@@ -19,7 +19,7 @@
     <view class="hero-head">
       <view>
         <view class="hero-kicker">TODAY'S COASTAL WINDOW</view>
-        <view class="hero-title">今天适合赶海</view>
+        <view class="hero-title">{{summary.safetyLevel || summary.label}}</view>
         <view class="hero-subtitle">{{summary.subtitle}}</view>
       </view>
       <view class="score-ring">
@@ -76,7 +76,7 @@
         <view class="spot-number">0{{index + 1}}</view>
         <view class="spot-main">
           <view class="spot-name-row"><text class="spot-name">{{item.name}}</text><text class="spot-area">{{item.area}}</text></view>
-          <view class="spot-meta"><text>{{item.distance}} km</text><text class="meta-dot">·</text><text>{{item.tideRange}}</text><text class="meta-dot">·</text><text>{{item.update}}</text></view>
+          <view class="spot-meta"><text>{{item.distanceLabel}}</text><text class="meta-dot">·</text><text>{{item.tideRange}}</text><text class="meta-dot">·</text><text>{{item.update}}</text></view>
         </view>
         <view class="spot-score"><text>{{item.score}}</text><text>分</text></view>
       </view>
