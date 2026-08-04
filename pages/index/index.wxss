@@ -221,6 +221,76 @@
   font-size: 21rpx;
 }
 
+.forecast-title {
+  margin-top: 32rpx;
+}
+
+.forecast-scroll {
+  width: 100%;
+  white-space: nowrap;
+}
+
+.forecast-card {
+  display: inline-block;
+  width: 154rpx;
+  min-height: 194rpx;
+  margin-right: 13rpx;
+  padding: 17rpx 15rpx;
+  border: 1rpx solid #e0eded;
+  border-radius: 21rpx;
+  background: white;
+  vertical-align: top;
+}
+
+.forecast-card.great {
+  border-color: #f0d4a6;
+  background: #fff9ee;
+}
+
+.forecast-card.low {
+  opacity: .72;
+}
+
+.forecast-date {
+  color: #315a62;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.forecast-week {
+  margin-top: 5rpx;
+  color: #9aadb1;
+  font-size: 18rpx;
+}
+
+.forecast-score {
+  margin-top: 19rpx;
+  color: #e29243;
+}
+
+.forecast-score text:first-child {
+  font-size: 39rpx;
+  font-weight: 800;
+}
+
+.forecast-score text:last-child {
+  margin-left: 2rpx;
+  font-size: 17rpx;
+}
+
+.forecast-label {
+  margin-top: 4rpx;
+  color: #569a91;
+  font-size: 19rpx;
+}
+
+.forecast-tide {
+  margin-top: 17rpx;
+  color: #9caeb2;
+  font-size: 17rpx;
+  line-height: 1.4;
+}
+
 .action-icon {
   display: flex;
   align-items: center;
