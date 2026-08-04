@@ -1,0 +1,241 @@
+.map-page {
+  position: relative;
+  width: 100vw;
+  height: calc(100vh - 100rpx);
+  overflow: hidden;
+  background: #dfeff0;
+}
+
+.coast-map {
+  width: 100%;
+  height: 100%;
+}
+
+.map-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 260rpx;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(8, 73, 83, .25), rgba(8, 73, 83, 0));
+}
+
+.map-header {
+  position: absolute;
+  top: 28rpx;
+  left: 30rpx;
+  right: 30rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+  text-shadow: 0 2rpx 8rpx rgba(0, 0, 0, .24);
+}
+
+.map-title text {
+  display: block;
+}
+
+.map-title text:first-child {
+  font-size: 38rpx;
+  font-weight: 700;
+}
+
+.map-subtitle {
+  margin-top: 7rpx;
+  color: rgba(255, 255, 255, .85);
+  font-size: 20rpx;
+}
+
+.map-locate {
+  display: flex;
+  align-items: center;
+  gap: 7rpx;
+  padding: 14rpx 18rpx;
+  border: 1rpx solid rgba(255, 255, 255, .45);
+  border-radius: 18rpx;
+  background: rgba(12, 77, 87, .55);
+  font-size: 22rpx;
+}
+
+.map-locate text:first-child {
+  color: #ffe2ac;
+  font-size: 30rpx;
+}
+
+.map-legend {
+  position: absolute;
+  top: 145rpx;
+  left: 30rpx;
+  display: flex;
+  gap: 18rpx;
+  padding: 12rpx 16rpx;
+  border-radius: 16rpx;
+  background: rgba(255, 255, 255, .9);
+  color: #536f76;
+  font-size: 19rpx;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 14rpx;
+  height: 14rpx;
+  margin-right: 6rpx;
+  border-radius: 50%;
+}
+
+.legend-dot.hot { background: #e39345; }
+.legend-dot.normal { background: #39a18d; }
+.legend-dot.rest { background: #8fa5ad; }
+
+.map-sheet {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 16rpx 28rpx calc(18rpx + env(safe-area-inset-bottom));
+  border-radius: 34rpx 34rpx 0 0;
+  background: #f7fbfc;
+  box-shadow: 0 -14rpx 40rpx rgba(21, 76, 83, .16);
+}
+
+.sheet-handle {
+  width: 80rpx;
+  height: 8rpx;
+  margin: 0 auto 22rpx;
+  border-radius: 99rpx;
+  background: #cfe0e2;
+}
+
+.sheet-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.sheet-title {
+  color: #173e47;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.sheet-hint {
+  color: #95a8ad;
+  font-size: 20rpx;
+}
+
+.spot-scroll {
+  width: 100%;
+  margin: 20rpx 0;
+  white-space: nowrap;
+}
+
+.map-spot-card {
+  display: inline-block;
+  width: 210rpx;
+  margin-right: 14rpx;
+  padding: 18rpx;
+  border: 1rpx solid #e1edef;
+  border-radius: 21rpx;
+  background: white;
+  vertical-align: top;
+}
+
+.map-spot-card.active {
+  border-color: #60b9b0;
+  background: #effaf8;
+  box-shadow: 0 8rpx 20rpx rgba(32, 145, 137, .12);
+}
+
+.map-score {
+  color: #e39141;
+}
+
+.map-score text:first-child {
+  font-size: 35rpx;
+  font-weight: 800;
+}
+
+.map-score text:last-child {
+  margin-left: 3rpx;
+  font-size: 18rpx;
+}
+
+.map-spot-name {
+  overflow: hidden;
+  margin-top: 8rpx;
+  color: #254d55;
+  font-size: 24rpx;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-spot-meta {
+  overflow: hidden;
+  margin-top: 8rpx;
+  color: #90a5aa;
+  font-size: 18rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.map-spot-level {
+  display: inline-block;
+  margin-top: 12rpx;
+  padding: 5rpx 9rpx;
+  border-radius: 7rpx;
+  background: #edf6f5;
+  color: #3c938b;
+  font-size: 18rpx;
+}
+
+.selected-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx;
+  border-radius: 22rpx;
+}
+
+.preview-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.preview-kicker {
+  color: #c98947;
+  font-size: 18rpx;
+}
+
+.preview-title {
+  margin-top: 7rpx;
+  color: #1c4650;
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.preview-desc {
+  overflow: hidden;
+  margin-top: 8rpx;
+  color: #789197;
+  font-size: 19rpx;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 10rpx;
+  margin-left: 16rpx;
+}
+
+.preview-btn {
+  padding: 13rpx 17rpx;
+  border-radius: 14rpx;
+  font-size: 21rpx;
+}
+
+.preview-btn.light { background: #eff8f7; color: #087f88; }
+.preview-btn.dark { background: #087f88; color: white; }
