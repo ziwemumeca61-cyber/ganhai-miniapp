@@ -1,4 +1,4 @@
-const { getSpots } = require('../utils/data')
+const { getSpots, getTodaySummary } = require('../utils/data')
 
 function localAnswer(question) {
   const spots = getSpots()
@@ -18,12 +18,31 @@ function localAnswer(question) {
   return `今天烟台整体赶海指数84分，首选${top.name}，建议去${top.zone.side}，${top.zone.distance}。这是演示预测，真实版会接入天气、潮汐和用户战果数据后动态更新。`
 }
 
-function ask(question, context) {
-  // 接入成长计划后，把这里替换为 wx.cloud.callFunction({ name: 'ai-chat' })。
-  return Promise.resolve({
-    answer: localAnswer(question, context),
-    source: '本地演示回答'
-  })
+async function ask(question, context) {
+  const app = getApp()
+  const canUseCloudAI = app && app.globalData && app.globalData.cloudEnabled && wx.cloud && wx.cloud.extend && wx.cloud.extend.AI
+
+  if (canUseCloudAI) {
+    try {
+      // 成长计划环境：具体 provider/model 以 CloudBase 控制台完成资格和模型开通后为准。
+      const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
+      const summary = getTodaySummary()
+      const topSpots = getSpots().slice(0, 4).map(item => `${item.name}(${item.score}分，${item.zone.side}，${item.zone.distance})`).join('；')
+      const res = await model.generateText({
+        model: 'hy3',
+        messages: [
+          { role: 'system', content: '你是烟台赶海向导。只能基于提供的结构化数据回答；不要编造潮汐、天气、封闭区域或海货数量。先说结论，再给时间、区域和安全提醒。' },
+          { role: 'user', content: `用户问题：${question}\n城市：${(context && context.city) || '烟台'}\n今日数据：${summary.label}，指数${summary.score}，低潮${summary.lowTide}，窗口${summary.bestTime}，天气${summary.weather}，风${summary.wind}。\n候选地点：${topSpots}` }
+        ]
+      })
+      const answer = res && res.choices && res.choices[0] && res.choices[0].message && res.choices[0].message.content
+      if (answer) return { answer, source: '混元 AI · 结构化数据' }
+    } catch (error) {
+      console.warn('CloudBase AI unavailable, fallback to local adapter', error)
+    }
+  }
+
+  return { answer: localAnswer(question, context), source: '本地演示回答' }
 }
 
 module.exports = { ask }
