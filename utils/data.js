@@ -1,3 +1,6 @@
+const { distanceKm, formatDistance } = require('./geo')
+const { scoreWithConditions, scoreLabel } = require('./predict')
+
 const spots = [
   {
     id: 'jinshatan',
@@ -157,8 +160,17 @@ const spots = [
   }
 ]
 
-function getSpots() {
-  return spots.slice().sort((a, b) => b.score - a.score)
+function getSpots(location, conditions) {
+  return spots.map(item => {
+    const km = distanceKm(location, item)
+    const score = conditions ? scoreWithConditions(item.score, conditions) : item.score
+    return Object.assign({}, item, {
+      score,
+      level: scoreLabel(score),
+      distance: km === null ? item.distance : Number(km.toFixed(1)),
+      distanceLabel: formatDistance(km === null ? item.distance : km)
+    })
+  }).sort((a, b) => b.score - a.score)
 }
 
 function getSpot(id) {
@@ -177,7 +189,14 @@ function getTodaySummary() {
     tideRange: '潮差 2.8m',
     bestTime: '04:50—07:10',
     safety: '建议 06:40 前开始回撤',
-    updatedAt: '2026-08-03 12:10'
+    updatedAt: '2026-08-03 12:10',
+    conditions: {
+      windLevel: 2,
+      windDirection: '东南',
+      precipitation: 0,
+      tideRange: 2.8,
+      warning: false
+    }
   }
 }
 
