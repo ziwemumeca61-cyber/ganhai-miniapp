@@ -1,0 +1,54 @@
+<view wx:if="{{spot}}" class="page-shell spot-page">
+  <view class="detail-head">
+    <view>
+      <view class="eyebrow">{{spot.area}} · 今日赶海点</view>
+      <view class="detail-title">{{spot.name}}</view>
+      <view class="detail-meta"><text>距当前位置约 {{spot.distance}} km</text><text class="meta-dot">·</text><text>{{spot.update}}</text></view>
+    </view>
+    <view class="detail-score"><text>{{spot.score}}</text><text>赶海指数</text></view>
+  </view>
+
+  <view class="zone-card card">
+    <view class="zone-header"><view><text class="zone-kicker">TODAY'S BEST ZONE</text><text class="zone-title">{{spot.zone.side}}</text></view><view class="compass"><text>N</text><text class="compass-arrow">↑</text><text>E</text></view></view>
+    <view class="zone-map">
+      <view class="shoreline"><text>岸线</text></view>
+      <view class="zone-water"><view class="zone-strip one"></view><view class="zone-strip two"></view><view class="zone-strip three"></view><text class="water-label">退潮后优先观察区域</text></view>
+      <view class="distance-label start">入口</view>
+      <view class="distance-label end">{{spot.zone.distance}}</view>
+    </view>
+    <view class="zone-reason"><text class="reason-icon">✦</text><text>{{spot.zone.reason}}</text></view>
+  </view>
+
+  <view class="section-title"><text class="title">今天的潮汐节奏</text><text class="link">{{spot.tideRange}}</text></view>
+  <view class="tide-card card">
+    <view class="tide-top"><view><text class="tide-main">{{spot.bestWindow}}</text><text class="tide-sub">建议赶海窗口</text></view><view class="tide-weather"><text>☼ {{spot.weather}}</text><text>潮汐 {{spot.tide}}</text></view></view>
+    <view class="timeline">
+      <view wx:for="{{forecast}}" wx:key="time" class="timeline-item {{item.type}}">
+        <view class="time-dot"></view>
+        <view class="time-label">{{item.time}}</view>
+        <view class="time-name">{{item.label}}</view>
+        <view class="time-height">{{item.height}}</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="section-title"><text class="title">预计能遇到什么</text><text class="link" bindtap="showDisclaimer">演示说明 ⓘ</text></view>
+  <view class="species-grid">
+      <view wx:for="{{spot.species}}" wx:key="name" class="species-card card">
+      <view class="species-mark {{item.tone}}">{{item.mark}}</view>
+      <view class="species-name">{{item.name}}</view>
+      <view class="species-value">{{item.value}}</view>
+    </view>
+  </view>
+
+  <view class="safety-card">
+    <view class="safety-title"><text>安全提醒</text><text class="risk risk-{{spot.risk}}">{{spot.risk}}风险</text></view>
+    <view class="safety-text">{{spot.safety}}</view>
+    <view class="safety-foot">涨潮和天气变化可能快于预报，出发前请再次确认现场情况。</view>
+  </view>
+
+  <view class="detail-actions">
+    <view class="ghost-btn" bindtap="goReport">上报战果</view>
+    <view class="primary-btn" bindtap="openLocation">打开导航</view>
+  </view>
+</view>
