@@ -1,0 +1,32 @@
+<view class="ai-page">
+  <view class="ai-header">
+    <view>
+      <view class="eyebrow">COASTAL AI GUIDE</view>
+      <view class="ai-title">问赶海</view>
+      <view class="ai-subtitle">让数据告诉你，今天该往哪片滩走</view>
+    </view>
+    <view class="ai-orb"><text>✦</text></view>
+  </view>
+  <view class="ai-tip"><text class="tip-icon">i</text><text>AI会读取烟台天气、潮汐和地点数据；预测结果仅作出行参考。</text></view>
+
+  <scroll-view class="chat-list" scroll-y="true" scroll-into-view="{{scrollId}}" scroll-with-animation="true">
+    <view wx:for="{{messages}}" wx:key="id" id="{{item.id}}" class="message-row {{item.role}}">
+      <view wx:if="{{item.role === 'assistant'}}" class="avatar assistant-avatar">✦</view>
+      <view class="message-bubble"><text>{{item.content}}</text><text wx:if="{{item.source}}" class="message-source">{{item.source}}</text></view>
+      <view wx:if="{{item.role === 'user'}}" class="avatar user-avatar">我</view>
+    </view>
+    <view wx:if="{{sending}}" class="message-row assistant"><view class="avatar assistant-avatar">✦</view><view class="message-bubble loading-bubble"><text>正在看潮汐和风向</text><view class="typing"><i></i><i></i><i></i></view></view></view>
+  </scroll-view>
+
+  <view class="suggestion-wrap">
+    <view class="suggestion-title">你可以这样问</view>
+    <scroll-view class="suggestions" scroll-x="true">
+      <text wx:for="{{suggestions}}" wx:key="*this" class="suggestion" data-text="{{item}}" bindtap="chooseSuggestion">{{item}}</text>
+    </scroll-view>
+  </view>
+
+  <view class="input-bar">
+    <input class="chat-input" value="{{inputValue}}" placeholder="例如：明早带娃去哪儿？" confirm-type="send" bindinput="onInput" bindconfirm="submit" />
+    <view class="send-btn {{inputValue ? 'ready' : ''}}" bindtap="submit">↑</view>
+  </view>
+</view>
