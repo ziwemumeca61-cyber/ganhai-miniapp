@@ -22,9 +22,10 @@
 
 1. 创建 CloudBase 环境并部署 `cloudfunctions/ai-chat`。
 2. 将 `app.js` 中的 `cloudEnv` 换成自己的环境 ID，并在控制台完成成长计划资格与混元模型开通；AI 页面会自动优先调用 `wx.cloud.extend.AI`，失败时回退到演示回答。
-3. 接入天气与潮汐数据适配器，将结果缓存到 `forecasts`。
-4. 在后台录入真实赶海点、微区域、风险边界和现场校准数据。
-5. 接入战果审核与预测模型，逐步替换演示数据。
+3. 部署 `cloudfunctions/forecast`，配置 `QWEATHER_API_HOST`、`QWEATHER_TOKEN` 和烟台潮汐站 ID；未配置时会自动回退演示数据。
+4. 接入天气与潮汐数据适配器，将结果缓存到 `forecasts`。
+5. 在后台录入真实赶海点、微区域、风险边界和现场校准数据。
+6. 接入战果审核与预测模型，逐步替换演示数据。
 
 ## 当前状态
 
