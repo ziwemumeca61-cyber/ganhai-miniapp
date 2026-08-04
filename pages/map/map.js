@@ -13,8 +13,17 @@ Page({
   },
 
   onLoad() {
-    api.getHomeData().then(data => {
-      const markers = data.spots.map((spot, index) => ({
+    this.loadMapData()
+  },
+
+  loadMapData(location) {
+    api.getHomeData(location).then(data => {
+      this.setData({ spots: data.spots, markers: this.buildMarkers(data.spots), selected: data.spots[0] })
+    })
+  },
+
+  buildMarkers(spots) {
+    return spots.map((spot, index) => ({
         id: index + 1,
         latitude: spot.latitude,
         longitude: spot.longitude,
@@ -30,8 +39,6 @@ Page({
           display: 'ALWAYS'
         }
       }))
-      this.setData({ spots: data.spots, markers, selected: data.spots[0] })
-    })
   },
 
   locate() {
@@ -41,6 +48,7 @@ Page({
         return
       }
       this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 12, located: true })
+      this.loadMapData(location)
       wx.showToast({ title: '已定位到你附近', icon: 'success' })
     })
   },
@@ -52,17 +60,18 @@ Page({
 
   selectSpot(e) {
     const spot = this.data.spots.find(item => item.id === e.currentTarget.dataset.id)
+    if (!spot) return
     this.setData({ selected: spot, latitude: spot.latitude, longitude: spot.longitude, scale: 13 })
   },
 
   goDetail() {
-    if (!this.data.selected) return
+    if (!this.data.selected || !this.data.selected.id) return
     wx.navigateTo({ url: `/pages/spot/spot?id=${this.data.selected.id}` })
   },
 
   navigateToSpot() {
     const spot = this.data.selected
-    if (!spot) return
+    if (!spot || !spot.id) return
     wx.openLocation({ latitude: spot.latitude, longitude: spot.longitude, name: spot.name, address: `${spot.area} · 推荐区域：${spot.zone.side}` })
   }
 })
