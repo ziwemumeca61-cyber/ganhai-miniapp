@@ -1,0 +1,10 @@
+{
+  "desc": "赶海雷达小程序站点地图",
+  "rules": [
+    { "action": "allow", "page": "pages/index/index" },
+    { "action": "allow", "page": "pages/map/map" },
+    { "action": "allow", "page": "pages/spot/spot" },
+    { "action": "allow", "page": "pages/ai/ai" },
+    { "action": "allow", "page": "pages/report/report" }
+  ]
+}
