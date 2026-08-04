@@ -1,0 +1,80 @@
+<view class="page-shell home-page">
+  <view class="topline">
+    <view>
+      <view class="brand">赶海雷达</view>
+      <view class="eyebrow">YANTAI COASTAL GUIDE · 01</view>
+    </view>
+    <view class="location-chip" bindtap="locate">
+      <text class="location-dot">●</text>
+      <view>
+        <view class="location-name">{{locationLabel}}</view>
+        <view class="location-status">{{locationStatus}}</view>
+      </view>
+      <text class="chevron">⌄</text>
+    </view>
+  </view>
+
+  <view class="hero card">
+    <view class="hero-glow"></view>
+    <view class="hero-head">
+      <view>
+        <view class="hero-kicker">TODAY'S COASTAL WINDOW</view>
+        <view class="hero-title">今天适合赶海</view>
+        <view class="hero-subtitle">{{summary.subtitle}}</view>
+      </view>
+      <view class="score-ring">
+        <view class="score-number">{{summary.score}}</view>
+        <view class="score-label">赶海指数</view>
+      </view>
+    </view>
+    <view class="hero-line"></view>
+    <view class="metrics">
+      <view class="metric">
+        <text class="metric-icon">↓</text>
+        <view><text class="metric-value">{{summary.lowTide}}</text><text class="metric-label">低潮时间</text></view>
+      </view>
+      <view class="metric">
+        <text class="metric-icon sun">☼</text>
+        <view><text class="metric-value">{{summary.weather}}</text><text class="metric-label">体感天气</text></view>
+      </view>
+      <view class="metric">
+        <text class="metric-icon wind">↝</text>
+        <view><text class="metric-value">{{summary.wind}}</text><text class="metric-label">海风状态</text></view>
+      </view>
+    </view>
+    <view class="best-window">
+      <view><text class="window-label">推荐下海窗口</text><text class="window-value">{{summary.bestTime}}</text></view>
+      <view class="window-warning">{{summary.safety}}</view>
+    </view>
+  </view>
+
+  <view class="quick-actions">
+    <view class="quick-action" bindtap="goMap"><view class="action-icon map-icon">⌁</view><text>附近赶海点</text></view>
+    <view class="quick-action" bindtap="goAi"><view class="action-icon ai-icon">✦</view><text>问AI怎么去</text></view>
+    <view class="quick-action" bindtap="locate"><view class="action-icon locate-icon">⊙</view><text>刷新定位</text></view>
+  </view>
+
+  <view class="section-title">
+    <text class="title">今天去哪儿</text>
+    <text class="link" bindtap="goMap">查看地图 →</text>
+  </view>
+
+  <block wx:for="{{spots}}" wx:key="id">
+    <view class="spot-card card" bindtap="viewSpot" data-id="{{item.id}}">
+      <view class="spot-top">
+        <view class="spot-number">0{{index + 1}}</view>
+        <view class="spot-main">
+          <view class="spot-name-row"><text class="spot-name">{{item.name}}</text><text class="spot-area">{{item.area}}</text></view>
+          <view class="spot-meta"><text>{{item.distance}} km</text><text class="meta-dot">·</text><text>{{item.tideRange}}</text><text class="meta-dot">·</text><text>{{item.update}}</text></view>
+        </view>
+        <view class="spot-score"><text>{{item.score}}</text><text>分</text></view>
+      </view>
+      <view class="spot-bottom">
+        <view class="spot-tags"><text wx:for="{{item.tags}}" wx:key="*this" class="mini-tag">{{item}}</text></view>
+        <view class="spot-direction"><text class="direction-arrow">↗</text>{{item.zone.side}}</view>
+      </view>
+    </view>
+  </block>
+
+  <view class="data-notice">数据更新时间：{{summary.updatedAt}}　·　预测结果仅作出行参考</view>
+</view>
