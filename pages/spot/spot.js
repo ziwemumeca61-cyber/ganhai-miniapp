@@ -32,6 +32,13 @@ Page({
     wx.navigateTo({ url: `/pages/report/report?spotId=${this.data.spot.id}` })
   },
 
+  askAI() {
+    const spot = this.data.spot
+    if (!spot) return
+    wx.setStorageSync('ai_prefill', `我准备去${spot.name}，请结合今天潮汐和天气告诉我几点到、往哪个区域走、几点开始回撤。`)
+    wx.switchTab({ url: '/pages/ai/ai' })
+  },
+
   showDisclaimer() {
     wx.showModal({
       title: '预测说明',
