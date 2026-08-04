@@ -18,7 +18,7 @@
       <view wx:for="{{spots}}" wx:key="id" class="map-spot-card {{selected.id === item.id ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectSpot">
         <view class="map-score"><text>{{item.score}}</text><text>分</text></view>
         <view class="map-spot-name">{{item.name}}</view>
-        <view class="map-spot-meta">{{item.distance}} km · {{item.zone.side}}</view>
+        <view class="map-spot-meta">{{item.distanceLabel}} · {{item.zone.side}}</view>
         <view class="map-spot-level">{{item.level}}</view>
       </view>
     </scroll-view>
