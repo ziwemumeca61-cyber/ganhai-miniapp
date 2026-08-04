@@ -48,6 +48,11 @@
     </view>
   </view>
 
+  <view wx:if="{{summary.safetyLevel !== '适合赶海'}}" class="safety-banner">
+    <text class="safety-banner-icon">!</text>
+    <view><text class="safety-banner-title">当前不适合直接下海</text><text class="safety-banner-text">天气或潮汐条件发生变化，请先确认现场风浪和管理提示。</text></view>
+  </view>
+
   <view class="quick-actions">
     <view class="quick-action" bindtap="goMap"><view class="action-icon map-icon">⌁</view><text>附近赶海点</text></view>
     <view class="quick-action" bindtap="goAi"><view class="action-icon ai-icon">✦</view><text>问AI怎么去</text></view>
