@@ -101,6 +101,26 @@
   font-size: 22rpx;
 }
 
+.note-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-draft-btn {
+  margin-top: 34rpx;
+  padding: 8rpx 13rpx;
+  border: 1rpx solid #f0dbb9;
+  border-radius: 99rpx;
+  background: #fff8eb;
+  color: #b87939;
+  font-size: 18rpx;
+}
+
+.ai-draft-btn.disabled {
+  opacity: .55;
+}
+
 .photo-line {
   display: flex;
   align-items: center;
