@@ -16,7 +16,7 @@
       <view wx:for="{{amounts}}" wx:key="*this" class="amount-choice {{amount === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseAmount"><text class="amount-dot"></text><text>{{item}}</text></view>
     </view>
 
-    <view class="form-label note-label">补充一句（可选）</view>
+    <view class="note-head"><view class="form-label note-label">补充一句（可选）</view><view class="ai-draft-btn {{aiGenerating ? 'disabled' : ''}}" bindtap="generateDraft">✦ {{aiGenerating ? '整理中' : 'AI帮我整理'}}</view></view>
     <textarea class="note-input" maxlength="120" placeholder="例如：东侧礁石缝里海螺明显多一些" value="{{note}}" bindinput="onNote"></textarea>
 
     <view class="photo-line" bindtap="addPhoto"><view class="photo-icon">＋</view><view><text class="photo-title">上传现场照片</text><text class="photo-tip">{{imageCount ? '已选择 ' + imageCount + ' 张' : '照片越清晰，校准越准确'}}</text></view><text class="photo-arrow">›</text></view>
