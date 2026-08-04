@@ -212,6 +212,47 @@
   box-shadow: 0 10rpx 30rpx rgba(31, 91, 102, .05);
 }
 
+.safety-banner {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 18rpx;
+  padding: 18rpx 20rpx;
+  border: 1rpx solid #f3d6b2;
+  border-radius: 20rpx;
+  background: #fff6e8;
+  color: #a56c36;
+}
+
+.safety-banner-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34rpx;
+  height: 34rpx;
+  margin-right: 12rpx;
+  border-radius: 50%;
+  background: #e59a4d;
+  color: white;
+  font-size: 22rpx;
+  font-weight: 800;
+}
+
+.safety-banner-title, .safety-banner-text {
+  display: block;
+}
+
+.safety-banner-title {
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.safety-banner-text {
+  margin-top: 5rpx;
+  color: #b0845d;
+  font-size: 19rpx;
+  line-height: 1.5;
+}
+
 .quick-action {
   display: flex;
   flex-direction: column;
