@@ -7,8 +7,16 @@ Page({
     messages: [
       { id: 'welcome', role: 'assistant', content: '我是你的烟台赶海向导。告诉我想去的时间、距离、海货或同行人群，我会结合潮汐和天气给你一个清楚的建议。' }
     ],
-    suggestions: ['今天哪里适合带孩子？', '想找蛤蜊多的地方', '现在还能下海吗？', '明早去哪儿最好？'],
+    suggestions: ['今天哪里适合带孩子？', '想找蛤蜊多的地方', '现在还能下海吗？', '帮我安排今天行程'],
     sending: false
+  },
+
+  onShow() {
+    const prefill = wx.getStorageSync('ai_prefill')
+    if (prefill) {
+      wx.removeStorageSync('ai_prefill')
+      this.setData({ inputValue: prefill })
+    }
   },
 
   onInput(e) {
@@ -16,12 +24,14 @@ Page({
   },
 
   chooseSuggestion(e) {
-    this.setData({ inputValue: e.currentTarget.dataset.text })
-    this.submit()
+    this.sendQuestion(e.currentTarget.dataset.text)
   },
 
   submit() {
-    const question = (this.data.inputValue || '').trim()
+    this.sendQuestion((this.data.inputValue || '').trim())
+  },
+
+  sendQuestion(question) {
     if (!question || this.data.sending) return
     const userMessage = { id: `u-${Date.now()}`, role: 'user', content: question }
     const messages = this.data.messages.concat(userMessage)
