@@ -164,6 +164,30 @@
   line-height: 1.55;
 }
 
+.ai-plan-btn {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+  padding: 17rpx 18rpx;
+  border: 1rpx solid #f1dfbf;
+  border-radius: 17rpx;
+  background: linear-gradient(90deg, #fff8ea, #fffdf6);
+  color: #b27435;
+  font-size: 21rpx;
+}
+
+.ai-plan-btn text:first-child {
+  margin-right: 9rpx;
+  color: #e29a4a;
+  font-size: 26rpx;
+}
+
+.ai-plan-arrow {
+  margin-left: auto;
+  color: #df9747;
+  font-size: 28rpx;
+}
+
 .reason-icon {
   margin-right: 9rpx;
   color: #e69a47;
