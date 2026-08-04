@@ -44,6 +44,7 @@ Page({
   },
 
   goAi() {
+    wx.setStorageSync('ai_prefill', '请根据今天的天气、潮汐和距离，帮我安排一条烟台赶海路线。')
     wx.switchTab({ url: '/pages/ai/ai' })
   },
 
