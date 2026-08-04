@@ -1,0 +1,9 @@
+{
+  "name": "forecast",
+  "version": "1.0.0",
+  "description": "赶海雷达天气与潮汐数据适配器",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
