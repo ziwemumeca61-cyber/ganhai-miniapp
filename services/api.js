@@ -34,6 +34,7 @@ function getHomeData(location) {
   return callLiveForecast(location).then(live => {
     if (!live) return demoData
     const conditions = Object.assign({}, summary.conditions, live.conditions || {})
+    if (!live.conditions || !live.conditions.tideRange) conditions.tideRange = summary.conditions.tideRange
     const score = scoreWithConditions(summary.score, conditions)
     const liveSummary = Object.assign({}, summary, live.summary || {}, {
       score,
