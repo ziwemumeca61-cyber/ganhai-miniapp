@@ -13,6 +13,14 @@ Page({
 
   onLoad() {
     this.loadData()
+    getLocation((err, location) => {
+      if (!err) {
+        this.setData({ locationLabel: '烟台 · 已定位', locationStatus: '已按当前位置排序' })
+        this.loadData()
+      } else {
+        this.setData({ locationLabel: '烟台 · 定位未授权', locationStatus: '可继续浏览烟台赶海点' })
+      }
+    })
   },
 
   onPullDownRefresh() {
@@ -21,7 +29,8 @@ Page({
 
   loadData(stopRefresh) {
     this.setData({ loading: true })
-    Promise.all([api.getHomeData(), api.getForecastCalendar()]).then(([data, calendar]) => {
+    const app = getApp()
+    Promise.all([api.getHomeData(app.globalData.location), api.getForecastCalendar()]).then(([data, calendar]) => {
       this.setData({ summary: data.summary, spots: data.spots, calendar, loading: false })
       if (stopRefresh) wx.stopPullDownRefresh()
     })
