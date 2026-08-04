@@ -1,0 +1,38 @@
+<view class="map-page">
+  <map class="coast-map" latitude="{{latitude}}" longitude="{{longitude}}" scale="{{scale}}" markers="{{markers}}" show-location="{{located}}" enable-zoom="true" enable-scroll="true" bindmarkertap="markerTap"></map>
+  <view class="map-gradient"></view>
+  <view class="map-header">
+    <view class="map-title"><text>烟台沿海</text><text class="map-subtitle">{{spots.length}} 个赶海点 · 演示数据</text></view>
+    <view class="map-locate" bindtap="locate"><text>⊙</text><text>{{located ? '已定位' : '定位'}}</text></view>
+  </view>
+  <view class="map-legend">
+    <view><text class="legend-dot hot"></text>优先去</view>
+    <view><text class="legend-dot normal"></text>可以去</view>
+    <view><text class="legend-dot rest"></text>休闲点</view>
+  </view>
+
+  <view class="map-sheet">
+    <view class="sheet-handle"></view>
+    <view class="sheet-title-row"><text class="sheet-title">附近赶海点</text><text class="sheet-hint">按今日指数排序</text></view>
+    <scroll-view class="spot-scroll" scroll-x="true" enable-flex="true">
+      <view wx:for="{{spots}}" wx:key="id" class="map-spot-card {{selected.id === item.id ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectSpot">
+        <view class="map-score"><text>{{item.score}}</text><text>分</text></view>
+        <view class="map-spot-name">{{item.name}}</view>
+        <view class="map-spot-meta">{{item.distance}} km · {{item.zone.side}}</view>
+        <view class="map-spot-level">{{item.level}}</view>
+      </view>
+    </scroll-view>
+
+    <view wx:if="{{selected}}" class="selected-preview card">
+      <view class="preview-main">
+        <view class="preview-kicker">推荐区域 · {{selected.zone.side}}</view>
+        <view class="preview-title">{{selected.name}}</view>
+        <view class="preview-desc">{{selected.zone.distance}}　{{selected.zone.reason}}</view>
+      </view>
+      <view class="preview-actions">
+        <view class="preview-btn light" bindtap="navigateToSpot">导航</view>
+        <view class="preview-btn dark" bindtap="goDetail">详情</view>
+      </view>
+    </view>
+  </view>
+</view>
