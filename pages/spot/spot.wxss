@@ -1,0 +1,353 @@
+.spot-page {
+  padding-top: 28rpx;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 26rpx;
+}
+
+.detail-title {
+  margin-top: 10rpx;
+  color: #173f48;
+  font-size: 46rpx;
+  font-weight: 800;
+  letter-spacing: -1rpx;
+}
+
+.detail-meta {
+  margin-top: 10rpx;
+  color: #91a5aa;
+  font-size: 20rpx;
+}
+
+.detail-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #e29243;
+}
+
+.detail-score text:first-child {
+  font-size: 62rpx;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.detail-score text:last-child {
+  margin-top: 8rpx;
+  color: #a37d57;
+  font-size: 19rpx;
+}
+
+.zone-card {
+  overflow: hidden;
+  padding: 28rpx 24rpx 24rpx;
+  background: linear-gradient(160deg, #ffffff 0%, #f3fbfa 100%);
+}
+
+.zone-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.zone-kicker {
+  display: block;
+  color: #70a9a5;
+  font-size: 17rpx;
+  letter-spacing: 2rpx;
+}
+
+.zone-title {
+  display: block;
+  margin-top: 8rpx;
+  color: #17434b;
+  font-size: 32rpx;
+  font-weight: 700;
+}
+
+.compass {
+  display: grid;
+  grid-template-columns: 38rpx 38rpx;
+  grid-template-rows: 34rpx 34rpx;
+  align-items: center;
+  justify-items: center;
+  width: 76rpx;
+  height: 68rpx;
+  color: #90a8ad;
+  font-size: 18rpx;
+}
+
+.compass text:first-child { grid-column: 1 / span 2; }
+.compass text:last-child { grid-column: 2; grid-row: 2; }
+.compass-arrow { grid-column: 1; grid-row: 2; color: #e69742; font-size: 30rpx; }
+
+.zone-map {
+  position: relative;
+  height: 220rpx;
+  margin-top: 22rpx;
+  overflow: hidden;
+  border-radius: 21rpx;
+  background: #cdebea;
+}
+
+.shoreline {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  width: 78rpx;
+  border-right: 5rpx solid #ddb072;
+  background: repeating-linear-gradient(135deg, #f7dfb9 0, #f7dfb9 12rpx, #f2d4a8 12rpx, #f2d4a8 22rpx);
+  color: #96724d;
+  font-size: 18rpx;
+  writing-mode: vertical-rl;
+}
+
+.zone-water {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 78rpx;
+  background: repeating-linear-gradient(10deg, #b5e2e1 0, #b5e2e1 28rpx, #a5d9da 28rpx, #a5d9da 31rpx);
+}
+
+.zone-strip {
+  position: absolute;
+  left: 52rpx;
+  right: 30rpx;
+  height: 38rpx;
+  border: 2rpx dashed rgba(28, 115, 120, .46);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .16);
+  transform: rotate(-6deg);
+}
+
+.zone-strip.one { top: 30rpx; }
+.zone-strip.two { top: 90rpx; left: 92rpx; right: 60rpx; }
+.zone-strip.three { top: 150rpx; left: 48rpx; right: 90rpx; }
+
+.water-label {
+  position: absolute;
+  right: 20rpx;
+  bottom: 14rpx;
+  color: rgba(21, 96, 104, .65);
+  font-size: 17rpx;
+}
+
+.distance-label {
+  position: absolute;
+  z-index: 3;
+  padding: 6rpx 10rpx;
+  border-radius: 9rpx;
+  background: rgba(255, 255, 255, .86);
+  color: #4e7f84;
+  font-size: 17rpx;
+}
+
+.distance-label.start { top: 16rpx; left: 20rpx; }
+.distance-label.end { right: 20rpx; bottom: 18rpx; color: #087f88; }
+
+.zone-reason {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 18rpx;
+  color: #53787e;
+  font-size: 21rpx;
+  line-height: 1.55;
+}
+
+.reason-icon {
+  margin-right: 9rpx;
+  color: #e69a47;
+  font-size: 25rpx;
+}
+
+.tide-card {
+  padding: 24rpx;
+}
+
+.tide-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.tide-main, .tide-sub {
+  display: block;
+}
+
+.tide-main {
+  color: #e28f3f;
+  font-size: 36rpx;
+  font-weight: 800;
+}
+
+.tide-sub {
+  margin-top: 6rpx;
+  color: #91a7ac;
+  font-size: 20rpx;
+}
+
+.tide-weather {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  color: #6c8b91;
+  font-size: 19rpx;
+  line-height: 1.8;
+}
+
+.timeline {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30rpx;
+  padding-top: 18rpx;
+}
+
+.timeline::before {
+  position: absolute;
+  top: 28rpx;
+  right: 14rpx;
+  left: 14rpx;
+  height: 4rpx;
+  border-radius: 4rpx;
+  background: #d8eeee;
+  content: '';
+}
+
+.timeline-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 24%;
+}
+
+.time-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border: 5rpx solid #e5f4f3;
+  border-radius: 50%;
+  background: #45a89d;
+}
+
+.low .time-dot { background: #e29243; }
+.high .time-dot { background: #6c8ed2; }
+
+.time-label {
+  margin-top: 12rpx;
+  color: #294f57;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.time-name {
+  margin-top: 6rpx;
+  color: #8da3a8;
+  font-size: 18rpx;
+}
+
+.time-height {
+  margin-top: 4rpx;
+  color: #b0bdc0;
+  font-size: 17rpx;
+}
+
+.species-grid {
+  display: flex;
+  justify-content: space-between;
+}
+
+.species-card {
+  width: 31.5%;
+  padding: 20rpx 14rpx;
+  text-align: center;
+}
+
+.species-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58rpx;
+  height: 58rpx;
+  margin: 0 auto 12rpx;
+  border-radius: 20rpx;
+  font-size: 30rpx;
+  font-weight: 700;
+}
+
+.species-mark.warm { background: #fff0d9; color: #df9341; }
+.species-mark.cool { background: #eaf6f6; color: #419c99; }
+
+.species-name {
+  color: #4a6d73;
+  font-size: 21rpx;
+}
+
+.species-value {
+  margin-top: 7rpx;
+  color: #dd8f3f;
+  font-size: 23rpx;
+  font-weight: 700;
+}
+
+.safety-card {
+  margin-top: 28rpx;
+  padding: 22rpx;
+  border: 1rpx solid #f3dfbd;
+  border-radius: 22rpx;
+  background: #fff9ed;
+}
+
+.safety-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #a86d35;
+  font-size: 25rpx;
+  font-weight: 700;
+}
+
+.risk {
+  padding: 6rpx 11rpx;
+  border-radius: 99rpx;
+  font-size: 18rpx;
+  font-weight: 500;
+}
+
+.risk-低 { background: #e7f6ee; color: #3a956f; }
+.risk-中 { background: #fff0d4; color: #be7b33; }
+
+.safety-text {
+  margin-top: 13rpx;
+  color: #876746;
+  font-size: 22rpx;
+  line-height: 1.6;
+}
+
+.safety-foot {
+  margin-top: 12rpx;
+  color: #b59a7b;
+  font-size: 18rpx;
+  line-height: 1.5;
+}
+
+.detail-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 28rpx;
+}
+
+.detail-actions .ghost-btn, .detail-actions .primary-btn {
+  flex: 1;
+}
