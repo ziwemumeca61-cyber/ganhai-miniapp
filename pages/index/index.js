@@ -5,6 +5,7 @@ Page({
   data: {
     summary: {},
     spots: [],
+    calendar: [],
     locationLabel: '烟台 · 正在定位',
     locationStatus: '点击获取附近推荐',
     loading: true
@@ -20,8 +21,8 @@ Page({
 
   loadData(stopRefresh) {
     this.setData({ loading: true })
-    api.getHomeData().then(data => {
-      this.setData({ summary: data.summary, spots: data.spots, loading: false })
+    Promise.all([api.getHomeData(), api.getForecastCalendar()]).then(([data, calendar]) => {
+      this.setData({ summary: data.summary, spots: data.spots, calendar, loading: false })
       if (stopRefresh) wx.stopPullDownRefresh()
     })
   },
