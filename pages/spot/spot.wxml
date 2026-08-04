@@ -17,6 +17,7 @@
       <view class="distance-label end">{{spot.zone.distance}}</view>
     </view>
     <view class="zone-reason"><text class="reason-icon">✦</text><text>{{spot.zone.reason}}</text></view>
+    <view class="ai-plan-btn" bindtap="askAI"><text>✦</text><text>让 AI 按今天的潮汐给我安排路线</text><text class="ai-plan-arrow">→</text></view>
   </view>
 
   <view class="section-title"><text class="title">今天的潮汐节奏</text><text class="link">{{spot.tideRange}}</text></view>
