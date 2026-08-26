@@ -9,7 +9,7 @@ const pendingGuide = {
 }
 
 const spots = [
-  { id: 'jinshatan', name: '金沙滩—白银河口', area: '黄渤海新区', latitude: 37.573856, longitude: 121.260837, type: '沙滩', harvest: '蛤蜊 · 海肠', verification: '候选点待实地', terrainSafety: 18, ...pendingGuide },
+  { id: 'jinshatan', name: '金沙滩海滨公园（瞭望台附近）', area: '黄渤海新区', latitude: 37.573856, longitude: 121.260837, type: '沙滩', harvest: '蛤蜊 · 海肠', verification: '附近导航点已核验', terrainSafety: 18, entry: '金沙滩海滨公园瞭望台附近导航点', shoreline: '瞭望台周边海岸，实际下滩口以现场公开通道为准', direction: '到达后先确认开放通道，不穿越绿化、护栏或管理围挡', retreat: '回涨前返回海滨路一侧，现场关闭或警戒时立即结束' },
   { id: 'jiahekou', name: '夹河口—古贝广场', area: '芝罘区', latitude: 37.5672, longitude: 121.3345, type: '泥沙滩', harvest: '蛤蜊 · 海蛎子', verification: '公开资料待复核', terrainSafety: 14, ...pendingGuide },
   { id: 'first-bath', name: '第一海水浴场', area: '芝罘区', latitude: 37.536201, longitude: 121.419746, type: '沙滩', harvest: '海螺 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '第一海水浴场公共入口', shoreline: '东侧裸露礁石与岸边沙滩，以现场开放区域为限', direction: '优先核对东侧礁石区，不进入游泳分隔区', retreat: '涨潮前至少30分钟回到固定岸线' },
   { id: 'jinhaiwan', name: '金海湾—旅游大世界', area: '芝罘区', latitude: 37.535687, longitude: 121.42711, type: '礁石 + 沙滩', harvest: '海螺 · 螃蟹', verification: '候选点待实地', terrainSafety: 15, ...pendingGuide },
@@ -23,7 +23,8 @@ const spots = [
   { id: 'yangmadao-front', name: '养马岛前海', area: '牟平区', latitude: 37.474548, longitude: 121.644837, type: '沙滩', harvest: '海螺 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '养马岛海水浴场公共入口', shoreline: '海水浴场近岸公开区域，以现场管理边界为准', direction: '只在平缓近岸活动，不向离岸礁石延伸', retreat: '预留30分钟返回入口，天气突变立即结束' },
   { id: 'yangmadao-back', name: '养马岛后海', area: '牟平区', latitude: 37.486, longitude: 121.606, type: '礁石', harvest: '海螺 · 螃蟹', verification: '候选点待实地', terrainSafety: 15, ...pendingGuide },
   { id: 'haiyang-wanmi', name: '海阳凤城万米海滩', area: '海阳市', latitude: 36.69538, longitude: 121.225813, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '凤城万米海滩公共入口', shoreline: '海景路沿线公开海水浴场岸段，以现场开放区域为限', direction: '仅在平缓沙滩和现场允许区域活动', retreat: '回涨前返回海景路一侧，浴场关闭或警戒时立即结束' },
-  { id: 'longkou-donghai-west', name: '东海度假区西部夏季海水浴场', area: '龙口市', latitude: 37.715873, longitude: 120.411911, type: '沙滩', harvest: '贝类 · 小鱼', verification: 'POI坐标已核验', terrainSafety: 18, entry: '海涛二路6号浴场入口', shoreline: '海润豪景对面海水浴场岸段，以现场开放区域为限', direction: '从海涛二路一侧进入，仅在平缓近岸和现场允许区域活动', retreat: '回涨前返回海涛二路一侧，浴场关闭或出现警戒时立即结束' }
+  { id: 'longkou-donghai-west', name: '东海度假区西部夏季海水浴场', area: '龙口市', latitude: 37.715873, longitude: 120.411911, type: '沙滩', harvest: '贝类 · 小鱼', verification: 'POI坐标已核验', terrainSafety: 18, entry: '海涛二路6号浴场入口', shoreline: '海润豪景对面海水浴场岸段，以现场开放区域为限', direction: '从海涛二路一侧进入，仅在平缓近岸和现场允许区域活动', retreat: '回涨前返回海涛二路一侧，浴场关闭或出现警戒时立即结束' },
+  { id: 'penglai-bath-nearby', name: '蓬莱海水浴场（仙境路附近）', area: '蓬莱区', latitude: 37.820125, longitude: 120.766869, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '附近导航点已核验', terrainSafety: 18, entry: '仙境路2号附近导航参考点，并非浴场入口', shoreline: '仙境路北侧海滩方向，实际下滩口以现场公开通道为准', direction: '到达参考点后沿公开步道寻找现场开放入口，不跨越景区或管理边界', retreat: '回涨前返回仙境路一侧，遇封闭、警戒或收费管理区域立即停止' }
 ]
 
 function harvestAssessment(spot, reports) {
