@@ -69,6 +69,15 @@ function regionKey(item) {
   return 'zhifu'
 }
 
+function tideWindowFromLow(time) {
+  const match = String(time || '').match(/^(\d{1,2}):(\d{2})$/)
+  if (!match) return null
+  const minutes = Number(match[1]) * 60 + Number(match[2])
+  if (!Number.isFinite(minutes)) return null
+  const format = value => String(Math.floor(value / 60)).padStart(2, '0') + ':' + String(value % 60).padStart(2, '0')
+  return format(Math.max(0, minutes - 120)) + '—' + format(Math.min(1439, minutes + 30))
+}
+
 function getSpots(location, conditions, reports) {
   return spots.map(item => {
     const km = distanceKm(location, item)
@@ -79,7 +88,10 @@ function getSpots(location, conditions, reports) {
     const harvest = harvestAssessment(item, reports)
     const recommended = verified && safetyScore !== null && safetyScore >= 80 && harvest.score !== null
     const lowTide = localConditions && localConditions.nextLow ? localConditions.nextLow : '--:--'
-    const window = localConditions && localConditions.window ? localConditions.window : '暂不可计算'
+    const officialWindow = localConditions && localConditions.window
+    const estimatedWindow = !officialWindow && lowTide !== '--:--' ? tideWindowFromLow(lowTide) : null
+    const window = officialWindow || estimatedWindow || (localConditions && localConditions.dataReady ? '今日低潮窗口已过' : '潮汐数据待更新')
+    const windowBasis = officialWindow ? '官方潮汐窗口' : estimatedWindow ? '按低潮前2小时至后30分钟估算' : localConditions && localConditions.dataReady ? '今日窗口已结束' : '等待官方潮汐数据'
     const guide = positionGuides[item.id] || { shoreSide: item.shoreline, offshoreRange: '仅限退潮后裸露的近岸区域' }
     const distanceScore = km === null ? 50 : Math.max(0, 100 - km * 2)
     const rankScore = Math.round(Number(safetyScore || 0) * 0.6 + distanceScore * 0.35 + (verified ? 5 : 0))
@@ -104,6 +116,7 @@ function getSpots(location, conditions, reports) {
       distanceLabel: formatDistance(km),
       tide: lowTide === '--:--' ? '潮汐待更新' : '下一低潮 ' + lowTide,
       bestWindow: window,
+      windowBasis,
       weather: localConditions && localConditions.weatherLabel || '天气待更新',
       tideRange: localConditions && localConditions.waveLabel || '海况待更新',
       update: localConditions && localConditions.dataReady ? '实时海况' : '等待实时数据',
