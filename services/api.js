@@ -6,7 +6,14 @@ function callCloud(name, data) {
   if (!app || !app.globalData || !app.globalData.cloudEnabled || !wx.cloud) return Promise.resolve(null)
   return wx.cloud.callFunction({ name, data }).then(response => response && response.result || null).catch(error => {
     console.warn(name + ' unavailable', error)
-    return null
+    const message = String(error && (error.errMsg || error.message) || '未知错误')
+      .replace(/requestID:[^\s,]+/gi, '')
+      .slice(0, 100)
+    return {
+      source: 'cloud-call-failed',
+      reason: name + '调用失败：' + message,
+      conditions: { dataReady: false, blocked: false }
+    }
   })
 }
 
