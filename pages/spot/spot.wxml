@@ -26,7 +26,7 @@
 
   <view class="section-title"><text class="title">今天的潮汐节奏</text><text class="link">{{spot.tideRange}}</text></view>
   <view class="tide-card card">
-    <view class="tide-top"><view><text class="tide-main">{{spot.bestWindow}}</text><text class="tide-sub">建议赶海窗口</text></view><view class="tide-weather"><text>☼ {{spot.weather}}</text><text>潮汐 {{spot.tide}}</text></view></view>
+    <view class="tide-top"><view><text class="tide-main">{{spot.bestWindow}}</text><text class="tide-sub">{{spot.windowBasis}}</text></view><view class="tide-weather"><text>☼ {{spot.weather}}</text><text>潮汐 {{spot.tide}}</text></view></view>
     <view class="timeline">
       <view wx:for="{{forecast}}" wx:key="time" class="timeline-item {{item.type}}">
         <view class="time-dot"></view>
