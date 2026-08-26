@@ -6,10 +6,13 @@
   "setting": {
     "es6": true,
     "postcss": true,
-    "minified": false,
+    "minified": true,
     "urlCheck": false,
     "compileHotReLoad": true,
-    "lazyloadPlaceholderEnable": false
+    "lazyloadPlaceholderEnable": false,
+    "minifyJS": true,
+    "minifyWXML": true,
+    "minifyWXSS": true
   },
   "compileType": "miniprogram",
   "libVersion": "3.17.1",
