@@ -139,20 +139,30 @@ async function weather() {
   }
 }
 
+const REGIONS = {
+  zhifu: { tide: 'zhifu', wave: 'east', label: '芝罘近岸海域' },
+  muping: { tide: 'muping', wave: 'east', label: '牟平近岸海域' },
+  development: { tide: 'development', wave: 'east', label: '开发区近岸海域' },
+  penglai: { tide: 'penglai', wave: 'pengchang', label: '蓬莱近岸海域' },
+  changdaoSouth: { tide: 'changdaoSouth', wave: 'pengchang', label: '长岛南部海域' },
+  changdaoNorth: { tide: 'changdaoNorth', wave: 'pengchang', label: '长岛北部海域' },
+  laizhou: { tide: 'laizhou', wave: 'west', label: '莱州近岸海域' },
+  longkou: { tide: 'longkou', wave: 'west', label: '龙口近岸海域' },
+  haiyang: { tide: 'haiyang', wave: 'south', label: '海阳近岸海域' }
+}
+
 const regionFor = location => {
   const latitude = Number(location && location.latitude)
   const longitude = Number(location && location.longitude)
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 36.4 || latitude > 38.5 || longitude < 119.3 || longitude > 122.2) {
-    return { tide: 'zhifu', wave: 'east', label: '芝罘近岸海域' }
-  }
-  if (latitude >= 37.88) return { tide: 'changdaoSouth', wave: 'pengchang', label: '长岛南部海域' }
-  if (latitude <= 36.9) return { tide: 'haiyang', wave: 'south', label: '海阳近岸海域' }
-  if (longitude <= 120.25) return { tide: 'laizhou', wave: 'west', label: '莱州近岸海域' }
-  if (longitude <= 120.58) return { tide: 'longkou', wave: 'west', label: '龙口近岸海域' }
-  if (longitude <= 120.95) return { tide: 'penglai', wave: 'pengchang', label: '蓬莱近岸海域' }
-  if (longitude <= 121.32) return { tide: 'development', wave: 'east', label: '开发区近岸海域' }
-  if (longitude >= 121.58) return { tide: 'muping', wave: 'east', label: '牟平近岸海域' }
-  return { tide: 'zhifu', wave: 'east', label: '芝罘近岸海域' }
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 36.4 || latitude > 38.5 || longitude < 119.3 || longitude > 122.2) return REGIONS.zhifu
+  if (latitude >= 37.88) return REGIONS.changdaoSouth
+  if (latitude <= 36.9) return REGIONS.haiyang
+  if (longitude <= 120.25) return REGIONS.laizhou
+  if (longitude <= 120.58) return REGIONS.longkou
+  if (longitude <= 120.95) return REGIONS.penglai
+  if (longitude <= 121.32) return REGIONS.development
+  if (longitude >= 121.58) return REGIONS.muping
+  return REGIONS.zhifu
 }
 
 const plan = (row, wave, met) => {
@@ -178,6 +188,37 @@ const plan = (row, wave, met) => {
   }
 }
 
+const evaluateRegion = (region, ocean, met) => {
+  const row = ocean.tides[region.tide]
+  const wave = ocean.waves[region.wave]
+  if (!row || !row.low.length || !wave) return null
+  const result = plan(row, wave.max, met)
+  const reasons = []
+  if (wave.max >= 1.5) reasons.push('浪高达到' + wave.max + '米')
+  if (met.wind >= 39 || met.gust >= 50) reasons.push('风力或阵风过大')
+  if (met.code >= 95) reasons.push('存在雷暴天气')
+  if (met.visibility !== null && met.visibility < 1000) reasons.push('能见度低于1公里')
+  return {
+    row,
+    wave,
+    result,
+    blocked: reasons.length > 0,
+    reasons,
+    conditions: {
+      dataReady: true,
+      blocked: reasons.length > 0,
+      reasons,
+      regionLabel: region.label,
+      nextLow: result.nextLow,
+      window: result.window,
+      tideScore: result.tideScore,
+      seaWeatherScore: result.seaWeatherScore,
+      weatherLabel: met.temp + '℃ · 风速' + met.wind + 'km/h',
+      waveLabel: '浪高' + wave.min + '—' + wave.max + 'm · ' + wave.direction + '浪'
+    }
+  }
+}
+
 exports.main = async event => {
   const checkedAt = new Date().toISOString()
   const location = event && event.location || { latitude: 37.536, longitude: 121.45 }
@@ -194,9 +235,8 @@ exports.main = async event => {
       }
     }
     const region = regionFor(location)
-    const row = ocean.tides[region.tide]
-    const wave = ocean.waves[region.wave]
-    if (!row || !row.low.length || !wave) {
+    const evaluated = evaluateRegion(region, ocean, met)
+    if (!evaluated) {
       return {
         source: 'official-region-unavailable',
         checkedAt,
@@ -204,25 +244,16 @@ exports.main = async event => {
         conditions: { dataReady: false, blocked: false }
       }
     }
-    const result = plan(row, wave.max, met)
-    const reasons = []
-    if (wave.max >= 1.5) reasons.push('浪高达到' + wave.max + '米')
-    if (met.wind >= 39 || met.gust >= 50) reasons.push('风力或阵风过大')
-    if (met.code >= 95) reasons.push('存在雷暴天气')
-    if (met.visibility !== null && met.visibility < 1000) reasons.push('能见度低于1公里')
-    const blocked = reasons.length > 0
-    const conditions = {
-      dataReady: true,
-      blocked,
-      reasons,
-      regionLabel: region.label,
-      nextLow: result.nextLow,
-      window: result.window,
-      tideScore: result.tideScore,
-      seaWeatherScore: result.seaWeatherScore,
-      weatherLabel: met.temp + '℃ · 风速' + met.wind + 'km/h',
-      waveLabel: '浪高' + wave.min + '—' + wave.max + 'm · ' + wave.direction + '浪'
-    }
+    const regionalConditions = {}
+    Object.keys(REGIONS).forEach(key => {
+      const item = evaluateRegion(REGIONS[key], ocean, met)
+      if (item) regionalConditions[key] = item.conditions
+    })
+    const row = evaluated.row
+    const result = evaluated.result
+    const blocked = evaluated.blocked
+    const reasons = evaluated.reasons
+    const conditions = Object.assign({}, evaluated.conditions, { regions: regionalConditions })
     return {
       source: '烟台官方海洋预报 + Open-Meteo烟台代表点天气',
       checkedAt,
