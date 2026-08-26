@@ -10,11 +10,15 @@
 
   <view class="zone-card card">
     <view class="zone-header"><view><text class="zone-kicker">VERIFIED SHORE GUIDE</text><text class="zone-title">{{spot.verification}}</text></view><view class="compass"><text>N</text><text class="compass-arrow">↑</text><text>E</text></view></view>
+    <view class="position-facts">
+      <view class="position-fact"><text>具体方位</text><text>{{spot.shoreSide}}</text></view>
+      <view class="position-fact"><text>离岸范围</text><text>{{spot.offshoreRange}}</text></view>
+    </view>
     <view class="zone-map">
       <view class="shoreline"><text>岸线</text></view>
-      <view class="zone-water"><view class="zone-strip one"></view><view class="zone-strip two"></view><view class="zone-strip three"></view><text class="water-label">以现场开放边界为准</text></view>
+      <view class="zone-water"><view class="zone-strip one"></view><view class="zone-strip two"></view><view class="zone-strip three"></view><text class="water-label">{{spot.offshoreRange}}</text></view>
       <view class="distance-label start">入口</view>
-      <view class="distance-label end">{{spot.verification}}</view>
+      <view class="distance-label end">目标近岸带</view>
     </view>
     <view class="zone-reason"><text class="reason-icon">✦</text><text>入口：{{spot.entry}}　岸段：{{spot.shoreline}}</text></view>
     <view class="ai-plan-btn" bindtap="askAI"><text>✦</text><text>让 AI 按有效数据说明安全与收获</text><text class="ai-plan-arrow">→</text></view>
@@ -34,6 +38,7 @@
   </view>
 
   <view class="section-title"><text class="title">近14天收获判断</text><text class="link" bindtap="showDisclaimer">置信说明 ⓘ</text></view>
+  <view class="catch-summary card">{{spot.catchForecast}}</view>
   <view class="species-grid">
       <view wx:for="{{spot.species}}" wx:key="name" class="species-card card">
       <view class="species-mark {{item.tone}}">{{item.mark}}</view>
@@ -45,7 +50,7 @@
   <view class="safety-card">
     <view class="safety-title"><text>安全提醒</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
     <view class="safety-text">撤离：{{spot.retreat}}</view>
-    <view class="safety-foot">POI坐标核验不代表岸段开放或采捕许可，现场管理提示优先。</view>
+    <view class="safety-foot">方位和离岸距离为保守参考带，并非测绘边界；潮位变化、岸段封闭或现场警戒时，以现场管理提示优先。</view>
   </view>
 
   <view class="detail-actions">
