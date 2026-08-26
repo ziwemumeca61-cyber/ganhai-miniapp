@@ -85,6 +85,46 @@
 .compass text:last-child { grid-column: 2; grid-row: 2; }
 .compass-arrow { grid-column: 1; grid-row: 2; color: #e69742; font-size: 30rpx; }
 
+
+.position-facts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 20rpx;
+}
+
+.position-fact {
+  padding: 17rpx;
+  border-radius: 16rpx;
+  background: #eaf7f6;
+}
+
+.position-fact text {
+  display: block;
+}
+
+.position-fact text:first-child {
+  color: #6c999b;
+  font-size: 18rpx;
+}
+
+.position-fact text:last-child {
+  margin-top: 7rpx;
+  color: #174b52;
+  font-size: 23rpx;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.catch-summary {
+  margin-bottom: 16rpx;
+  padding: 20rpx 22rpx;
+  border-left: 7rpx solid #e29243;
+  color: #416b70;
+  font-size: 22rpx;
+  line-height: 1.65;
+}
+
 .zone-map {
   position: relative;
   height: 220rpx;
