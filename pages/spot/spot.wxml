@@ -5,19 +5,19 @@
       <view class="detail-title">{{spot.name}}</view>
       <view class="detail-meta"><text>距当前位置约 {{spot.distance}} km</text><text class="meta-dot">·</text><text>{{spot.update}}</text></view>
     </view>
-    <view class="detail-score"><text>{{spot.score}}</text><text>赶海指数</text></view>
+    <view class="detail-score"><text>{{spot.safetyScore === null ? '--' : spot.safetyScore}}</text><text>海况安全分</text></view>
   </view>
 
   <view class="zone-card card">
-    <view class="zone-header"><view><text class="zone-kicker">TODAY'S BEST ZONE</text><text class="zone-title">{{spot.zone.side}}</text></view><view class="compass"><text>N</text><text class="compass-arrow">↑</text><text>E</text></view></view>
+    <view class="zone-header"><view><text class="zone-kicker">VERIFIED SHORE GUIDE</text><text class="zone-title">{{spot.verification}}</text></view><view class="compass"><text>N</text><text class="compass-arrow">↑</text><text>E</text></view></view>
     <view class="zone-map">
       <view class="shoreline"><text>岸线</text></view>
-      <view class="zone-water"><view class="zone-strip one"></view><view class="zone-strip two"></view><view class="zone-strip three"></view><text class="water-label">退潮后优先观察区域</text></view>
+      <view class="zone-water"><view class="zone-strip one"></view><view class="zone-strip two"></view><view class="zone-strip three"></view><text class="water-label">以现场开放边界为准</text></view>
       <view class="distance-label start">入口</view>
-      <view class="distance-label end">{{spot.zone.distance}}</view>
+      <view class="distance-label end">{{spot.verification}}</view>
     </view>
-    <view class="zone-reason"><text class="reason-icon">✦</text><text>{{spot.zone.reason}}</text></view>
-    <view class="ai-plan-btn" bindtap="askAI"><text>✦</text><text>让 AI 按今天的潮汐给我安排路线</text><text class="ai-plan-arrow">→</text></view>
+    <view class="zone-reason"><text class="reason-icon">✦</text><text>入口：{{spot.entry}}　岸段：{{spot.shoreline}}</text></view>
+    <view class="ai-plan-btn" bindtap="askAI"><text>✦</text><text>让 AI 按有效数据说明安全与收获</text><text class="ai-plan-arrow">→</text></view>
   </view>
 
   <view class="section-title"><text class="title">今天的潮汐节奏</text><text class="link">{{spot.tideRange}}</text></view>
@@ -33,7 +33,7 @@
     </view>
   </view>
 
-  <view class="section-title"><text class="title">预计能遇到什么</text><text class="link" bindtap="showDisclaimer">演示说明 ⓘ</text></view>
+  <view class="section-title"><text class="title">近14天收获判断</text><text class="link" bindtap="showDisclaimer">置信说明 ⓘ</text></view>
   <view class="species-grid">
       <view wx:for="{{spot.species}}" wx:key="name" class="species-card card">
       <view class="species-mark {{item.tone}}">{{item.mark}}</view>
@@ -44,8 +44,8 @@
 
   <view class="safety-card">
     <view class="safety-title"><text>安全提醒</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
-    <view class="safety-text">{{spot.safety}}</view>
-    <view class="safety-foot">涨潮和天气变化可能快于预报，出发前请再次确认现场情况。</view>
+    <view class="safety-text">撤离：{{spot.retreat}}</view>
+    <view class="safety-foot">POI坐标核验不代表岸段开放或采捕许可，现场管理提示优先。</view>
   </view>
 
   <view class="detail-actions">
