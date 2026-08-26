@@ -71,7 +71,7 @@
   </scroll-view>
 
   <view class="section-title">
-    <text class="title">地点核验清单</text>
+    <text class="title">附近综合推荐</text>
     <text class="link" bindtap="goMap">查看地图 →</text>
   </view>
 
@@ -87,7 +87,7 @@
       </view>
       <view class="spot-bottom">
         <view class="spot-tags"><text wx:for="{{item.tags}}" wx:key="*this" class="mini-tag">{{item}}</text></view>
-        <view class="spot-direction"><text class="direction-arrow">↗</text>{{item.zone.side}}</view>
+        <view class="spot-direction"><text class="direction-arrow">↗</text>{{item.shoreSide}} · {{item.offshoreRange}}</view>
       </view>
     </view>
   </block>
