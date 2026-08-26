@@ -4,12 +4,13 @@ const db = cloud.database()
 const command = db.command
 
 const spots = {
-  'first-bath': { latitude: 37.536201, longitude: 121.419746 },
-  'moon-bay': { latitude: 37.534699, longitude: 121.432033 },
-  dongpaotai: { latitude: 37.534003, longitude: 121.436541 },
-  'second-bath': { latitude: 37.520652, longitude: 121.449064 },
-  fenbei: { latitude: 37.443113, longitude: 121.550549 },
-  'yangmadao-front': { latitude: 37.474548, longitude: 121.644837 }
+  'first-bath': { name: '第一海水浴场', latitude: 37.536201, longitude: 121.419746 },
+  'moon-bay': { name: '月亮湾', latitude: 37.534699, longitude: 121.432033 },
+  dongpaotai: { name: '东炮台—海韵广场', latitude: 37.534003, longitude: 121.436541 },
+  'second-bath': { name: '第二海水浴场', latitude: 37.520652, longitude: 121.449064 },
+  fenbei: { name: '粉贝沙滩', latitude: 37.443113, longitude: 121.550549 },
+  'yangmadao-front': { name: '养马岛前海', latitude: 37.474548, longitude: 121.644837 },
+  'haiyang-wanmi': { name: '海阳凤城万米海滩', latitude: 36.69538, longitude: 121.225813 }
 }
 const weights = { '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
 const radians = value => value * Math.PI / 180
@@ -19,6 +20,11 @@ const distanceMeters = (from, to) => {
   const dLng = radians(to.longitude - from.longitude)
   const a = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(radians(from.latitude)) * Math.cos(radians(to.latitude))
   return Math.round(radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)))
+}
+const isoTime = value => {
+  if (!value) return ''
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString()
 }
 
 async function summaries() {
@@ -35,6 +41,25 @@ async function summaries() {
   } catch (error) {
     console.warn('field_reports unavailable', error)
     return { ok: true, summaries: [], needsCollection: true }
+  }
+}
+
+async function feed() {
+  try {
+    const result = await db.collection('field_reports').where({ verified: true }).orderBy('createdAt', 'desc').limit(30).get()
+    const items = (result.data || []).map(item => ({
+      id: item._id,
+      spotId: item.spotId,
+      spotName: item.spotName || spots[item.spotId] && spots[item.spotId].name || '已核验地点',
+      species: String(item.species || '其他').slice(0, 12),
+      amount: weights[item.amount] ? item.amount : '已记录',
+      note: String(item.note || '').slice(0, 120),
+      createdAt: isoTime(item.createdAt)
+    }))
+    return { ok: true, items }
+  } catch (error) {
+    console.warn('field_reports feed unavailable', error)
+    return { ok: true, items: [], needsCollection: true }
   }
 }
 
@@ -55,6 +80,7 @@ async function submit(event) {
     if (duplicate.data && duplicate.data.length) return { ok: false, error: '10分钟内请勿重复上报' }
     const result = await db.collection('field_reports').add({ data: {
       spotId: event.spotId,
+      spotName: target.name,
       species: String(event.species || '其他').slice(0, 12),
       amount: event.amount,
       amountWeight: weights[event.amount],
@@ -72,4 +98,8 @@ async function submit(event) {
   }
 }
 
-exports.main = event => event && event.action === 'submit' ? submit(event) : summaries()
+exports.main = event => {
+  if (event && event.action === 'submit') return submit(event)
+  if (event && event.action === 'feed') return feed()
+  return summaries()
+}
