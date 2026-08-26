@@ -18,6 +18,171 @@
   line-height: 1.6;
 }
 
+.circle-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.publish-btn {
+  flex-shrink: 0;
+  margin-top: 8rpx;
+  padding: 16rpx 20rpx;
+  border-radius: 999rpx;
+  background: #087f88;
+  color: #fff;
+  font-size: 21rpx;
+  font-weight: 700;
+  box-shadow: 0 10rpx 24rpx rgba(8, 127, 136, .18);
+}
+
+.circle-rule {
+  margin-top: 26rpx;
+  padding: 18rpx 20rpx;
+  border: 1rpx solid #dcebea;
+  border-radius: 18rpx;
+  background: #f1f8f7;
+  color: #6e898e;
+  font-size: 19rpx;
+  line-height: 1.55;
+}
+
+.feed-list {
+  margin-top: 24rpx;
+}
+
+.feed-card {
+  margin-bottom: 20rpx;
+  padding: 24rpx;
+}
+
+.feed-top {
+  display: flex;
+  align-items: center;
+}
+
+.feed-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68rpx;
+  height: 68rpx;
+  margin-right: 15rpx;
+  border-radius: 22rpx;
+  background: linear-gradient(145deg, #dff5f1, #fff0d7);
+  color: #087f88;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.feed-meta {
+  min-width: 0;
+}
+
+.feed-spot {
+  overflow: hidden;
+  color: #315a62;
+  font-size: 24rpx;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-time {
+  margin-top: 6rpx;
+  color: #98aaae;
+  font-size: 17rpx;
+}
+
+.verified-badge {
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 7rpx 11rpx;
+  border-radius: 99rpx;
+  background: #e8f7f2;
+  color: #258a78;
+  font-size: 16rpx;
+  font-weight: 700;
+}
+
+.feed-result {
+  display: flex;
+  align-items: center;
+  margin-top: 22rpx;
+}
+
+.species-name {
+  color: #173f48;
+  font-size: 31rpx;
+  font-weight: 800;
+}
+
+.amount-tag {
+  margin-left: 13rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 99rpx;
+  background: #fff2dc;
+  color: #bc7936;
+  font-size: 18rpx;
+  font-weight: 700;
+}
+
+.feed-note {
+  margin-top: 14rpx;
+  color: #617d83;
+  font-size: 22rpx;
+  line-height: 1.65;
+}
+
+.feed-state {
+  padding: 100rpx 0;
+  color: #91a5aa;
+  font-size: 22rpx;
+  text-align: center;
+}
+
+.empty-card {
+  margin-top: 32rpx;
+  padding: 58rpx 30rpx;
+  text-align: center;
+}
+
+.empty-icon {
+  color: #54a79d;
+  font-size: 60rpx;
+}
+
+.empty-title {
+  margin-top: 12rpx;
+  color: #315a62;
+  font-size: 28rpx;
+  font-weight: 800;
+}
+
+.empty-text {
+  margin-top: 12rpx;
+  color: #8ba0a5;
+  font-size: 20rpx;
+  line-height: 1.6;
+}
+
+.empty-action {
+  display: inline-block;
+  margin-top: 24rpx;
+  padding: 14rpx 28rpx;
+  border-radius: 99rpx;
+  background: #e8f6f3;
+  color: #087f88;
+  font-size: 21rpx;
+  font-weight: 700;
+}
+
+.back-link {
+  display: inline-block;
+  color: #278c8c;
+  font-size: 22rpx;
+}
+
 .report-card {
   margin-top: 30rpx;
   padding: 26rpx 22rpx;
@@ -176,13 +341,6 @@
   margin-top: 14rpx;
 }
 
-.submitted-note {
-  margin-top: 20rpx;
-  color: #4b9c91;
-  font-size: 20rpx;
-  text-align: center;
-}
-
 .location-check {
   display: flex;
   align-items: center;
@@ -192,7 +350,12 @@
   border-radius: 22rpx;
   background: #fff6e8;
 }
-.location-check.ready { border-color: #a8d9cf; background: #eaf8f4; }
+
+.location-check.ready {
+  border-color: #a8d9cf;
+  background: #eaf8f4;
+}
+
 .location-check-icon {
   display: flex;
   align-items: center;
@@ -205,11 +368,31 @@
   color: #fff;
   font-size: 34rpx;
 }
-.location-check.ready .location-check-icon { background: #36a08e; }
-.location-check-title, .location-check-text { display: block; }
-.location-check-title { color: #8d632f; font-size: 24rpx; font-weight: 700; }
-.location-check.ready .location-check-title { color: #187a70; }
-.location-check-text { margin-top: 6rpx; color: #9f8769; font-size: 19rpx; }
+
+.location-check.ready .location-check-icon {
+  background: #36a08e;
+}
+
+.location-check-title, .location-check-text {
+  display: block;
+}
+
+.location-check-title {
+  color: #8d632f;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.location-check.ready .location-check-title {
+  color: #187a70;
+}
+
+.location-check-text {
+  margin-top: 6rpx;
+  color: #9f8769;
+  font-size: 19rpx;
+}
+
 .spot-picker {
   display: flex;
   justify-content: space-between;
@@ -220,5 +403,14 @@
   color: #315e64;
   font-size: 23rpx;
 }
-.form-hint { margin-top: 10rpx; color: #91a5a7; font-size: 18rpx; line-height: 1.5; }
-.submit-btn.disabled { opacity: .58; }
+
+.form-hint {
+  margin-top: 10rpx;
+  color: #91a5a7;
+  font-size: 18rpx;
+  line-height: 1.5;
+}
+
+.submit-btn.disabled {
+  opacity: .58;
+}
