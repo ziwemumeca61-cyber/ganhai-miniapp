@@ -55,9 +55,10 @@ function getSpots(location, conditions, reports) {
     const km = distanceKm(location, item)
     const localConditions = conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions
     const verified = item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验'
-    const safetyScore = verified ? safetyScoreWithConditions(item.terrainSafety, localConditions) : null
+    const scoreable = Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
+    const safetyScore = scoreable ? safetyScoreWithConditions(item.terrainSafety, localConditions) : null
     const harvest = harvestAssessment(item, reports)
-    const recommended = safetyScore !== null && safetyScore >= 80 && harvest.score !== null
+    const recommended = verified && safetyScore !== null && safetyScore >= 80 && harvest.score !== null
     const lowTide = localConditions && localConditions.nextLow ? localConditions.nextLow : '--:--'
     const window = localConditions && localConditions.window ? localConditions.window : '暂不可计算'
     return Object.assign({}, item, {
@@ -68,7 +69,7 @@ function getSpots(location, conditions, reports) {
       confidence: harvest.confidence,
       sampleCount: harvest.count,
       recommended,
-      level: recommended ? '达到推荐门槛' : safetyScore !== null ? scoreLabel(safetyScore) : item.verification,
+      level: recommended ? '达到推荐门槛' : safetyScore !== null ? scoreLabel(safetyScore) + (verified ? '' : ' · 地点待核验') : item.verification,
       distance: km === null ? null : Number(km.toFixed(1)),
       distanceLabel: formatDistance(km),
       tide: lowTide === '--:--' ? '潮汐待更新' : '下一低潮 ' + lowTide,
