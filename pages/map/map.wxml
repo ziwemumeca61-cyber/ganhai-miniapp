@@ -13,7 +13,7 @@
 
   <view class="map-sheet">
     <view class="sheet-handle"></view>
-    <view class="sheet-title-row"><text class="sheet-title">附近赶海点</text><text class="sheet-hint">按安全与距离排序</text></view>
+    <view class="sheet-title-row"><text class="sheet-title">附近赶海点</text><text class="sheet-hint">距离35% · 安全60% · 核验5%</text></view>
     <scroll-view class="spot-scroll" scroll-x="true" enable-flex="true">
       <view wx:for="{{spots}}" wx:key="id" class="map-spot-card {{selected.id === item.id ? 'active' : ''}}" data-id="{{item.id}}" bindtap="selectSpot">
         <view class="map-score"><text>{{item.safetyScore === null ? '--' : item.safetyScore}}</text><text>安全</text></view>
@@ -27,7 +27,8 @@
       <view class="preview-main">
         <view class="preview-kicker">{{selected.verification}} · {{selected.type}}</view>
         <view class="preview-title">{{selected.name}}</view>
-        <view class="preview-desc">收获{{selected.harvestLabel}}（{{selected.confidence}}置信/{{selected.sampleCount}}条）</view>
+        <view class="preview-desc">{{selected.shoreSide}} · {{selected.offshoreRange}}</view>
+        <view class="preview-desc">{{selected.catchForecast}}</view>
       </view>
       <view class="preview-actions">
         <view class="preview-btn light" bindtap="navigateToSpot">导航</view>
