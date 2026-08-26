@@ -22,7 +22,8 @@ const spots = [
   { id: 'fenbei', name: '粉贝沙滩', area: '高新区', latitude: 37.443113, longitude: 121.550549, type: '沙滩', harvest: '贝壳 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '滨海东路靠近海河西路一侧公共入口', shoreline: '辛安河特大桥西北侧公开沙滩岸段', direction: '远离河口急流、桥墩和施工围挡', retreat: '水位开始持续上升时返回道路侧' },
   { id: 'yangmadao-front', name: '养马岛前海', area: '牟平区', latitude: 37.474548, longitude: 121.644837, type: '沙滩', harvest: '海螺 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '养马岛海水浴场公共入口', shoreline: '海水浴场近岸公开区域，以现场管理边界为准', direction: '只在平缓近岸活动，不向离岸礁石延伸', retreat: '预留30分钟返回入口，天气突变立即结束' },
   { id: 'yangmadao-back', name: '养马岛后海', area: '牟平区', latitude: 37.486, longitude: 121.606, type: '礁石', harvest: '海螺 · 螃蟹', verification: '候选点待实地', terrainSafety: 15, ...pendingGuide },
-  { id: 'haiyang-wanmi', name: '海阳凤城万米海滩', area: '海阳市', latitude: 36.69538, longitude: 121.225813, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '凤城万米海滩公共入口', shoreline: '海景路沿线公开海水浴场岸段，以现场开放区域为限', direction: '仅在平缓沙滩和现场允许区域活动', retreat: '回涨前返回海景路一侧，浴场关闭或警戒时立即结束' }
+  { id: 'haiyang-wanmi', name: '海阳凤城万米海滩', area: '海阳市', latitude: 36.69538, longitude: 121.225813, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '凤城万米海滩公共入口', shoreline: '海景路沿线公开海水浴场岸段，以现场开放区域为限', direction: '仅在平缓沙滩和现场允许区域活动', retreat: '回涨前返回海景路一侧，浴场关闭或警戒时立即结束' },
+  { id: 'longkou-donghai-west', name: '东海度假区西部夏季海水浴场', area: '龙口市', latitude: 37.715873, longitude: 120.411911, type: '沙滩', harvest: '贝类 · 小鱼', verification: 'POI坐标已核验', terrainSafety: 18, entry: '海涛二路6号浴场入口', shoreline: '海润豪景对面海水浴场岸段，以现场开放区域为限', direction: '从海涛二路一侧进入，仅在平缓近岸和现场允许区域活动', retreat: '回涨前返回海涛二路一侧，浴场关闭或出现警戒时立即结束' }
 ]
 
 function harvestAssessment(spot, reports) {
