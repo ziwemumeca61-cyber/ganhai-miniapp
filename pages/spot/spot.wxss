@@ -349,8 +349,8 @@
   font-weight: 500;
 }
 
-.risk-低 { background: #e7f6ee; color: #3a956f; }
-.risk-中 { background: #fff0d4; color: #be7b33; }
+.risk-low { background: #e7f6ee; color: #3a956f; }
+.risk-medium { background: #fff0d4; color: #be7b33; }
 
 .safety-text {
   margin-top: 13rpx;
