@@ -1,34 +1,71 @@
 <view class="page-shell report-page">
-  <view class="report-head">
-    <view class="eyebrow">VERIFIED FIELD REPORT</view>
-    <view class="report-title">把今天的海，告诉下一位赶海人</view>
-    <view class="report-subtitle">只有现场定位通过的战果才会进入近14天收获判断。</view>
-  </view>
+  <block wx:if="{{mode === 'feed'}}">
+    <view class="circle-head">
+      <view>
+        <view class="eyebrow">GANHAI COMMUNITY</view>
+        <view class="report-title">赶海圈</view>
+        <view class="report-subtitle">看看附近赶海人的真实现场分享。</view>
+      </view>
+      <view class="publish-btn" bindtap="openPublish">＋ 发布战果</view>
+    </view>
 
-  <view class="location-check {{onsiteReady ? 'ready' : ''}}" bindtap="verifyLocation">
-    <view class="location-check-icon">⊙</view>
-    <view><text class="location-check-title">{{onsiteReady ? '现场定位已通过' : '先获取现场定位'}}</text><text class="location-check-text">{{locationText}}</text></view>
-  </view>
+    <view class="circle-rule">只展示通过现场定位校验的动态；不公开用户身份、精确坐标和定位距离。</view>
 
-  <view class="report-card card">
-    <view class="form-label">赶海地点</view>
-    <picker mode="selector" range="{{spotOptions}}" range-key="name" value="{{spotIndex}}" bindchange="chooseSpot">
-      <view class="spot-picker"><text>{{spotName}}</text><text>⌄</text></view>
-    </picker>
-    <view class="form-hint">仅开放POI坐标已核验地点，提交时校验距地点不超过2公里。</view>
+    <view wx:if="{{feedLoading && !feedLoaded}}" class="feed-state">正在读取赶海圈…</view>
+    <view wx:elif="{{feedLoaded && !feed.length}}" class="empty-card card">
+      <view class="empty-icon">≈</view>
+      <view class="empty-title">还没有现场分享</view>
+      <view class="empty-text">第一条真实动态，等你在已核验地点现场发布。</view>
+      <view class="empty-action" bindtap="openPublish">发布第一条</view>
+    </view>
 
-    <view class="form-label amount-label">今天遇到的品类</view>
-    <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
+    <view class="feed-list" wx:else>
+      <view wx:for="{{feed}}" wx:key="id" class="feed-card card">
+        <view class="feed-top">
+          <view class="feed-avatar">{{item.species.slice(0, 1)}}</view>
+          <view class="feed-meta">
+            <view class="feed-spot">{{item.spotName}}</view>
+            <view class="feed-time">{{item.timeLabel}} · 现场定位已核验</view>
+          </view>
+          <view class="verified-badge">可信现场</view>
+        </view>
+        <view class="feed-result"><text class="species-name">{{item.species}}</text><text class="amount-tag">{{item.amount}}</text></view>
+        <view class="feed-note">{{item.noteDisplay}}</view>
+      </view>
+    </view>
+  </block>
 
-    <view class="form-label amount-label">大概收获</view>
-    <view class="amount-row"><view wx:for="{{amounts}}" wx:key="*this" class="amount-choice {{amount === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseAmount"><text class="amount-dot"></text><text>{{item}}</text></view></view>
+  <block wx:else>
+    <view class="publish-head">
+      <view class="back-link" bindtap="backToFeed">‹ 返回赶海圈</view>
+      <view class="report-title">分享今天的现场</view>
+      <view class="report-subtitle">只有现场定位通过的战果才会进入动态和近14天收获判断。</view>
+    </view>
 
-    <view class="note-head"><view class="form-label note-label">补充一句（可选）</view><view class="ai-draft-btn {{aiGenerating ? 'disabled' : ''}}" bindtap="generateDraft">✦ {{aiGenerating ? '整理中' : 'AI帮我整理'}}</view></view>
-    <textarea class="note-input" maxlength="120" placeholder="例如：公共入口附近沙滩，回涨前已撤离" value="{{note}}" bindinput="onNote"></textarea>
-    <view class="photo-line" bindtap="addPhoto"><view class="photo-icon">＋</view><view><text class="photo-title">选择现场照片</text><text class="photo-tip">{{imageCount ? '已选择 ' + imageCount + ' 张；本版暂不上传云端' : '照片上传将在后续版本启用'}}</text></view><text class="photo-arrow">›</text></view>
-  </view>
+    <view class="location-check {{onsiteReady ? 'ready' : ''}}" bindtap="verifyLocation">
+      <view class="location-check-icon">⊙</view>
+      <view><text class="location-check-title">{{onsiteReady ? '现场定位已通过' : '先获取现场定位'}}</text><text class="location-check-text">{{locationText}}</text></view>
+    </view>
 
-  <view class="privacy-note">精确位置只在微信云环境内用于现场验真，不发送给第三方天气服务。</view>
-  <view class="primary-btn submit-btn {{!onsiteReady || submitting ? 'disabled' : ''}}" bindtap="submit">{{submitting ? '正在保存…' : onsiteReady ? '提交现场战果' : '先定位再上报'}}</view>
-  <view wx:if="{{submitted}}" class="submitted-note">已通过现场定位校验并进入近14天样本。</view>
+    <view class="report-card card">
+      <view class="form-label">赶海地点</view>
+      <picker mode="selector" range="{{spotOptions}}" range-key="name" value="{{spotIndex}}" bindchange="chooseSpot">
+        <view class="spot-picker"><text>{{spotName}}</text><text>⌄</text></view>
+      </picker>
+      <view class="form-hint">仅开放POI坐标已核验地点，提交时校验距地点不超过2公里。</view>
+
+      <view class="form-label amount-label">今天遇到的品类</view>
+      <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
+
+      <view class="form-label amount-label">大概收获</view>
+      <view class="amount-row"><view wx:for="{{amounts}}" wx:key="*this" class="amount-choice {{amount === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseAmount"><text class="amount-dot"></text><text>{{item}}</text></view></view>
+
+      <view class="note-head"><view class="form-label note-label">补充一句（可选）</view><view class="ai-draft-btn {{aiGenerating ? 'disabled' : ''}}" bindtap="generateDraft">✦ {{aiGenerating ? '整理中' : 'AI帮我整理'}}</view></view>
+      <textarea class="note-input" maxlength="120" placeholder="例如：公共入口附近沙滩，回涨前已撤离" value="{{note}}" bindinput="onNote"></textarea>
+      <view class="photo-line" bindtap="addPhoto"><view class="photo-icon">＋</view><view><text class="photo-title">选择现场照片</text><text class="photo-tip">{{imageCount ? '已选择 ' + imageCount + ' 张；本版暂不上传云端' : '照片上传将在后续版本启用'}}</text></view><text class="photo-arrow">›</text></view>
+    </view>
+
+    <view class="privacy-note">精确位置只在微信云环境内用于现场验真，不进入赶海圈，也不发送给第三方天气服务。</view>
+    <view class="primary-btn submit-btn {{!onsiteReady || submitting ? 'disabled' : ''}}" bindtap="submit">{{submitting ? '正在发布…' : onsiteReady ? '发布到赶海圈' : '先定位再发布'}}</view>
+  </block>
 </view>
