@@ -7,7 +7,7 @@ Page({
     api.getSpotDetail(options.id).then(data => {
       const spot = data.spot
       const summary = data.summary || {}
-      const windowParts = String(summary.bestTime || '').split('—')
+      const windowParts = String(spot && spot.bestWindow || summary.bestTime || '').split('—')
       const nextLow = spot && spot.tide && spot.tide.match(/\d{2}:\d{2}/)
       const forecast = []
       if (windowParts[0] && /^\d{2}:\d{2}$/.test(windowParts[0])) forecast.push({ time: windowParts[0], label: '观察开始', type: 'arrive', height: '' })
