@@ -23,8 +23,8 @@
         <view class="hero-subtitle">{{summary.subtitle}}</view>
       </view>
       <view class="score-ring">
-        <view class="score-number">{{summary.score}}</view>
-        <view class="score-label">赶海指数</view>
+        <view class="score-number">{{summary.safetyScore === null ? '--' : summary.safetyScore}}</view>
+        <view class="score-label">海况安全分</view>
       </view>
     </view>
     <view class="hero-line"></view>
@@ -43,7 +43,7 @@
       </view>
     </view>
     <view class="best-window">
-      <view><text class="window-label">推荐下海窗口</text><text class="window-value">{{summary.bestTime}}</text></view>
+      <view><text class="window-label">观察窗口</text><text class="window-value">{{summary.bestTime}}</text></view>
       <view class="window-warning">{{summary.safety}}</view>
     </view>
   </view>
@@ -59,19 +59,19 @@
     <view class="quick-action" bindtap="locate"><view class="action-icon locate-icon">⊙</view><text>刷新定位</text></view>
   </view>
 
-  <view class="section-title forecast-title"><text class="title">未来5天走势</text><text class="link">看潮汐趋势</text></view>
+  <view class="section-title forecast-title"><text class="title">今日有效数据</text><text class="link">数据闸门</text></view>
   <scroll-view class="forecast-scroll" scroll-x="true">
     <view wx:for="{{calendar}}" wx:key="date" class="forecast-card {{item.color}}">
       <view class="forecast-date">{{item.date}}</view>
       <view class="forecast-week">{{item.weekday}}</view>
-      <view class="forecast-score"><text>{{item.score}}</text><text>分</text></view>
+      <view class="forecast-score"><text>{{item.score === null ? '--' : item.score}}</text><text>安全</text></view>
       <view class="forecast-label">{{item.label}}</view>
       <view class="forecast-tide">低潮 {{item.tide}}</view>
     </view>
   </scroll-view>
 
   <view class="section-title">
-    <text class="title">今天去哪儿</text>
+    <text class="title">地点核验清单</text>
     <text class="link" bindtap="goMap">查看地图 →</text>
   </view>
 
@@ -83,7 +83,7 @@
           <view class="spot-name-row"><text class="spot-name">{{item.name}}</text><text class="spot-area">{{item.area}}</text></view>
           <view class="spot-meta"><text>{{item.distanceLabel}}</text><text class="meta-dot">·</text><text>{{item.tideRange}}</text><text class="meta-dot">·</text><text>{{item.update}}</text></view>
         </view>
-        <view class="spot-score"><text>{{item.score}}</text><text>分</text></view>
+        <view class="spot-score"><text>{{item.safetyScore === null ? '--' : item.safetyScore}}</text><text>安全</text></view>
       </view>
       <view class="spot-bottom">
         <view class="spot-tags"><text wx:for="{{item.tags}}" wx:key="*this" class="mini-tag">{{item}}</text></view>
@@ -92,5 +92,5 @@
     </view>
   </block>
 
-  <view class="data-notice">数据更新时间：{{summary.updatedAt}}　·　预测结果仅作出行参考</view>
+  <view class="data-notice">数据更新时间：{{summary.updatedAt}}　·　POI核验不等于岸段开放许可</view>
 </view>
