@@ -25,11 +25,26 @@
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
-      { "pagePath": "pages/index/index", "text": "今日" },
-      { "pagePath": "pages/map/map", "text": "附近" },
-      { "pagePath": "pages/ai/ai", "text": "问赶海" },
-      { "pagePath": "pages/report/report", "text": "上报" }
+      {
+        "pagePath": "pages/index/index",
+        "text": "今日"
+      },
+      {
+        "pagePath": "pages/map/map",
+        "text": "附近"
+      },
+      {
+        "pagePath": "pages/ai/ai",
+        "text": "问赶海"
+      },
+      {
+        "pagePath": "pages/report/report",
+        "text": "上报"
+      }
     ]
   },
-  "sitemapLocation": "sitemap.json"
+  "sitemapLocation": "sitemap.json",
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
 }
