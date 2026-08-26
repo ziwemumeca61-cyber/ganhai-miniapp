@@ -52,7 +52,7 @@
       <picker mode="selector" range="{{spotOptions}}" range-key="name" value="{{spotIndex}}" bindchange="chooseSpot">
         <view class="spot-picker"><text>{{spotName}}</text><text>⌄</text></view>
       </picker>
-      <view class="form-hint">仅开放POI坐标已核验地点，提交时校验距地点不超过2公里。</view>
+      <view class="form-hint">开放已核验POI和附近导航点，提交时校验距参考点不超过2公里。</view>
 
       <view class="form-label amount-label">今天遇到的品类</view>
       <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
