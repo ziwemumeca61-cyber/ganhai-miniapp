@@ -10,7 +10,8 @@ const spots = {
   'second-bath': { name: '第二海水浴场', latitude: 37.520652, longitude: 121.449064 },
   fenbei: { name: '粉贝沙滩', latitude: 37.443113, longitude: 121.550549 },
   'yangmadao-front': { name: '养马岛前海', latitude: 37.474548, longitude: 121.644837 },
-  'haiyang-wanmi': { name: '海阳凤城万米海滩', latitude: 36.69538, longitude: 121.225813 }
+  'haiyang-wanmi': { name: '海阳凤城万米海滩', latitude: 36.69538, longitude: 121.225813 },
+  'longkou-donghai-west': { name: '东海度假区西部夏季海水浴场', latitude: 37.715873, longitude: 120.411911 }
 }
 const weights = { '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
 const radians = value => value * Math.PI / 180
