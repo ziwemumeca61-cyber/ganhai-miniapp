@@ -40,7 +40,7 @@ Page({
         width: 30,
         height: 30,
         callout: {
-          content: `${spot.score}分 · ${spot.name}`,
+          content: `${spot.safetyScore === null ? '待海况' : spot.safetyScore + '安全分'} · ${spot.name}`,
           color: '#15525b',
           fontSize: 11,
           borderRadius: 12,
