@@ -108,21 +108,20 @@ const articleLinks = (html, base) => {
 }
 
 async function official() {
-  const pages = await Promise.allSettled([get(HOME), get(INDEX), get(LIST_API)])
   const links = []
-  pages.forEach((result, index) => {
-    if (result.status !== 'fulfilled') return
-    let html = result.value
-    if (index === 2) {
-      try {
-        const payload = JSON.parse(result.value)
-        html = payload && payload.data && payload.data.html || ''
-      } catch (error) {
-        console.warn('official list api invalid', error.message)
-      }
-    }
-    links.push(...articleLinks(html, index === 1 ? INDEX : HOME))
-  })
+  try {
+    const payload = JSON.parse(await get(LIST_API))
+    const html = payload && payload.data && payload.data.html || ''
+    links.push(...articleLinks(html, HOME))
+  } catch (error) {
+    console.warn('official list api unavailable', error.message)
+  }
+  if (!links.length) {
+    const pages = await Promise.allSettled([get(HOME), get(INDEX)])
+    pages.forEach((result, index) => {
+      if (result.status === 'fulfilled') links.push(...articleLinks(result.value, index === 0 ? HOME : INDEX))
+    })
+  }
   const unique = Array.from(new Set(links))
   for (const url of unique.slice(0, 30)) {
     try {
