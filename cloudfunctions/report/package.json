@@ -1,0 +1,9 @@
+{
+  "name": "report",
+  "version": "1.0.0",
+  "description": "赶海现场战果定位验真",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}
