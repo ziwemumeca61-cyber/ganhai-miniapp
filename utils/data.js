@@ -8,6 +8,25 @@ const pendingGuide = {
   retreat: '待实地核验，暂不提供撤离建议'
 }
 
+const positionGuides = {
+  jinshatan: { shoreSide: '瞭望台北侧近岸沙滩', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  jiahekou: { shoreSide: '古贝广场北侧、夹河口外侧岸段', offshoreRange: '固定岸线外约0—100米泥沙滩' },
+  'first-bath': { shoreSide: '公共入口东侧裸露礁石与近岸沙滩', offshoreRange: '固定岸线外约0—50米' },
+  jinhaiwan: { shoreSide: '旅游大世界临海一侧近岸', offshoreRange: '固定岸线外约0—60米' },
+  'moon-bay': { shoreSide: '月亮老人东侧可见礁石岸段', offshoreRange: '固定岸线外约0—40米' },
+  dongpaotai: { shoreSide: '东炮台东侧往海韵广场方向', offshoreRange: '固定岸线外约0—40米' },
+  'second-bath': { shoreSide: '入口北侧礁石、南侧沙滩', offshoreRange: '固定岸线外约0—60米' },
+  yanda: { shoreSide: '导航点东侧、烟台大学临海一侧', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  tianyuewan: { shoreSide: '酒店临海东侧公开沙滩方向', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  beizhai: { shoreSide: '北寨临海一侧、辛安河口外侧', offshoreRange: '固定岸线外约0—60米' },
+  fenbei: { shoreSide: '辛安河特大桥西北侧公开沙滩', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'yangmadao-front': { shoreSide: '养马岛海水浴场南侧近岸', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'yangmadao-back': { shoreSide: '养马岛北侧后海礁石岸段', offshoreRange: '固定岸线外约0—40米' },
+  'haiyang-wanmi': { shoreSide: '海景路南侧公开海滩', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
+  'longkou-donghai-west': { shoreSide: '海涛二路西侧海水浴场近岸', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
+  'penglai-bath-nearby': { shoreSide: '仙境路北侧海滩方向', offshoreRange: '固定岸线外约0—80米退潮裸露区' }
+}
+
 const spots = [
   { id: 'jinshatan', name: '金沙滩海滨公园（瞭望台附近）', area: '黄渤海新区', latitude: 37.573856, longitude: 121.260837, type: '沙滩', harvest: '蛤蜊 · 海肠', verification: '附近导航点已核验', terrainSafety: 18, entry: '金沙滩海滨公园瞭望台附近导航点', shoreline: '瞭望台周边海岸，实际下滩口以现场公开通道为准', direction: '到达后先确认开放通道，不穿越绿化、护栏或管理围挡', retreat: '回涨前返回海滨路一侧，现场关闭或警戒时立即结束' },
   { id: 'jiahekou', name: '夹河口—古贝广场', area: '芝罘区', latitude: 37.5672, longitude: 121.3345, type: '泥沙滩', harvest: '蛤蜊 · 海蛎子', verification: '公开资料待复核', terrainSafety: 14, ...pendingGuide },
@@ -61,6 +80,12 @@ function getSpots(location, conditions, reports) {
     const recommended = verified && safetyScore !== null && safetyScore >= 80 && harvest.score !== null
     const lowTide = localConditions && localConditions.nextLow ? localConditions.nextLow : '--:--'
     const window = localConditions && localConditions.window ? localConditions.window : '暂不可计算'
+    const guide = positionGuides[item.id] || { shoreSide: item.shoreline, offshoreRange: '仅限退潮后裸露的近岸区域' }
+    const distanceScore = km === null ? 50 : Math.max(0, 100 - km * 2)
+    const rankScore = Math.round(Number(safetyScore || 0) * 0.6 + distanceScore * 0.35 + (verified ? 5 : 0))
+    const catchForecast = harvest.count < 5
+      ? '目标海货：' + item.harvest + '；现场样本不足，暂不预测数量'
+      : '预测海货：' + item.harvest + '；近14天趋势' + harvest.label + '（' + harvest.confidence + '置信）'
     return Object.assign({}, item, {
       score: safetyScore,
       safetyScore,
@@ -68,6 +93,11 @@ function getSpots(location, conditions, reports) {
       harvestLabel: harvest.label,
       confidence: harvest.confidence,
       sampleCount: harvest.count,
+      catchForecast,
+      shoreSide: guide.shoreSide,
+      offshoreRange: guide.offshoreRange,
+      rankScore,
+      rankReason: (km === null ? '未定位' : formatDistance(km)) + ' · 安全' + (safetyScore === null ? '待更新' : safetyScore + '分') + ' · 距离与安全综合排序',
       recommended,
       level: recommended ? '达到推荐门槛' : safetyScore !== null ? scoreLabel(safetyScore) + (verified ? '' : ' · 地点待核验') : item.verification,
       distance: km === null ? null : Number(km.toFixed(1)),
@@ -85,9 +115,8 @@ function getSpots(location, conditions, reports) {
       note: '收获判断只使用近14天现场定位通过的样本'
     })
   }).sort((a, b) => {
+    if (a.rankScore !== b.rankScore) return b.rankScore - a.rankScore
     if (a.recommended !== b.recommended) return a.recommended ? -1 : 1
-    if ((a.safetyScore !== null) !== (b.safetyScore !== null)) return a.safetyScore !== null ? -1 : 1
-    if (a.safetyScore !== b.safetyScore) return Number(b.safetyScore || 0) - Number(a.safetyScore || 0)
     return Number(a.distance || 999) - Number(b.distance || 999)
   })
 }
