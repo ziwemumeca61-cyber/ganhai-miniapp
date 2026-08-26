@@ -43,7 +43,7 @@
   </view>
 
   <view class="safety-card">
-    <view class="safety-title"><text>安全提醒</text><text class="risk risk-{{spot.risk}}">{{spot.risk}}风险</text></view>
+    <view class="safety-title"><text>安全提醒</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
     <view class="safety-text">{{spot.safety}}</view>
     <view class="safety-foot">涨潮和天气变化可能快于预报，出发前请再次确认现场情况。</view>
   </view>
