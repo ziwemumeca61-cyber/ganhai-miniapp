@@ -11,8 +11,8 @@ function callCloud(name, data) {
 }
 
 function callLiveForecast(location) {
-  if (!location) return Promise.resolve(null)
-  return callCloud('forecast', { location: { latitude: location.latitude, longitude: location.longitude } })
+  const point = location || { latitude: 37.536, longitude: 121.45 }
+  return callCloud('forecast', { location: { latitude: point.latitude, longitude: point.longitude } })
 }
 
 function getReportSummaries() {
@@ -23,7 +23,11 @@ function getHomeData(location) {
   const fallback = getTodaySummary()
   return Promise.all([callLiveForecast(location), getReportSummaries()]).then(([live, reports]) => {
     if (!live || !live.conditions || !live.conditions.dataReady) {
-      return { source: live && live.source || 'waiting-live-data', summary: fallback, spots: getSpots(location, fallback.conditions, reports) }
+      const subtitle = !live
+        ? '云端海况服务未连接，请检查 forecast 云函数'
+        : live.reason || '当天官方海况尚未通过校验'
+      const summary = Object.assign({}, fallback, { subtitle })
+      return { source: live && live.source || 'waiting-live-data', summary, spots: getSpots(location, summary.conditions, reports) }
     }
     const conditions = live.conditions
     const summary = Object.assign({}, fallback, live.summary || {}, {
@@ -31,7 +35,7 @@ function getHomeData(location) {
       safetyScore: live.summary && live.summary.safetyScore,
       label: safetyLevel(conditions),
       safetyLevel: safetyLevel(conditions),
-      subtitle: conditions.blocked ? (conditions.reasons || []).join('、') : '官方潮汐与实时天气已通过时效校验',
+      subtitle: conditions.blocked ? (conditions.reasons || []).join('、') : (conditions.regionLabel || '烟台近岸') + '官方潮汐与实时天气已通过校验',
       dataReady: true,
       conditions,
       updatedAt: new Date().toLocaleString()
