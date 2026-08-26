@@ -3,7 +3,7 @@
   <view class="map-gradient"></view>
   <view class="map-header">
     <view class="map-title"><text>烟台沿海</text><text class="map-subtitle">{{spots.length}} 个地点 · 实时数据闸门</text></view>
-    <view class="map-locate" bindtap="locate"><text>⊙</text><text>{{locating ? '定位中' : located ? '已定位' : '定位'}}</text></view>
+    <view class="map-locate" bindtap="locate"><text>⊙</text><text>{{locating ? '定位中' : located ? '已定位 ' + locationAccuracy + 'm' : '定位'}}</text></view>
   </view>
   <view class="map-legend">
     <view><text class="legend-dot hot"></text>安全可评估</view>
