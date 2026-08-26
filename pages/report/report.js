@@ -2,7 +2,7 @@ const { spots } = require('../../utils/data')
 const { getLocation } = require('../../utils/location')
 const ai = require('../../services/ai')
 
-const verifiedSpots = spots.filter(item => item.verification === 'POI坐标已核验')
+const verifiedSpots = spots.filter(item => item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验')
 
 function relativeTime(value) {
   const time = new Date(value).getTime()
