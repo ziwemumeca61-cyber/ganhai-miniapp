@@ -15,5 +15,6 @@
   "libVersion": "3.17.1",
   "appid": "wxba5ed8acf2d84bca",
   "projectname": "ganhai-miniapp",
-  "condition": {}
+  "condition": {},
+  "cloudfunctionRoot": "cloudfunctions/"
 }
