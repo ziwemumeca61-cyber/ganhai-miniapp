@@ -15,7 +15,7 @@ Page({
     this.loadData()
     getLocation((err, location) => {
       if (!err) {
-        this.setData({ locationLabel: '烟台 · 已定位', locationStatus: '已按当前位置排序' })
+        this.setData({ locationLabel: '烟台 · 已定位', locationStatus: `已按当前位置排序 · 精度约${Math.round(location.accuracy || 0)}m` })
         this.loadData()
       } else {
         this.setData({ locationLabel: '烟台 · 定位未授权', locationStatus: '可继续浏览烟台赶海点' })
@@ -37,13 +37,15 @@ Page({
   },
 
   locate() {
-    getLocation((err) => {
+    this.setData({ locationStatus: '正在获取高精度位置…' })
+    getLocation((err, location) => {
       if (err) {
         this.setData({ locationLabel: '烟台 · 定位未授权', locationStatus: '仍可浏览烟台演示数据' })
         wx.showToast({ title: '未获取定位，先展示烟台数据', icon: 'none' })
         return
       }
-      this.setData({ locationLabel: '烟台 · 已定位', locationStatus: '已按当前位置排序' })
+      this.setData({ locationLabel: '烟台 · 已定位', locationStatus: `已按当前位置排序 · 精度约${Math.round(location.accuracy || 0)}m` })
+      this.loadData()
       wx.showToast({ title: '定位成功', icon: 'success' })
     })
   },
