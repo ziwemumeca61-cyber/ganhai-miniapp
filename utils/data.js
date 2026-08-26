@@ -37,15 +37,29 @@ function harvestAssessment(spot, reports) {
   return { count, label, score: Math.round(Math.min(100, average / 4 * 100)), confidence: count < 50 ? '中' : '高' }
 }
 
+function regionKey(item) {
+  const latitude = Number(item.latitude)
+  const longitude = Number(item.longitude)
+  if (latitude >= 37.88) return 'changdaoSouth'
+  if (latitude <= 36.9) return 'haiyang'
+  if (longitude <= 120.25) return 'laizhou'
+  if (longitude <= 120.58) return 'longkou'
+  if (longitude <= 120.95) return 'penglai'
+  if (longitude <= 121.32) return 'development'
+  if (longitude >= 121.58) return 'muping'
+  return 'zhifu'
+}
+
 function getSpots(location, conditions, reports) {
   return spots.map(item => {
     const km = distanceKm(location, item)
+    const localConditions = conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions
     const verified = item.verification === 'POI坐标已核验'
-    const safetyScore = verified ? safetyScoreWithConditions(item.terrainSafety, conditions) : null
+    const safetyScore = verified ? safetyScoreWithConditions(item.terrainSafety, localConditions) : null
     const harvest = harvestAssessment(item, reports)
     const recommended = safetyScore !== null && safetyScore >= 80 && harvest.score !== null
-    const lowTide = conditions && conditions.nextLow ? conditions.nextLow : '--:--'
-    const window = conditions && conditions.window ? conditions.window : '暂不可计算'
+    const lowTide = localConditions && localConditions.nextLow ? localConditions.nextLow : '--:--'
+    const window = localConditions && localConditions.window ? localConditions.window : '暂不可计算'
     return Object.assign({}, item, {
       score: safetyScore,
       safetyScore,
@@ -59,9 +73,9 @@ function getSpots(location, conditions, reports) {
       distanceLabel: formatDistance(km),
       tide: lowTide === '--:--' ? '潮汐待更新' : '下一低潮 ' + lowTide,
       bestWindow: window,
-      weather: conditions && conditions.weatherLabel || '天气待更新',
-      tideRange: conditions && conditions.waveLabel || '海况待更新',
-      update: conditions && conditions.dataReady ? '实时海况' : '等待实时数据',
+      weather: localConditions && localConditions.weatherLabel || '天气待更新',
+      tideRange: localConditions && localConditions.waveLabel || '海况待更新',
+      update: localConditions && localConditions.dataReady ? '实时海况' : '等待实时数据',
       tags: [item.type, item.verification, item.harvest],
       species: item.harvest.split(' · ').slice(0, 3).map((name, index) => ({ name, mark: name.slice(0, 1), value: harvest.label, tone: index === 0 ? 'warm' : 'cool' })),
       zone: { side: item.direction, distance: item.shoreline, reason: item.entry },
