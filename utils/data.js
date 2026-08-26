@@ -16,8 +16,8 @@ const spots = [
   { id: 'moon-bay', name: '月亮湾', area: '芝罘区', latitude: 37.534699, longitude: 121.432033, type: '礁石', harvest: '螃蟹 · 海螺', verification: 'POI坐标已核验', terrainSafety: 15, entry: '滨海北路月亮湾公共步行入口', shoreline: '月亮老人周边可见礁石岸段，以护栏和现场提示为界', direction: '仅观察退潮后裸露礁石，不翻越护栏', retreat: '发现回涨或浪花越过外缘立即撤离' },
   { id: 'dongpaotai', name: '东炮台—海韵广场', area: '芝罘区', latitude: 37.534003, longitude: 121.436541, type: '礁石', harvest: '海螺 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 15, entry: '东炮台公园公共入口', shoreline: '东炮台东侧至海韵广场方向的开放岸段', direction: '避开海豹湾生态保育和任何封闭区域', retreat: '涨潮前30分钟离开低位礁石' },
   { id: 'second-bath', name: '第二海水浴场', area: '莱山区', latitude: 37.520652, longitude: 121.449064, type: '礁石 + 沙滩', harvest: '螃蟹 · 海螺', verification: 'POI坐标已核验', terrainSafety: 15, entry: '第二海水浴场公共入口', shoreline: '北侧礁石、南侧沙滩的现场开放岸段', direction: '礁石与沙滩分开判断，不跨越管理隔离', retreat: '回涨前返回主沙滩或硬质步道' },
-  { id: 'yanda', name: '烟大海水浴场', area: '莱山区', latitude: 37.4862, longitude: 121.4625, type: '沙滩', harvest: '蛤蜊 · 蛏子', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
-  { id: 'tianyuewan', name: '天越湾—东灯塔', area: '高新区', latitude: 37.46145, longitude: 121.488068, type: '沙滩', harvest: '小螃蟹 · 海螺', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
+  { id: 'yanda', name: '烟大海水浴场（附近）', area: '莱山区', latitude: 37.4862, longitude: 121.4625, type: '沙滩', harvest: '蛤蜊 · 蛏子', verification: '附近导航点已核验', terrainSafety: 18, entry: '滨海中路与黄海路交叉口东100米附近导航点', shoreline: '烟台大学东侧海岸，实际下滩口以现场公开通道为准', direction: '到达后沿滨海公共步道寻找开放入口，不跨越护栏或管理边界', retreat: '回涨前返回滨海中路一侧，遇封闭或警戒立即停止' },
+  { id: 'tianyuewan', name: '天越湾酒店附近沙滩', area: '莱山区', latitude: 37.46145, longitude: 121.488068, type: '沙滩', harvest: '小螃蟹 · 海螺', verification: '附近导航点已核验', terrainSafety: 18, entry: '滨海中路1599号天越湾酒店附近导航点', shoreline: '天越湾酒店临海一侧沙滩，实际下滩口以现场公开通道为准', direction: '到达后寻找公开步道，不进入酒店专属、收费或封闭区域', retreat: '回涨前返回滨海中路一侧，现场关闭或警戒时立即结束' },
   { id: 'beizhai', name: '北寨—辛安河口', area: '高新区', latitude: 37.4418, longitude: 121.5385, type: '礁石 + 沙滩', harvest: '海螺 · 小螃蟹', verification: '候选点待实地', terrainSafety: 15, ...pendingGuide },
   { id: 'fenbei', name: '粉贝沙滩', area: '高新区', latitude: 37.443113, longitude: 121.550549, type: '沙滩', harvest: '贝壳 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '滨海东路靠近海河西路一侧公共入口', shoreline: '辛安河特大桥西北侧公开沙滩岸段', direction: '远离河口急流、桥墩和施工围挡', retreat: '水位开始持续上升时返回道路侧' },
   { id: 'yangmadao-front', name: '养马岛前海', area: '牟平区', latitude: 37.474548, longitude: 121.644837, type: '沙滩', harvest: '海螺 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '养马岛海水浴场公共入口', shoreline: '海水浴场近岸公开区域，以现场管理边界为准', direction: '只在平缓近岸活动，不向离岸礁石延伸', retreat: '预留30分钟返回入口，天气突变立即结束' },
@@ -54,7 +54,7 @@ function getSpots(location, conditions, reports) {
   return spots.map(item => {
     const km = distanceKm(location, item)
     const localConditions = conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions
-    const verified = item.verification === 'POI坐标已核验'
+    const verified = item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验'
     const safetyScore = verified ? safetyScoreWithConditions(item.terrainSafety, localConditions) : null
     const harvest = harvestAssessment(item, reports)
     const recommended = safetyScore !== null && safetyScore >= 80 && harvest.score !== null
