@@ -30,8 +30,18 @@ Page({
   loadData(stopRefresh) {
     this.setData({ loading: true })
     const app = getApp()
-    Promise.all([api.getHomeData(app.globalData.location), api.getForecastCalendar()]).then(([data, calendar]) => {
-      this.setData({ summary: data.summary, spots: data.spots, calendar, loading: false })
+    api.getHomeData(app.globalData.location).then(data => {
+      this.setData({
+        summary: data.summary,
+        spots: data.spots,
+        calendar: api.getForecastCalendar(data.summary),
+        loading: false
+      })
+    }).catch(error => {
+      console.error('home data failed', error)
+      this.setData({ loading: false })
+      wx.showToast({ title: '实时数据加载失败', icon: 'none' })
+    }).finally(() => {
       if (stopRefresh) wx.stopPullDownRefresh()
     })
   },
