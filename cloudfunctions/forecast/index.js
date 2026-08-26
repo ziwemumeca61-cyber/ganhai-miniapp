@@ -4,6 +4,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const HOME = 'https://hyj.yantai.gov.cn/'
 const INDEX = 'https://hyj.yantai.gov.cn/col/col1638/index.html'
+const LIST_API = 'https://hyj.yantai.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?parseType=bulidstatic&webId=52&tplSetId=MsPkwMwlYqOxItyOUpt7Y&pageType=column&tagId=%E5%88%97%E8%A1%A8%E6%96%B0%E9%97%BB&editType=null&pageId=1638'
 
 const get = url => new Promise((resolve, reject) => {
   https.get(url, { headers: { 'User-Agent': 'GanhaiRadar/1.1' } }, res => {
@@ -107,13 +108,23 @@ const articleLinks = (html, base) => {
 }
 
 async function official() {
-  const pages = await Promise.allSettled([get(HOME), get(INDEX)])
+  const pages = await Promise.allSettled([get(HOME), get(INDEX), get(LIST_API)])
   const links = []
   pages.forEach((result, index) => {
-    if (result.status === 'fulfilled') links.push(...articleLinks(result.value, index === 0 ? HOME : INDEX))
+    if (result.status !== 'fulfilled') return
+    let html = result.value
+    if (index === 2) {
+      try {
+        const payload = JSON.parse(result.value)
+        html = payload && payload.data && payload.data.html || ''
+      } catch (error) {
+        console.warn('official list api invalid', error.message)
+      }
+    }
+    links.push(...articleLinks(html, index === 1 ? INDEX : HOME))
   })
   const unique = Array.from(new Set(links))
-  for (const url of unique.slice(0, 20)) {
+  for (const url of unique.slice(0, 30)) {
     try {
       const parsed = parseArticle(await get(url), url)
       if (parsed && parsed.date === chinaDate()) return parsed
@@ -121,6 +132,7 @@ async function official() {
       console.warn('official article skipped', error.message)
     }
   }
+  console.warn('official daily forecast not found', { date: chinaDate(), linkCount: unique.length })
   return null
 }
 
