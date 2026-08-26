@@ -182,3 +182,43 @@
   font-size: 20rpx;
   text-align: center;
 }
+
+.location-check {
+  display: flex;
+  align-items: center;
+  margin-top: 26rpx;
+  padding: 22rpx;
+  border: 1rpx solid #efd2aa;
+  border-radius: 22rpx;
+  background: #fff6e8;
+}
+.location-check.ready { border-color: #a8d9cf; background: #eaf8f4; }
+.location-check-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64rpx;
+  height: 64rpx;
+  margin-right: 16rpx;
+  border-radius: 20rpx;
+  background: #e7a252;
+  color: #fff;
+  font-size: 34rpx;
+}
+.location-check.ready .location-check-icon { background: #36a08e; }
+.location-check-title, .location-check-text { display: block; }
+.location-check-title { color: #8d632f; font-size: 24rpx; font-weight: 700; }
+.location-check.ready .location-check-title { color: #187a70; }
+.location-check-text { margin-top: 6rpx; color: #9f8769; font-size: 19rpx; }
+.spot-picker {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16rpx;
+  padding: 18rpx;
+  border-radius: 16rpx;
+  background: #f1f8f6;
+  color: #315e64;
+  font-size: 23rpx;
+}
+.form-hint { margin-top: 10rpx; color: #91a5a7; font-size: 18rpx; line-height: 1.5; }
+.submit-btn.disabled { opacity: .58; }
