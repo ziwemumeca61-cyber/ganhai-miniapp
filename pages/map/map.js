@@ -9,11 +9,21 @@ Page({
     markers: [],
     spots: [],
     selected: {},
-    located: false
+    located: false,
+    locating: false
   },
 
   onLoad() {
-    this.loadMapData()
+    this.setData({ locating: true })
+    getLocation((err, location) => {
+      if (err) {
+        this.setData({ locating: false })
+        this.loadMapData()
+        return
+      }
+      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 12, located: true, locating: false })
+      this.loadMapData(location)
+    })
   },
 
   loadMapData(location) {
@@ -42,12 +52,15 @@ Page({
   },
 
   locate() {
+    if (this.data.locating) return
+    this.setData({ locating: true })
     getLocation((err, location) => {
       if (err) {
+        this.setData({ locating: false })
         wx.showToast({ title: '未授权定位，继续浏览烟台', icon: 'none' })
         return
       }
-      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 12, located: true })
+      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 12, located: true, locating: false })
       this.loadMapData(location)
       wx.showToast({ title: '已定位到你附近', icon: 'success' })
     })
