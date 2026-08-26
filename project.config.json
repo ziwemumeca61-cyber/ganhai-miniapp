@@ -12,8 +12,8 @@
     "lazyloadPlaceholderEnable": false
   },
   "compileType": "miniprogram",
-  "libVersion": "3.8.8",
-  "appid": "touristappid",
+  "libVersion": "3.17.1",
+  "appid": "wxba5ed8acf2d84bca",
   "projectname": "ganhai-miniapp",
   "condition": {}
 }
