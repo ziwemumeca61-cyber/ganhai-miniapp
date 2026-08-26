@@ -10,7 +10,8 @@ Page({
     spots: [],
     selected: {},
     located: false,
-    locating: false
+    locating: false,
+    locationAccuracy: null
   },
 
   onLoad() {
@@ -21,7 +22,7 @@ Page({
         this.loadMapData()
         return
       }
-      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 12, located: true, locating: false })
+      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 14, located: true, locating: false, locationAccuracy: Math.round(location.accuracy || 0) })
       this.loadMapData(location)
     })
   },
@@ -60,9 +61,9 @@ Page({
         wx.showToast({ title: '未授权定位，继续浏览烟台', icon: 'none' })
         return
       }
-      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 12, located: true, locating: false })
+      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 14, located: true, locating: false, locationAccuracy: Math.round(location.accuracy || 0) })
       this.loadMapData(location)
-      wx.showToast({ title: '已定位到你附近', icon: 'success' })
+      wx.showToast({ title: '定位精度约' + Math.round(location.accuracy || 0) + '米', icon: 'none' })
     })
   },
 
