@@ -14,11 +14,6 @@
     "backgroundTextStyle": "light",
     "enablePullDownRefresh": true
   },
-  "permission": {
-    "scope.userLocation": {
-      "desc": "用于推荐附近赶海点和规划安全路线"
-    }
-  },
   "tabBar": {
     "color": "#82959d",
     "selectedColor": "#087f88",
@@ -44,8 +39,5 @@
     ]
   },
   "sitemapLocation": "sitemap.json",
-  "requiredPrivateInfos": [
-    "getLocation"
-  ],
   "lazyCodeLoading": "requiredComponents"
 }
