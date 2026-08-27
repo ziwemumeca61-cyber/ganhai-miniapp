@@ -56,7 +56,7 @@
   <view class="quick-actions">
     <view class="quick-action" bindtap="goMap"><view class="action-icon map-icon">⌁</view><text>附近赶海点</text></view>
     <view class="quick-action" bindtap="goAi"><view class="action-icon ai-icon">✦</view><text>问AI怎么去</text></view>
-    <view class="quick-action" bindtap="locate"><view class="action-icon locate-icon">⊙</view><text>位置说明</text></view>
+    <view class="quick-action" bindtap="locate"><view class="action-icon locate-icon">⊙</view><text>刷新定位</text></view>
   </view>
 
   <view class="section-title forecast-title"><text class="title">今日有效数据</text><text class="link">数据闸门</text></view>
@@ -71,7 +71,7 @@
   </scroll-view>
 
   <view class="section-title">
-    <text class="title">烟台沿海推荐</text>
+    <text class="title">附近综合推荐</text>
     <text class="link" bindtap="goMap">查看地图 →</text>
   </view>
 
