@@ -1,3 +1,4 @@
+const { getLocation } = require('../../utils/location')
 const api = require('../../services/api')
 
 Page({
@@ -14,7 +15,16 @@ Page({
   },
 
   onLoad() {
-    this.loadMapData()
+    this.setData({ locating: true })
+    getLocation((err, location) => {
+      if (err) {
+        this.setData({ locating: false })
+        this.loadMapData()
+        return
+      }
+      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 14, located: true, locating: false, locationAccuracy: Math.round(location.accuracy || 0) })
+      this.loadMapData(location)
+    })
   },
 
   loadMapData(location) {
@@ -43,10 +53,17 @@ Page({
   },
 
   locate() {
-    wx.showModal({
-      title: '精准定位暂未启用',
-      content: '当前按烟台沿海默认范围展示。你仍可拖动地图、选择地点并使用微信导航。',
-      showCancel: false
+    if (this.data.locating) return
+    this.setData({ locating: true })
+    getLocation((err, location) => {
+      if (err) {
+        this.setData({ locating: false })
+        wx.showToast({ title: '未授权定位，继续浏览烟台', icon: 'none' })
+        return
+      }
+      this.setData({ latitude: location.latitude, longitude: location.longitude, scale: 14, located: true, locating: false, locationAccuracy: Math.round(location.accuracy || 0) })
+      this.loadMapData(location)
+      wx.showToast({ title: '定位精度约' + Math.round(location.accuracy || 0) + '米', icon: 'none' })
     })
   },
 
