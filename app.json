@@ -42,7 +42,7 @@
   "lazyCodeLoading": "requiredComponents",
   "permission": {
     "scope.userLocation": {
-      "desc": "用于按当前位置推荐附近赶海点、计算距离并校验现场分享"
+      "desc": "用于在设备端计算与赶海地点的距离、推荐附近地点和显示地图位置"
     }
   },
   "requiredPrivateInfos": [
