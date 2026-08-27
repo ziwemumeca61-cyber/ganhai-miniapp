@@ -1,3 +1,4 @@
+const { getLocation } = require('../../utils/location')
 const api = require('../../services/api')
 
 Page({
@@ -5,13 +6,21 @@ Page({
     summary: {},
     spots: [],
     calendar: [],
-    locationLabel: '烟台 · 默认范围',
-    locationStatus: '未启用精准定位，按烟台沿海展示',
+    locationLabel: '烟台 · 正在定位',
+    locationStatus: '点击获取附近推荐',
     loading: true
   },
 
   onLoad() {
     this.loadData()
+    getLocation((err, location) => {
+      if (!err) {
+        this.setData({ locationLabel: '烟台 · 已定位', locationStatus: `已按当前位置排序 · 精度约${Math.round(location.accuracy || 0)}m` })
+        this.loadData()
+      } else {
+        this.setData({ locationLabel: '烟台 · 定位未授权', locationStatus: '可继续浏览烟台赶海点' })
+      }
+    })
   },
 
   onPullDownRefresh() {
@@ -38,10 +47,16 @@ Page({
   },
 
   locate() {
-    wx.showModal({
-      title: '精准定位暂未启用',
-      content: '当前小程序尚未取得微信精准定位接口权限，现按烟台沿海默认范围展示地点。地图导航和地点海况仍可正常使用。',
-      showCancel: false
+    this.setData({ locationStatus: '正在获取高精度位置…' })
+    getLocation((err, location) => {
+      if (err) {
+        this.setData({ locationLabel: '烟台 · 定位未授权', locationStatus: '仍可浏览烟台赶海点' })
+        wx.showToast({ title: '未获取定位，先展示烟台数据', icon: 'none' })
+        return
+      }
+      this.setData({ locationLabel: '烟台 · 已定位', locationStatus: `已按当前位置排序 · 精度约${Math.round(location.accuracy || 0)}m` })
+      this.loadData()
+      wx.showToast({ title: '定位成功', icon: 'success' })
     })
   },
 
