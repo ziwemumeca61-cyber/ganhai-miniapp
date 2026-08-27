@@ -51,7 +51,7 @@ async function summaries() {
 
 async function feed() {
   try {
-    const result = await db.collection('field_reports').where({ verified: true }).orderBy('createdAt', 'desc').limit(30).get()
+    const result = await db.collection('field_reports').orderBy('createdAt', 'desc').limit(30).get()
     const items = (result.data || []).map(item => ({
       id: item._id,
       spotId: item.spotId,
@@ -59,6 +59,7 @@ async function feed() {
       species: String(item.species || '其他').slice(0, 12),
       amount: weights[item.amount] ? item.amount : '已记录',
       note: String(item.note || '').slice(0, 120),
+      verified: item.verified === true,
       createdAt: isoTime(item.createdAt)
     }))
     return { ok: true, items }
@@ -71,18 +72,12 @@ async function feed() {
 async function submit(event) {
   const context = cloud.getWXContext()
   const target = spots[event.spotId]
-  const latitude = Number(event.latitude)
-  const longitude = Number(event.longitude)
-  const accuracy = Math.round(Number(event.accuracy))
-  if (!target || !Number.isFinite(latitude) || !Number.isFinite(longitude) || !Number.isFinite(accuracy)) return { ok: false, error: '上报内容或现场定位不完整' }
-  if (accuracy < 1 || accuracy > 500) return { ok: false, error: '定位精度超过500米，请到开阔处重新定位' }
-  const distance = distanceMeters({ latitude, longitude }, target)
-  if (distance > 2000) return { ok: false, error: '当前位置距所选地点约' + (distance / 1000).toFixed(1) + '公里，不能计入现场样本' }
+  if (!target) return { ok: false, error: '请选择已收录的赶海地点' }
   if (!weights[event.amount]) return { ok: false, error: '请选择收获量' }
   const now = new Date()
   try {
     const duplicate = await db.collection('field_reports').where({ _openid: context.OPENID, createdAt: command.gte(new Date(Date.now() - 10 * 60000)) }).limit(1).get()
-    if (duplicate.data && duplicate.data.length) return { ok: false, error: '10分钟内请勿重复上报' }
+    if (duplicate.data && duplicate.data.length) return { ok: false, error: '10分钟内请勿重复发布' }
     const result = await db.collection('field_reports').add({ data: {
       spotId: event.spotId,
       spotName: target.name,
@@ -90,13 +85,12 @@ async function submit(event) {
       amount: event.amount,
       amountWeight: weights[event.amount],
       note: String(event.note || '').slice(0, 120),
-      accuracy,
-      distanceM: distance,
-      verified: true,
+      verified: false,
+      verificationLabel: '用户自选地点',
       observedAt: now,
       createdAt: now
     } })
-    return { ok: true, id: result._id, distanceM: distance }
+    return { ok: true, id: result._id, verified: false }
   } catch (error) {
     console.error('report submit failed', error)
     return { ok: false, error: '请先在云数据库创建 field_reports 集合并部署 report 云函数' }
