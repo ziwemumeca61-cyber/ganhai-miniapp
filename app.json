@@ -39,5 +39,13 @@
     ]
   },
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于按当前位置推荐附近赶海点、计算距离并校验现场分享"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
 }
