@@ -1,5 +1,4 @@
 const { spots } = require('../../utils/data')
-const { getLocation } = require('../../utils/location')
 const ai = require('../../services/ai')
 
 const verifiedSpots = spots.filter(item => item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验')
@@ -34,9 +33,8 @@ Page({
     imageCount: 0,
     submitting: false,
     aiGenerating: false,
-    onsiteReady: false,
-    locationText: '提交前必须获取现场定位',
-    location: null
+    onsiteReady: true,
+    locationText: '当前版本不获取精确位置'
   },
 
   onLoad(options) {
@@ -104,18 +102,10 @@ Page({
   onNote(e) { this.setData({ note: e.detail.value }) },
 
   verifyLocation() {
-    this.setData({ locationText: '正在获取高精度位置…', onsiteReady: false })
-    getLocation((error, location) => {
-      if (error) {
-        this.setData({ locationText: '定位失败，请允许位置权限后重试' })
-        return
-      }
-      const accuracy = Math.round(location.accuracy || 9999)
-      this.setData({
-        location,
-        onsiteReady: accuracy <= 500,
-        locationText: accuracy <= 500 ? '现场定位已通过 · 精度约' + accuracy + 'm' : '精度约' + accuracy + 'm，超过500m，请重新定位'
-      })
+    wx.showModal({
+      title: '不获取精确位置',
+      content: '当前版本未启用微信精准定位接口。你选择的地点会标注为“用户自选地点”，不会计入定位核验样本。',
+      showCancel: false
     })
   },
 
@@ -133,27 +123,18 @@ Page({
 
   submit() {
     if (this.data.submitting) return
-    if (!this.data.onsiteReady || !this.data.location) {
-      this.verifyLocation()
-      wx.showToast({ title: '请先完成现场定位', icon: 'none' })
-      return
-    }
     const app = getApp()
     if (!app.globalData.cloudEnabled || !wx.cloud) {
       wx.showToast({ title: '云环境尚未启用', icon: 'none' })
       return
     }
     this.setData({ submitting: true })
-    const location = this.data.location
     wx.cloud.callFunction({ name: 'report', data: {
       action: 'submit',
       spotId: this.data.spotId,
       species: this.data.selectedSpecies,
       amount: this.data.amount,
-      note: this.data.note,
-      latitude: location.latitude,
-      longitude: location.longitude,
-      accuracy: location.accuracy
+      note: this.data.note
     } }).then(response => {
       const result = response && response.result
       if (!result || !result.ok) throw new Error(result && result.error || '保存失败')
@@ -162,9 +143,8 @@ Page({
         submitting: false,
         note: '',
         imageCount: 0,
-        onsiteReady: false,
-        location: null,
-        locationText: '提交前必须获取现场定位'
+        onsiteReady: true,
+        locationText: '当前版本不获取精确位置'
       })
       wx.showToast({ title: '已发布到赶海圈', icon: 'success' })
       this.loadFeed(true)
