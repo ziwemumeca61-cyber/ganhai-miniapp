@@ -17,9 +17,9 @@ function callCloud(name, data) {
   })
 }
 
-function callLiveForecast(location) {
-  const point = location || { latitude: 37.536, longitude: 121.45 }
-  return callCloud('forecast', { location: { latitude: point.latitude, longitude: point.longitude } })
+function callLiveForecast() {
+  // 海况按固定烟台代表点请求；用户精确坐标仅在设备端用于距离排序。
+  return callCloud('forecast', { location: { latitude: 37.536, longitude: 121.45 } })
 }
 
 function getReportSummaries() {
