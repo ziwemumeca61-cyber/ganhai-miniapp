@@ -1,5 +1,6 @@
 const { distanceKm, formatDistance } = require('./geo')
 const { safetyScoreWithConditions, scoreLabel } = require('./predict')
+const { nationalCities, nationalSpots } = require('./national-data')
 
 const cities = [
   { id: 'yantai', name: '烟台', latitude: 37.536, longitude: 121.45, scale: 8 },
@@ -9,7 +10,10 @@ const cities = [
   { id: 'weifang', name: '潍坊', latitude: 37.1, longitude: 119.2, scale: 8 },
   { id: 'dongying', name: '东营', latitude: 37.65, longitude: 119.05, scale: 8 },
   { id: 'binzhou', name: '滨州', latitude: 38.0, longitude: 118.05, scale: 8 }
-]
+].concat(nationalCities).map(item => Object.assign({
+  province: '山东',
+  label: (item.province || '山东') + ' · ' + item.name
+}, item))
 
 const pendingGuide = {
   entry: '待实地核验，暂不提供入口建议',
@@ -143,6 +147,8 @@ spots.push(
   { id: 'binzhou-taoer-estuary', cityId: 'binzhou', cityName: '滨州', name: '套尔河入海口岸段（附近）', area: '沾化区', latitude: 38.05, longitude: 118.25, type: '河口湿地', harvest: '仅观察，不采集', verification: '公开资料待复核', terrainSafety: 7, ...pendingGuide }
 )
 
+spots.push(...nationalSpots)
+
 function harvestAssessment(spot, reports) {
   const item = (reports || []).find(report => report.spotId === spot.id)
   const count = Number(item && item.count || 0)
@@ -196,9 +202,11 @@ function getSpots(location, conditions, reports, cityId) {
     const guide = positionGuides[item.id] || { shoreSide: item.shoreline, offshoreRange: '仅限退潮后裸露的近岸区域' }
     const distanceScore = km === null ? 50 : Math.max(0, 100 - km * 2)
     const rankScore = Math.round(Number(safetyScore || 0) * 0.6 + distanceScore * 0.35 + (verified ? 5 : 0))
-    const catchForecast = harvest.count < 5
-      ? '目标海货：' + item.harvest + '；现场样本不足，暂不预测数量'
-      : '预测海货：' + item.harvest + '；近14天趋势' + harvest.label + '（' + harvest.confidence + '置信）'
+    const catchForecast = item.harvest.indexOf('仅观察') >= 0
+      ? '生态保护或观察岸段：仅观察，不采集'
+      : harvest.count < 5
+        ? '目标海货：' + item.harvest + '；现场样本不足，暂不预测数量'
+        : '预测海货：' + item.harvest + '；近14天趋势' + harvest.label + '（' + harvest.confidence + '置信）'
     return Object.assign({}, item, {
       cityId: item.cityId || 'yantai',
       cityName: item.cityName || '烟台',
