@@ -9,6 +9,8 @@ Page({
     markers: [],
     spots: [],
     selected: {},
+    cityOptions: api.cities,
+    cityIndex: 0,
     cityId: 'yantai',
     cityName: '烟台',
     located: false,
@@ -17,8 +19,41 @@ Page({
   },
 
   onLoad() {
+    const selected = wx.getStorageSync('manual_coastal_city') || getApp().globalData.selectedCityId || 'yantai'
+    const index = Math.max(0, api.cities.findIndex(item => item.id === selected))
+    const city = api.cities[index]
+    this.setData({ cityIndex: index, cityId: city.id, cityName: city.name })
     this.loadMapData()
-    this.locate(true)
+    this.locate(true, Boolean(wx.getStorageSync('manual_coastal_city')))
+  },
+
+  onShow() {
+    const selected = wx.getStorageSync('manual_coastal_city') || getApp().globalData.selectedCityId
+    if (selected && selected !== this.data.cityId) {
+      const index = api.cities.findIndex(item => item.id === selected)
+      if (index >= 0) this.applyCity(index, false)
+    }
+  },
+
+  chooseCity(e) {
+    this.applyCity(Number(e.detail.value), true)
+  },
+
+  applyCity(index, manual) {
+    const city = api.cities[index]
+    if (!city) return
+    if (manual) wx.setStorageSync('manual_coastal_city', city.id)
+    getApp().globalData.selectedCityId = city.id
+    this.setData({
+      cityIndex: index,
+      cityId: city.id,
+      cityName: city.name,
+      latitude: this.data.located ? this.data.latitude : city.latitude,
+      longitude: this.data.located ? this.data.longitude : city.longitude,
+      scale: this.data.located ? this.data.scale : city.scale,
+      selected: {}
+    })
+    this.loadMapData()
   },
 
   loadMapData(location) {
@@ -48,7 +83,7 @@ Page({
     }))
   },
 
-  locate(silent) {
+  locate(silent, preserveCity) {
     if (this.data.locating) return
     this.setData({ locating: true })
     getLocation((error, location) => {
@@ -57,12 +92,16 @@ Page({
         if (!silent) wx.showToast({ title: '定位失败，请检查位置权限', icon: 'none' })
         return
       }
-      const city = api.nearestCity(location)
+      const city = preserveCity
+        ? api.cities.find(item => item.id === this.data.cityId) || api.nearestCity(location)
+        : api.nearestCity(location)
+      const index = Math.max(0, api.cities.findIndex(item => item.id === city.id))
       getApp().globalData.selectedCityId = city.id
       this.setData({
         latitude: location.latitude,
         longitude: location.longitude,
         scale: 10,
+        cityIndex: index,
         cityId: city.id,
         cityName: city.name,
         located: true,
@@ -70,8 +109,13 @@ Page({
         locationAccuracy: Math.round(location.accuracy || 0)
       })
       this.loadMapData(location)
-      if (!silent) wx.showToast({ title: '已按实际距离排序', icon: 'success' })
+      if (!silent) wx.showToast({ title: preserveCity ? '已更新距离' : '已自动识别' + city.name, icon: 'success' })
     })
+  },
+
+  refreshLocation() {
+    wx.removeStorageSync('manual_coastal_city')
+    this.locate(false, false)
   },
 
   markerTap(e) {
