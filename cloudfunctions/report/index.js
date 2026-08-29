@@ -15,7 +15,11 @@ const spots = {
   jinshatan: { name: '金沙滩海滨公园（瞭望台附近）', latitude: 37.573856, longitude: 121.260837 },
   yanda: { name: '烟大海水浴场（附近）', latitude: 37.4862, longitude: 121.4625 },
   tianyuewan: { name: '天越湾酒店附近沙滩', latitude: 37.46145, longitude: 121.488068 },
-  'penglai-bath-nearby': { name: '蓬莱海水浴场（仙境路附近）', latitude: 37.820125, longitude: 120.766869 }
+  'penglai-bath-nearby': { name: '蓬莱海水浴场（仙境路附近）', latitude: 37.820125, longitude: 120.766869 },
+  'qingdao-shilaoren': { name: '石老人海水浴场（附近）', latitude: 36.09231, longitude: 120.47021 },
+  'qingdao-jinshatan': { name: '青岛金沙滩（附近）', latitude: 35.9609, longitude: 120.2417 },
+  'weihai-international': { name: '威海国际海水浴场', latitude: 37.527543, longitude: 122.042078 },
+  'rizhao-wanpingkou': { name: '万平口海滨风景区（3号停车场附近）', latitude: 35.424022, longitude: 119.569466 }
 }
 const weights = { '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
 const radians = value => value * Math.PI / 180
