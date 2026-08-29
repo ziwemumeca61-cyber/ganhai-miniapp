@@ -3,7 +3,7 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 const db = cloud.database()
 const command = db.command
 
-const spots = {
+const spots = Object.assign({
   'first-bath': { name: '第一海水浴场', latitude: 37.536201, longitude: 121.419746 },
   'moon-bay': { name: '月亮湾', latitude: 37.534699, longitude: 121.432033 },
   dongpaotai: { name: '东炮台—海韵广场', latitude: 37.534003, longitude: 121.436541 },
@@ -20,7 +20,7 @@ const spots = {
   'qingdao-jinshatan': { name: '青岛金沙滩（附近）', latitude: 35.9609, longitude: 120.2417 },
   'weihai-international': { name: '威海国际海水浴场', latitude: 37.527543, longitude: 122.042078 },
   'rizhao-wanpingkou': { name: '万平口海滨风景区（3号停车场附近）', latitude: 35.424022, longitude: 119.569466 }
-}
+}, require('./national-spots'))
 const weights = { '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
 const radians = value => value * Math.PI / 180
 const distanceMeters = (from, to) => {
