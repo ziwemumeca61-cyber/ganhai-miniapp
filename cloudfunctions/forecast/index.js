@@ -6,13 +6,23 @@ const HOME = 'https://hyj.yantai.gov.cn/'
 const INDEX = 'https://hyj.yantai.gov.cn/col/col1638/index.html'
 const MODEL_CACHE_TTL = 10 * 60 * 1000
 const modelCache = new Map()
-const SHANGHAI_TIDE_STATION = {
-  id: 'sh-luchaogang',
-  name: '芦潮港',
-  latitude: 30.84,
-  longitude: 121.86,
-  placeId: 21,
-  source: '上海海事局'
+const OFFICIAL_TIDE_STATIONS = {
+  shanghai: {
+    id: 'sh-luchaogang',
+    name: '芦潮港',
+    latitude: 30.84,
+    longitude: 121.86,
+    placeId: 21,
+    source: '上海海事局'
+  },
+  nantong: {
+    id: 'js-qinglonggang',
+    name: '青龙港',
+    latitude: 31.74,
+    longitude: 121.69,
+    placeId: 5,
+    source: '上海海事局潮汐服务'
+  }
 }
 const LIST_API = 'https://hyj.yantai.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?parseType=bulidstatic&webId=52&tplSetId=MsPkwMwlYqOxItyOUpt7Y&pageType=column&tagId=%E5%88%97%E8%A1%A8%E6%96%B0%E9%97%BB&editType=null&pageId=1638'
 
@@ -57,8 +67,7 @@ const chinaDate = () => chinaDateOffset(0)
 
 const chinaTimestamp = (date, time) => Date.parse(date + 'T' + time + ':00+08:00')
 
-async function shanghaiOfficialTide(date) {
-  const station = SHANGHAI_TIDE_STATION
+async function shMsaOfficialTide(station, date) {
   const url = 'https://www.sh.msa.gov.cn/shhsfb/information-aim-navigation/tide-search?PlaceId=' + station.placeId + '&TideDate=' + date
   const text = clean(await get(url))
   const match = text.match(/潮时\(Hrs\)\s*((?:\d{2}:\d{2}\s*){2,4})\s*潮高\(cm\)\s*((?:-?\d+\s*){2,4})/)
@@ -468,8 +477,9 @@ async function nationwideModel(event) {
   const weatherQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_gusts_10m%2Cvisibility'
   const marineQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=2&cell_selection=sea&current=wave_height%2Csea_level_height_msl&hourly=wave_height%2Csea_level_height_msl'
   const cityId = String(event && event.cityId || '')
-  const officialPromise = cityId === 'shanghai'
-    ? Promise.allSettled([shanghaiOfficialTide(chinaDate()), shanghaiOfficialTide(chinaDateOffset(1))]).then(results => {
+  const officialStation = OFFICIAL_TIDE_STATIONS[cityId]
+  const officialPromise = officialStation
+    ? Promise.allSettled([shMsaOfficialTide(officialStation, chinaDate()), shMsaOfficialTide(officialStation, chinaDateOffset(1))]).then(results => {
         const available = results.filter(item => item.status === 'fulfilled').map(item => item.value)
         if (!available.length) return null
         return {
