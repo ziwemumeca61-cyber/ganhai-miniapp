@@ -262,7 +262,12 @@ const evaluateRegion = (region, ocean, met) => {
       tideScore: result.tideScore,
       seaWeatherScore: result.seaWeatherScore,
       weatherLabel: met.temp + '℃ · 风速' + met.wind + 'km/h',
-      waveLabel: '浪高' + wave.min + '—' + wave.max + 'm · ' + wave.direction + '浪'
+      waveLabel: '浪高' + wave.min + '—' + wave.max + 'm · ' + wave.direction + '浪',
+      tideSource: '烟台市海洋发展和渔业局',
+      tideStation: region.label,
+      tideConfidence: '高',
+      stationDistanceKm: null,
+      modelNotice: '潮汐与分海域浪高采用烟台官方每日海洋预报'
     }
   }
 }
