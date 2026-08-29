@@ -6,6 +6,14 @@ const HOME = 'https://hyj.yantai.gov.cn/'
 const INDEX = 'https://hyj.yantai.gov.cn/col/col1638/index.html'
 const MODEL_CACHE_TTL = 10 * 60 * 1000
 const modelCache = new Map()
+const SHANGHAI_TIDE_STATION = {
+  id: 'sh-luchaogang',
+  name: '芦潮港',
+  latitude: 30.84,
+  longitude: 121.86,
+  placeId: 21,
+  source: '上海海事局'
+}
 const LIST_API = 'https://hyj.yantai.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?parseType=bulidstatic&webId=52&tplSetId=MsPkwMwlYqOxItyOUpt7Y&pageType=column&tagId=%E5%88%97%E8%A1%A8%E6%96%B0%E9%97%BB&editType=null&pageId=1638'
 
 const get = url => new Promise((resolve, reject) => {
@@ -19,6 +27,16 @@ const get = url => new Promise((resolve, reject) => {
     res.on('end', () => res.statusCode < 300 ? resolve(body) : reject(new Error('HTTP ' + res.statusCode)))
   }).on('error', reject)
 })
+
+const distanceKm = (from, to) => {
+  const radians = value => value * Math.PI / 180
+  const lat1 = radians(Number(from.latitude))
+  const lat2 = radians(Number(to.latitude))
+  const dLat = lat2 - lat1
+  const dLng = radians(Number(to.longitude) - Number(from.longitude))
+  const value = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2
+  return 6371 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value))
+}
 
 const clean = html => html
   .replace(/<script[\s\S]*?<\/script>/gi, ' ')
@@ -34,6 +52,23 @@ const chinaDate = () => new Intl.DateTimeFormat('en-CA', {
   month: '2-digit',
   day: '2-digit'
 }).format(new Date())
+
+const chinaTimestamp = (date, time) => Date.parse(date + 'T' + time + ':00+08:00')
+
+async function shanghaiOfficialTide(date) {
+  const station = SHANGHAI_TIDE_STATION
+  const url = 'https://www.sh.msa.gov.cn/shhsfb/information-aim-navigation/tide-search?PlaceId=' + station.placeId + '&TideDate=' + date
+  const text = clean(await get(url))
+  const match = text.match(/潮时\(Hrs\)\s*((?:\d{2}:\d{2}\s*){2,4})\s*潮高\(cm\)\s*((?:-?\d+\s*){2,4})/)
+  if (!match) throw new Error('上海海事局潮汐表解析失败')
+  const times = (match[1].match(/\d{2}:\d{2}/g) || [])
+  const heights = (match[2].match(/-?\d+/g) || []).map(Number)
+  if (times.length < 2 || times.length !== heights.length) throw new Error('上海海事局潮汐表数据不完整')
+  const count = times.length >= 4 ? 2 : 1
+  const lows = times.map((time, index) => ({ time, height: heights[index], timestamp: chinaTimestamp(date, time) }))
+    .sort((a, b) => a.height - b.height).slice(0, count).sort((a, b) => a.timestamp - b.timestamp)
+  return { station, url, lows }
+}
 
 const chinaMinutes = () => {
   const parts = new Intl.DateTimeFormat('en-GB', {
@@ -376,8 +411,32 @@ const modelConditions = (metData, marineData, label) => {
     seaWeatherScore,
     weatherLabel: Number(met.temperature_2m).toFixed(1) + '℃ · 风速' + wind.toFixed(1) + 'km/h',
     waveLabel: '浪高约' + wave.toFixed(1) + 'm · 数值模型',
+    tideSource: 'Open-Meteo潮位模型',
+    tideConfidence: '参考',
+    stationDistanceKm: null,
     modelNotice: '潮位约8公里分辨率，仅作赶海时间参考，不用于航海'
   }
+}
+
+const withOfficialTide = (conditions, official, point) => {
+  if (!conditions || !official || !official.lows || !official.lows.length) return conditions
+  const km = distanceKm(point, official.station)
+  if (!Number.isFinite(km) || km > 65) return conditions
+  const now = Date.now()
+  const next = official.lows.find(item => item.timestamp + 30 * 60000 >= now)
+  if (!next) return conditions
+  const delta = Math.round((next.timestamp - now) / 60000)
+  const tideScore = delta >= -30 && delta <= 120 ? 40 : delta <= 240 ? 30 : delta <= 360 ? 18 : 8
+  return Object.assign({}, conditions, {
+    nextLow: next.time,
+    window: formatChinaTime(next.timestamp - 120 * 60000) + '—' + formatChinaTime(next.timestamp + 30 * 60000),
+    tideScore,
+    tideSource: official.source || official.station.source,
+    tideStation: official.station.name,
+    tideConfidence: km <= 30 ? '高' : '中',
+    stationDistanceKm: Number(km.toFixed(1)),
+    modelNotice: '低潮时间采用' + official.station.name + '官方潮汐站；浪高与天气仍采用数值模型'
+  })
 }
 
 async function nationwideModel(event) {
@@ -396,20 +455,31 @@ async function nationwideModel(event) {
   const longitudes = points.map(item => item.longitude.toFixed(6)).join(',')
   const weatherQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_gusts_10m%2Cvisibility'
   const marineQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=2&cell_selection=sea&current=wave_height%2Csea_level_height_msl&hourly=wave_height%2Csea_level_height_msl'
+  const cityId = String(event && event.cityId || '')
+  const officialPromise = cityId === 'shanghai'
+    ? shanghaiOfficialTide(chinaDate()).catch(error => {
+        console.warn('Shanghai official tide unavailable', error.message)
+        return null
+      })
+    : Promise.resolve(null)
   const values = await Promise.all([
     get('https://api.open-meteo.com/v1/forecast?' + weatherQuery),
-    get('https://marine-api.open-meteo.com/v1/marine?' + marineQuery)
+    get('https://marine-api.open-meteo.com/v1/marine?' + marineQuery),
+    officialPromise
   ])
   const weatherData = JSON.parse(values[0])
   const marineData = JSON.parse(values[1])
+  const officialTide = values[2]
   const weatherRows = Array.isArray(weatherData) ? weatherData : [weatherData]
   const marineRows = Array.isArray(marineData) ? marineData : [marineData]
   const conditionsBySpot = {}
   points.forEach((point, index) => {
-    const conditions = modelConditions(weatherRows[index], marineRows[index], point.id === '__summary' ? cityName : cityName)
+    let conditions = modelConditions(weatherRows[index], marineRows[index], cityName)
+    if (officialTide) conditions = withOfficialTide(conditions, { station: officialTide.station, source: officialTide.station.source, lows: officialTide.lows }, point)
     if (conditions && point.id !== '__summary') conditionsBySpot[point.id] = conditions
   })
-  const conditions = modelConditions(weatherRows[0], marineRows[0], cityName)
+  let conditions = modelConditions(weatherRows[0], marineRows[0], cityName)
+  if (officialTide) conditions = withOfficialTide(conditions, { station: officialTide.station, source: officialTide.station.source, lows: officialTide.lows }, points[0])
   if (!conditions) throw new Error('全国海洋模型未返回完整潮位或浪高')
   conditions.spots = conditionsBySpot
   const safetyScore = conditions.blocked ? null : Math.min(100, conditions.tideScore + conditions.seaWeatherScore + 18)
@@ -425,7 +495,7 @@ async function nationwideModel(event) {
       tideRange: conditions.waveLabel,
       safety: conditions.blocked ? conditions.reasons.join('、') : '模型参考；涨潮前至少30分钟开始回撤',
       officialSourceUrl: 'https://open-meteo.com/en/docs/marine-weather-api',
-      coverageLabel: cityName + '近岸数值模型 · 约8公里潮位网格'
+      coverageLabel: conditions.tideStation ? conditions.tideSource + '·' + conditions.tideStation + '站' : cityName + '近岸数值模型 · 约8公里潮位网格'
     },
     conditions
   }
