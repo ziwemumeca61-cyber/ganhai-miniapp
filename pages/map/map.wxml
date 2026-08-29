@@ -2,7 +2,7 @@
   <map class="coast-map" latitude="{{latitude}}" longitude="{{longitude}}" scale="{{scale}}" markers="{{markers}}" show-location="{{located}}" enable-zoom="true" enable-scroll="true" bindmarkertap="markerTap"></map>
   <view class="map-gradient"></view>
   <view class="map-header">
-    <picker mode="selector" range="{{cityOptions}}" range-key="name" value="{{cityIndex}}" bindchange="chooseCity">
+    <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity">
       <view class="map-title"><text>{{cityName}}附近 ⌄</text><text class="map-subtitle">{{spots.length}} 个{{cityName}}沿海地点 · 按实际距离排序</text></view>
     </picker>
     <view class="map-locate" bindtap="refreshLocation"><text>⊙</text><text>{{locating ? '定位中' : located ? '精度' + locationAccuracy + 'm' : '重新定位'}}</text></view>
