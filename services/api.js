@@ -17,9 +17,9 @@ function callCloud(name, data) {
   })
 }
 
-function callLiveForecast(location) {
-  const point = location || { latitude: 37.536, longitude: 121.45 }
-  return callCloud('forecast', { location: { latitude: point.latitude, longitude: point.longitude } })
+function callLiveForecast() {
+  // 用户精确坐标只在设备端用于距离排序，云端海况使用固定烟台代表点。
+  return callCloud('forecast', { location: { latitude: 37.536, longitude: 121.45 } })
 }
 
 function getReportSummaries() {
@@ -31,7 +31,7 @@ function getHomeData(location, cityId) {
   const selectedCity = cities.find(item => item.id === selectedCityId) || cities[0]
   const fallback = getTodaySummary()
   const livePromise = selectedCityId === 'yantai'
-    ? callLiveForecast(location)
+    ? callLiveForecast()
     : Promise.resolve({
         source: 'city-forecast-pending',
         reason: selectedCity.name + '当地官方潮汐与海况待接入',
@@ -84,4 +84,16 @@ function getForecastCalendar(summary) {
   }]
 }
 
-module.exports = { cities, getHomeData, getSpotDetail, getForecastCalendar }
+function nearestCity(location) {
+  const latitude = Number(location && location.latitude)
+  const longitude = Number(location && location.longitude)
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return cities[0]
+  return cities.reduce((best, city) => {
+    const lat = latitude - city.latitude
+    const lng = (longitude - city.longitude) * Math.cos(latitude * Math.PI / 180)
+    const score = lat * lat + lng * lng
+    return !best || score < best.score ? { city, score } : best
+  }, null).city
+}
+
+module.exports = { cities, nearestCity, getHomeData, getSpotDetail, getForecastCalendar }
