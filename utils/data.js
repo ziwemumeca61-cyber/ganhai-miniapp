@@ -186,8 +186,9 @@ function getSpots(location, conditions, reports, cityId) {
   return spots.filter(item => (item.cityId || 'yantai') === selectedCityId).map(item => {
     const km = distanceKm(location, item)
     const itemCityId = item.cityId || 'yantai'
+    const spotConditions = conditions && conditions.spots && conditions.spots[item.id]
     const localConditions = itemCityId === selectedCityId
-      ? (selectedCityId === 'yantai' ? (conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions) : conditions)
+      ? (spotConditions || (selectedCityId === 'yantai' ? (conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions) : conditions))
       : { dataReady: false, blocked: false }
     const verified = item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验'
     const scoreable = Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
