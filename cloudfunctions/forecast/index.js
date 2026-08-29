@@ -4,6 +4,8 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
 
 const HOME = 'https://hyj.yantai.gov.cn/'
 const INDEX = 'https://hyj.yantai.gov.cn/col/col1638/index.html'
+const MODEL_CACHE_TTL = 10 * 60 * 1000
+const modelCache = new Map()
 const LIST_API = 'https://hyj.yantai.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?parseType=bulidstatic&webId=52&tplSetId=MsPkwMwlYqOxItyOUpt7Y&pageType=column&tagId=%E5%88%97%E8%A1%A8%E6%96%B0%E9%97%BB&editType=null&pageId=1638'
 
 const get = url => new Promise((resolve, reject) => {
@@ -379,6 +381,9 @@ const modelConditions = (metData, marineData, label) => {
 }
 
 async function nationwideModel(event) {
+  const cacheKey = String(event && event.cityId || '') + ':' + String(event && event.cityName || '')
+  const cached = modelCache.get(cacheKey)
+  if (cached && Date.now() - cached.time < MODEL_CACHE_TTL) return Object.assign({}, cached.value, { cached: true })
   const cityName = String(event && event.cityName || '当前城市').slice(0, 20)
   const center = event && event.location || { latitude: 37.536, longitude: 121.45 }
   const requested = Array.isArray(event && event.locations) ? event.locations.slice(0, 30) : []
@@ -408,7 +413,7 @@ async function nationwideModel(event) {
   if (!conditions) throw new Error('全国海洋模型未返回完整潮位或浪高')
   conditions.spots = conditionsBySpot
   const safetyScore = conditions.blocked ? null : Math.min(100, conditions.tideScore + conditions.seaWeatherScore + 18)
-  return {
+  const value = {
     source: 'Open-Meteo全球海洋模型 + 全球天气模型',
     checkedAt: new Date().toISOString(),
     summary: {
@@ -424,6 +429,8 @@ async function nationwideModel(event) {
     },
     conditions
   }
+  modelCache.set(cacheKey, { time: Date.now(), value })
+  return value
 }
 
 exports.main = async event => {
