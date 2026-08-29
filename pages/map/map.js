@@ -22,7 +22,7 @@ Page({
     const selected = wx.getStorageSync('manual_coastal_city') || getApp().globalData.selectedCityId || 'yantai'
     const index = Math.max(0, api.cities.findIndex(item => item.id === selected))
     const city = api.cities[index]
-    this.setData({ cityIndex: index, cityId: city.id, cityName: city.name })
+    this.setData({ cityIndex: index, cityId: city.id, cityName: city.name, latitude: city.latitude, longitude: city.longitude, scale: city.scale })
     this.loadMapData()
     this.locate(true, Boolean(wx.getStorageSync('manual_coastal_city')))
   },
@@ -48,9 +48,9 @@ Page({
       cityIndex: index,
       cityId: city.id,
       cityName: city.name,
-      latitude: this.data.located ? this.data.latitude : city.latitude,
-      longitude: this.data.located ? this.data.longitude : city.longitude,
-      scale: this.data.located ? this.data.scale : city.scale,
+      latitude: city.latitude,
+      longitude: city.longitude,
+      scale: city.scale,
       selected: {}
     })
     this.loadMapData()
@@ -98,9 +98,9 @@ Page({
       const index = Math.max(0, api.cities.findIndex(item => item.id === city.id))
       getApp().globalData.selectedCityId = city.id
       this.setData({
-        latitude: location.latitude,
-        longitude: location.longitude,
-        scale: 10,
+        latitude: preserveCity ? city.latitude : location.latitude,
+        longitude: preserveCity ? city.longitude : location.longitude,
+        scale: preserveCity ? city.scale : 10,
         cityIndex: index,
         cityId: city.id,
         cityName: city.name,
