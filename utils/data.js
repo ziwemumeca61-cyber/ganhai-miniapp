@@ -177,7 +177,7 @@ function tideWindowFromLow(time) {
 
 function getSpots(location, conditions, reports, cityId) {
   const selectedCityId = cityId || 'yantai'
-  return spots.map(item => {
+  return spots.filter(item => (item.cityId || 'yantai') === selectedCityId).map(item => {
     const km = distanceKm(location, item)
     const itemCityId = item.cityId || 'yantai'
     const localConditions = itemCityId === selectedCityId
