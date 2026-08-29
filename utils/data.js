@@ -230,6 +230,7 @@ function getSpots(location, conditions, reports, cityId) {
       bestWindow: window,
       windowBasis,
       weather: localConditions && localConditions.weatherLabel || '天气待更新',
+      modelNotice: localConditions && localConditions.modelNotice || '',
       tideRange: localConditions && localConditions.waveLabel || '海况待更新',
       update: localConditions && localConditions.dataReady ? '实时海况' : '等待实时数据',
       tags: [item.type, item.verification, item.harvest],
