@@ -27,7 +27,7 @@ const OFFICIAL_TIDE_STATIONS = {
 const LIST_API = 'https://hyj.yantai.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?parseType=bulidstatic&webId=52&tplSetId=MsPkwMwlYqOxItyOUpt7Y&pageType=column&tagId=%E5%88%97%E8%A1%A8%E6%96%B0%E9%97%BB&editType=null&pageId=1638'
 
 const get = url => new Promise((resolve, reject) => {
-  https.get(url, { headers: { 'User-Agent': 'GanhaiRadar/1.1' } }, res => {
+  const request = https.get(url, { headers: { 'User-Agent': 'GanhaiRadar/1.1' } }, res => {
     if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
       return get(new URL(res.headers.location, url).toString()).then(resolve, reject)
     }
@@ -35,7 +35,9 @@ const get = url => new Promise((resolve, reject) => {
     res.setEncoding('utf8')
     res.on('data', chunk => { body += chunk })
     res.on('end', () => res.statusCode < 300 ? resolve(body) : reject(new Error('HTTP ' + res.statusCode)))
-  }).on('error', reject)
+  })
+  request.setTimeout(12000, () => request.destroy(new Error('请求超时')))
+  request.on('error', reject)
 })
 
 const distanceKm = (from, to) => {
