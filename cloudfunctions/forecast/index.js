@@ -230,7 +230,7 @@ const evaluateRegion = (region, ocean, met) => {
   }
 }
 
-exports.main = async event => {
+async function yantaiOfficial(event) {
   const checkedAt = new Date().toISOString()
   const location = event && event.location || { latitude: 37.536, longitude: 121.45 }
   try {
@@ -286,6 +286,167 @@ exports.main = async event => {
     return {
       source: 'forecast-failed',
       checkedAt,
+      reason: error.message,
+      conditions: { dataReady: false, blocked: false }
+    }
+  }
+}
+
+
+const finite = value => Number.isFinite(Number(value))
+const localClock = iso => String(iso || '').slice(11, 16)
+const localTimestamp = iso => Date.parse(String(iso || '') + '+08:00')
+const formatChinaTime = timestamp => new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Shanghai',
+  hour: '2-digit',
+  minute: '2-digit',
+  hourCycle: 'h23'
+}).format(new Date(timestamp))
+
+const modelConditions = (metData, marineData, label) => {
+  const met = metData && metData.current || {}
+  const hourly = marineData && marineData.hourly || {}
+  const times = Array.isArray(hourly.time) ? hourly.time : []
+  const levels = Array.isArray(hourly.sea_level_height_msl) ? hourly.sea_level_height_msl : []
+  const waves = Array.isArray(hourly.wave_height) ? hourly.wave_height : []
+  if (!times.length || !levels.length || !waves.length || !finite(met.wind_speed_10m)) return null
+
+  const now = Date.now()
+  const candidates = []
+  for (let index = 1; index < Math.min(times.length - 1, levels.length - 1); index += 1) {
+    const stamp = localTimestamp(times[index])
+    const current = Number(levels[index])
+    if (!finite(stamp) || !finite(current) || stamp < now - 30 * 60000 || stamp > now + 30 * 3600000) continue
+    if (current <= Number(levels[index - 1]) && current <= Number(levels[index + 1])) candidates.push(index)
+  }
+  let lowIndex = candidates[0]
+  if (!Number.isInteger(lowIndex)) {
+    let minimum = Infinity
+    for (let index = 0; index < Math.min(times.length, levels.length); index += 1) {
+      const stamp = localTimestamp(times[index])
+      const value = Number(levels[index])
+      if (stamp >= now - 30 * 60000 && stamp <= now + 18 * 3600000 && finite(value) && value < minimum) {
+        minimum = value
+        lowIndex = index
+      }
+    }
+  }
+  if (!Number.isInteger(lowIndex)) return null
+
+  const lowStamp = localTimestamp(times[lowIndex])
+  const delta = Math.round((lowStamp - now) / 60000)
+  const tideScore = delta >= -30 && delta <= 120 ? 40 : delta <= 240 ? 30 : delta <= 360 ? 18 : 8
+  const windowStart = lowStamp - 120 * 60000
+  const windowEnd = lowStamp + 30 * 60000
+  const windowWaves = waves.filter((value, index) => {
+    const stamp = localTimestamp(times[index])
+    return stamp >= lowStamp - 2 * 3600000 && stamp <= lowStamp + 2 * 3600000 && finite(value)
+  }).map(Number)
+  const currentWave = finite(marineData.current && marineData.current.wave_height)
+    ? Number(marineData.current.wave_height)
+    : Number(waves[Math.max(0, lowIndex)])
+  const wave = windowWaves.length ? Math.max(...windowWaves) : currentWave
+  const wind = Number(met.wind_speed_10m)
+  const gust = Number(met.wind_gusts_10m || wind)
+  const rain = Number(met.precipitation || 0)
+  const code = Number(met.weather_code || 0)
+  const visibility = finite(met.visibility) ? Number(met.visibility) : null
+  if (![wave, wind, gust, rain].every(finite)) return null
+
+  const seaWeatherScore =
+    (wave <= 0.5 ? 18 : wave <= 0.8 ? 16 : wave <= 1 ? 12 : wave < 1.5 ? 6 : 0) +
+    (wind <= 18 ? 14 : wind <= 28 ? 10 : wind < 39 ? 5 : 0) +
+    (rain < 0.5 ? 8 : rain < 2 ? 5 : 0)
+  const reasons = []
+  if (wave >= 1.5) reasons.push('浪高达到' + wave.toFixed(1) + '米')
+  if (wind >= 39 || gust >= 50) reasons.push('风力或阵风过大')
+  if (code >= 95) reasons.push('存在雷暴天气')
+  if (visibility !== null && visibility < 1000) reasons.push('能见度低于1公里')
+
+  return {
+    dataReady: true,
+    blocked: reasons.length > 0,
+    reasons,
+    regionLabel: label + '近岸模型网格',
+    nextLow: localClock(times[lowIndex]),
+    window: formatChinaTime(windowStart) + '—' + formatChinaTime(windowEnd),
+    tideScore,
+    seaWeatherScore,
+    weatherLabel: Number(met.temperature_2m).toFixed(1) + '℃ · 风速' + wind.toFixed(1) + 'km/h',
+    waveLabel: '浪高约' + wave.toFixed(1) + 'm · 数值模型',
+    modelNotice: '潮位约8公里分辨率，仅作赶海时间参考，不用于航海'
+  }
+}
+
+async function nationwideModel(event) {
+  const cityName = String(event && event.cityName || '当前城市').slice(0, 20)
+  const center = event && event.location || { latitude: 37.536, longitude: 121.45 }
+  const requested = Array.isArray(event && event.locations) ? event.locations.slice(0, 30) : []
+  const points = [{ id: '__summary', latitude: Number(center.latitude), longitude: Number(center.longitude) }]
+    .concat(requested.map(item => ({ id: String(item.id || '').slice(0, 80), latitude: Number(item.latitude), longitude: Number(item.longitude) })))
+    .filter(item => item.id && finite(item.latitude) && finite(item.longitude) && item.latitude >= 3 && item.latitude <= 54 && item.longitude >= 73 && item.longitude <= 136)
+  if (!points.length) throw new Error('缺少有效沿海坐标')
+
+  const latitudes = points.map(item => item.latitude.toFixed(6)).join(',')
+  const longitudes = points.map(item => item.longitude.toFixed(6)).join(',')
+  const weatherQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_gusts_10m%2Cvisibility'
+  const marineQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=2&cell_selection=sea&current=wave_height%2Csea_level_height_msl&hourly=wave_height%2Csea_level_height_msl'
+  const values = await Promise.all([
+    get('https://api.open-meteo.com/v1/forecast?' + weatherQuery),
+    get('https://marine-api.open-meteo.com/v1/marine?' + marineQuery)
+  ])
+  const weatherData = JSON.parse(values[0])
+  const marineData = JSON.parse(values[1])
+  const weatherRows = Array.isArray(weatherData) ? weatherData : [weatherData]
+  const marineRows = Array.isArray(marineData) ? marineData : [marineData]
+  const conditionsBySpot = {}
+  points.forEach((point, index) => {
+    const conditions = modelConditions(weatherRows[index], marineRows[index], point.id === '__summary' ? cityName : cityName)
+    if (conditions && point.id !== '__summary') conditionsBySpot[point.id] = conditions
+  })
+  const conditions = modelConditions(weatherRows[0], marineRows[0], cityName)
+  if (!conditions) throw new Error('全国海洋模型未返回完整潮位或浪高')
+  conditions.spots = conditionsBySpot
+  const safetyScore = conditions.blocked ? null : Math.min(100, conditions.tideScore + conditions.seaWeatherScore + 18)
+  return {
+    source: 'Open-Meteo全球海洋模型 + 全球天气模型',
+    checkedAt: new Date().toISOString(),
+    summary: {
+      safetyScore,
+      lowTide: conditions.nextLow || '--:--',
+      bestTime: conditions.window || '暂不可计算',
+      weather: conditions.weatherLabel.split(' · ')[0],
+      wind: conditions.weatherLabel.split(' · ')[1],
+      tideRange: conditions.waveLabel,
+      safety: conditions.blocked ? conditions.reasons.join('、') : '模型参考；涨潮前至少30分钟开始回撤',
+      officialSourceUrl: 'https://open-meteo.com/en/docs/marine-weather-api',
+      coverageLabel: cityName + '近岸数值模型 · 约8公里潮位网格'
+    },
+    conditions
+  }
+}
+
+exports.main = async event => {
+  const cityId = String(event && event.cityId || 'yantai')
+  if (cityId === 'yantai') {
+    const officialResult = await yantaiOfficial(event)
+    if (officialResult && officialResult.conditions && officialResult.conditions.dataReady) return officialResult
+    try {
+      const fallback = await nationwideModel(event)
+      fallback.source = '烟台官方预报不可用，已切换 ' + fallback.source
+      fallback.officialFallbackReason = officialResult && officialResult.reason
+      return fallback
+    } catch (error) {
+      return officialResult
+    }
+  }
+  try {
+    return await nationwideModel(event)
+  } catch (error) {
+    console.error('nationwide forecast failed', error)
+    return {
+      source: 'nationwide-forecast-failed',
+      checkedAt: new Date().toISOString(),
       reason: error.message,
       conditions: { dataReady: false, blocked: false }
     }
