@@ -1,4 +1,5 @@
 const api = require('../../services/api')
+const { getLocation } = require('../../utils/location')
 
 Page({
   data: {
@@ -8,8 +9,6 @@ Page({
     markers: [],
     spots: [],
     selected: {},
-    cityOptions: api.cities,
-    cityIndex: 0,
     cityId: 'yantai',
     cityName: '烟台',
     located: false,
@@ -18,42 +17,14 @@ Page({
   },
 
   onLoad() {
-    const saved = wx.getStorageSync('selected_coastal_city') || 'yantai'
-    const index = Math.max(0, api.cities.findIndex(item => item.id === saved))
-    this.applyCity(index)
+    this.loadMapData()
+    this.locate(true)
   },
 
-  onShow() {
-    const saved = wx.getStorageSync('selected_coastal_city')
-    if (saved && saved !== this.data.cityId) {
-      const index = api.cities.findIndex(item => item.id === saved)
-      if (index >= 0) this.applyCity(index)
-    }
-  },
-
-  chooseCity(e) {
-    this.applyCity(Number(e.detail.value))
-  },
-
-  applyCity(index) {
-    const city = api.cities[index]
-    if (!city) return
-    wx.setStorageSync('selected_coastal_city', city.id)
-    getApp().globalData.selectedCityId = city.id
-    this.setData({
-      cityIndex: index,
-      cityId: city.id,
-      cityName: city.name,
-      latitude: city.latitude,
-      longitude: city.longitude,
-      scale: city.scale,
-      selected: {}
-    })
-    this.loadMapData(null, city.id)
-  },
-
-  loadMapData(location, cityId) {
-    api.getHomeData(location, cityId || this.data.cityId).then(data => {
+  loadMapData(location) {
+    const app = getApp()
+    const point = location || app.globalData.location
+    api.getHomeData(point, this.data.cityId).then(data => {
       this.setData({ spots: data.spots, markers: this.buildMarkers(data.spots), selected: data.spots[0] || {} })
     })
   },
@@ -63,8 +34,8 @@ Page({
       id: index + 1,
       latitude: spot.latitude,
       longitude: spot.longitude,
-      width: 30,
-      height: 30,
+      width: 26,
+      height: 26,
       callout: {
         content: `${spot.safetyScore === null ? '待海况' : spot.safetyScore + '安全分'} · ${spot.name}`,
         color: '#15525b',
@@ -72,16 +43,34 @@ Page({
         borderRadius: 12,
         bgColor: '#ffffff',
         padding: 8,
-        display: 'ALWAYS'
+        display: 'BYCLICK'
       }
     }))
   },
 
-  locate() {
-    wx.showModal({
-      title: '精准定位暂未启用',
-      content: '现在可手动切换山东沿海城市。定位权限通过后将自动显示附近城市和实际距离。',
-      showCancel: false
+  locate(silent) {
+    if (this.data.locating) return
+    this.setData({ locating: true })
+    getLocation((error, location) => {
+      if (error) {
+        this.setData({ locating: false })
+        if (!silent) wx.showToast({ title: '定位失败，请检查位置权限', icon: 'none' })
+        return
+      }
+      const city = api.nearestCity(location)
+      getApp().globalData.selectedCityId = city.id
+      this.setData({
+        latitude: location.latitude,
+        longitude: location.longitude,
+        scale: 10,
+        cityId: city.id,
+        cityName: city.name,
+        located: true,
+        locating: false,
+        locationAccuracy: Math.round(location.accuracy || 0)
+      })
+      this.loadMapData(location)
+      if (!silent) wx.showToast({ title: '已按实际距离排序', icon: 'success' })
     })
   },
 
