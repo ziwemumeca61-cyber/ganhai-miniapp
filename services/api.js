@@ -1,4 +1,4 @@
-const { getSpots, getTodaySummary } = require('../utils/data')
+const { cities, getSpots, getSpot, getTodaySummary } = require('../utils/data')
 const { safetyLevel } = require('../utils/predict')
 
 function callCloud(name, data) {
@@ -26,15 +26,24 @@ function getReportSummaries() {
   return callCloud('report', { action: 'summary' }).then(result => result && result.ok ? result.summaries || [] : [])
 }
 
-function getHomeData(location) {
+function getHomeData(location, cityId) {
+  const selectedCityId = cityId || 'yantai'
+  const selectedCity = cities.find(item => item.id === selectedCityId) || cities[0]
   const fallback = getTodaySummary()
-  return Promise.all([callLiveForecast(location), getReportSummaries()]).then(([live, reports]) => {
+  const livePromise = selectedCityId === 'yantai'
+    ? callLiveForecast(location)
+    : Promise.resolve({
+        source: 'city-forecast-pending',
+        reason: selectedCity.name + '当地官方潮汐与海况待接入',
+        conditions: { dataReady: false, blocked: false }
+      })
+  return Promise.all([livePromise, getReportSummaries()]).then(([live, reports]) => {
     if (!live || !live.conditions || !live.conditions.dataReady) {
       const subtitle = !live
         ? '云端海况服务未连接，请检查 forecast 云函数'
         : live.reason || '当天官方海况尚未通过校验'
       const summary = Object.assign({}, fallback, { subtitle })
-      return { source: live && live.source || 'waiting-live-data', summary, spots: getSpots(location, summary.conditions, reports) }
+      return { source: live && live.source || 'waiting-live-data', summary, spots: getSpots(location, summary.conditions, reports, selectedCityId) }
     }
     const conditions = live.conditions
     const summary = Object.assign({}, fallback, live.summary || {}, {
@@ -47,13 +56,14 @@ function getHomeData(location) {
       conditions,
       updatedAt: new Date().toLocaleString()
     })
-    return { source: live.source, summary, spots: getSpots(location, conditions, reports) }
+    return { source: live.source, summary, spots: getSpots(location, conditions, reports, selectedCityId) }
   })
 }
 
 function getSpotDetail(id) {
   const app = getApp()
-  return getHomeData(app && app.globalData && app.globalData.location).then(data => ({
+  const target = getSpot(id)
+  return getHomeData(app && app.globalData && app.globalData.location, target.cityId || 'yantai').then(data => ({
     source: data.source,
     spot: data.spots.find(item => item.id === id) || data.spots[0],
     summary: data.summary
@@ -74,4 +84,4 @@ function getForecastCalendar(summary) {
   }]
 }
 
-module.exports = { getHomeData, getSpotDetail, getForecastCalendar }
+module.exports = { cities, getHomeData, getSpotDetail, getForecastCalendar }
