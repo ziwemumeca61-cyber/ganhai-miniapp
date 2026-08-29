@@ -39,5 +39,13 @@
     ]
   },
   "sitemapLocation": "sitemap.json",
-  "lazyCodeLoading": "requiredComponents"
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于在设备端计算与山东沿海赶海地点的距离、自动推荐附近地点和显示地图位置"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ]
 }
