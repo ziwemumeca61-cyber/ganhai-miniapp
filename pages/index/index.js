@@ -10,7 +10,7 @@ Page({
     cityIndex: 0,
     cityId: 'yantai',
     cityName: '烟台',
-    locationLabel: '山东沿海 · 正在定位',
+    locationLabel: '全国沿海 · 正在定位',
     locationStatus: '将按实际距离排序',
     loading: true
   },
