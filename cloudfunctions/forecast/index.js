@@ -46,12 +46,14 @@ const clean = html => html
   .replace(/&ndash;|&mdash;/gi, '—')
   .replace(/\s+/g, ' ')
 
-const chinaDate = () => new Intl.DateTimeFormat('en-CA', {
+const chinaDateOffset = days => new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Shanghai',
   year: 'numeric',
   month: '2-digit',
   day: '2-digit'
-}).format(new Date())
+}).format(new Date(Date.now() + Number(days || 0) * 86400000))
+
+const chinaDate = () => chinaDateOffset(0)
 
 const chinaTimestamp = (date, time) => Date.parse(date + 'T' + time + ':00+08:00')
 
@@ -64,9 +66,12 @@ async function shanghaiOfficialTide(date) {
   const times = (match[1].match(/\d{2}:\d{2}/g) || [])
   const heights = (match[2].match(/-?\d+/g) || []).map(Number)
   if (times.length < 2 || times.length !== heights.length) throw new Error('上海海事局潮汐表数据不完整')
-  const count = times.length >= 4 ? 2 : 1
-  const lows = times.map((time, index) => ({ time, height: heights[index], timestamp: chinaTimestamp(date, time) }))
-    .sort((a, b) => a.height - b.height).slice(0, count).sort((a, b) => a.timestamp - b.timestamp)
+  const extrema = times.map((time, index) => ({ time, height: heights[index], timestamp: chinaTimestamp(date, time) }))
+  const lows = extrema.filter((item, index) => {
+    const previous = index > 0 ? extrema[index - 1].height : Infinity
+    const next = index < extrema.length - 1 ? extrema[index + 1].height : Infinity
+    return item.height <= previous && item.height <= next
+  }).sort((a, b) => a.timestamp - b.timestamp)
   return { station, url, lows }
 }
 
@@ -462,9 +467,14 @@ async function nationwideModel(event) {
   const marineQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=2&cell_selection=sea&current=wave_height%2Csea_level_height_msl&hourly=wave_height%2Csea_level_height_msl'
   const cityId = String(event && event.cityId || '')
   const officialPromise = cityId === 'shanghai'
-    ? shanghaiOfficialTide(chinaDate()).catch(error => {
-        console.warn('Shanghai official tide unavailable', error.message)
-        return null
+    ? Promise.allSettled([shanghaiOfficialTide(chinaDate()), shanghaiOfficialTide(chinaDateOffset(1))]).then(results => {
+        const available = results.filter(item => item.status === 'fulfilled').map(item => item.value)
+        if (!available.length) return null
+        return {
+          station: available[0].station,
+          url: available[0].url,
+          lows: available.reduce((all, item) => all.concat(item.lows || []), []).sort((a, b) => a.timestamp - b.timestamp)
+        }
       })
     : Promise.resolve(null)
   const values = await Promise.all([
