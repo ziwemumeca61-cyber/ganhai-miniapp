@@ -94,5 +94,5 @@
     </view>
   </block>
 
-  <view class="data-notice">数据更新时间：{{summary.updatedAt}}　·　POI核验不等于岸段开放许可</view>
+  <view class="data-notice">数据更新时间：{{summary.updatedAt}}　·　海况模型：Open-Meteo（CC BY 4.0）　·　POI核验不等于岸段开放许可</view>
 </view>
