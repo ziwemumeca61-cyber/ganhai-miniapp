@@ -496,12 +496,12 @@ async function nationwideModel(event) {
     if (conditions && point.id !== '__summary') conditionsBySpot[point.id] = conditions
   })
   let conditions = modelConditions(weatherRows[0], marineRows[0], cityName)
-  if (officialTide) conditions = withOfficialTide(conditions, { station: officialTide.station, source: officialTide.station.source, lows: officialTide.lows }, points[0])
+  if (officialTide) conditions = withOfficialTide(conditions, { station: officialTide.station, source: officialTide.station.source, url: officialTide.url, lows: officialTide.lows }, points[0])
   if (!conditions) throw new Error('全国海洋模型未返回完整潮位或浪高')
   conditions.spots = conditionsBySpot
   const safetyScore = conditions.blocked ? null : Math.min(100, conditions.tideScore + conditions.seaWeatherScore + 18)
   const value = {
-    source: 'Open-Meteo全球海洋模型 + 全球天气模型',
+    source: conditions.tideStation ? conditions.tideSource + '潮汐 + Open-Meteo浪高天气' : 'Open-Meteo全球海洋模型 + 全球天气模型',
     checkedAt: new Date().toISOString(),
     summary: {
       safetyScore,
@@ -510,7 +510,7 @@ async function nationwideModel(event) {
       weather: conditions.weatherLabel.split(' · ')[0],
       wind: conditions.weatherLabel.split(' · ')[1],
       tideRange: conditions.waveLabel,
-      safety: conditions.blocked ? conditions.reasons.join('、') : '模型参考；涨潮前至少30分钟开始回撤',
+      safety: conditions.blocked ? conditions.reasons.join('、') : (conditions.tideStation ? '官方站潮汐参考；涨潮前至少30分钟开始回撤' : '模型参考；涨潮前至少30分钟开始回撤'),
       officialSourceUrl: conditions.tideSourceUrl || 'https://open-meteo.com/en/docs/marine-weather-api',
       coverageLabel: conditions.tideStation ? conditions.tideSource + '·' + conditions.tideStation + '站' : cityName + '近岸数值模型 · 约8公里潮位网格'
     },
