@@ -1,4 +1,4 @@
-const { cities, getSpots, getSpot, getTodaySummary } = require('../utils/data')
+const { cities, spots, getSpots, getSpot, getTodaySummary } = require('../utils/data')
 const { safetyLevel } = require('../utils/predict')
 
 function callCloud(name, data) {
@@ -17,9 +17,15 @@ function callCloud(name, data) {
   })
 }
 
-function callLiveForecast() {
-  // 用户精确坐标只在设备端用于距离排序，云端海况使用固定烟台代表点。
-  return callCloud('forecast', { location: { latitude: 37.536, longitude: 121.45 } })
+function callLiveForecast(city) {
+  // 用户精确坐标只在设备端用于距离排序；云端只接收公开赶海点和城市中心坐标。
+  const citySpots = spots.filter(item => (item.cityId || 'yantai') === city.id)
+  return callCloud('forecast', {
+    cityId: city.id,
+    cityName: city.name,
+    location: { latitude: city.latitude, longitude: city.longitude },
+    locations: citySpots.map(item => ({ id: item.id, latitude: item.latitude, longitude: item.longitude }))
+  })
 }
 
 function getReportSummaries() {
@@ -30,13 +36,7 @@ function getHomeData(location, cityId) {
   const selectedCityId = cityId || 'yantai'
   const selectedCity = cities.find(item => item.id === selectedCityId) || cities[0]
   const fallback = getTodaySummary()
-  const livePromise = selectedCityId === 'yantai'
-    ? callLiveForecast()
-    : Promise.resolve({
-        source: 'city-forecast-pending',
-        reason: selectedCity.name + '当地官方潮汐与海况待接入',
-        conditions: { dataReady: false, blocked: false }
-      })
+  const livePromise = callLiveForecast(selectedCity)
   return Promise.all([livePromise, getReportSummaries()]).then(([live, reports]) => {
     if (!live || !live.conditions || !live.conditions.dataReady) {
       const subtitle = !live
@@ -51,7 +51,7 @@ function getHomeData(location, cityId) {
       safetyScore: live.summary && live.summary.safetyScore,
       label: safetyLevel(conditions),
       safetyLevel: safetyLevel(conditions),
-      subtitle: conditions.blocked ? (conditions.reasons || []).join('、') : (conditions.regionLabel || '烟台近岸') + '官方潮汐与实时天气已通过校验',
+      subtitle: conditions.blocked ? (conditions.reasons || []).join('、') : (conditions.regionLabel || selectedCity.name + '近岸') + '潮位、浪高与实时天气已通过校验',
       dataReady: true,
       conditions,
       updatedAt: new Date().toLocaleString()
