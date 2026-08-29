@@ -1,6 +1,16 @@
 const { distanceKm, formatDistance } = require('./geo')
 const { safetyScoreWithConditions, scoreLabel } = require('./predict')
 
+const cities = [
+  { id: 'yantai', name: '烟台', latitude: 37.536, longitude: 121.45, scale: 8 },
+  { id: 'qingdao', name: '青岛', latitude: 36.08, longitude: 120.38, scale: 8 },
+  { id: 'weihai', name: '威海', latitude: 37.43, longitude: 122.12, scale: 8 },
+  { id: 'rizhao', name: '日照', latitude: 35.42, longitude: 119.55, scale: 9 },
+  { id: 'weifang', name: '潍坊', latitude: 37.1, longitude: 119.2, scale: 8 },
+  { id: 'dongying', name: '东营', latitude: 37.65, longitude: 119.05, scale: 8 },
+  { id: 'binzhou', name: '滨州', latitude: 38.0, longitude: 118.05, scale: 8 }
+]
+
 const pendingGuide = {
   entry: '待实地核验，暂不提供入口建议',
   shoreline: '待实地核验，暂不提供岸段建议',
@@ -46,6 +56,42 @@ const spots = [
   { id: 'penglai-bath-nearby', name: '蓬莱海水浴场（仙境路附近）', area: '蓬莱区', latitude: 37.820125, longitude: 120.766869, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '附近导航点已核验', terrainSafety: 18, entry: '仙境路2号附近导航参考点，并非浴场入口', shoreline: '仙境路北侧海滩方向，实际下滩口以现场公开通道为准', direction: '到达参考点后沿公开步道寻找现场开放入口，不跨越景区或管理边界', retreat: '回涨前返回仙境路一侧，遇封闭、警戒或收费管理区域立即停止' }
 ]
 
+
+spots.push(
+  { id: 'laizhou-golden-coast', cityId: 'yantai', cityName: '烟台', name: '莱州黄金海岸（附近）', area: '莱州市', latitude: 37.295, longitude: 119.91, type: '沙滩', harvest: '蛤蜊 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
+  { id: 'zhaoyuan-golden-coast', cityId: 'yantai', cityName: '烟台', name: '招远滨海岸段（附近）', area: '招远市', latitude: 37.58, longitude: 120.18, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 17, ...pendingGuide },
+  { id: 'laiyang-dingzi-bay', cityId: 'yantai', cityName: '烟台', name: '丁字湾滨海岸段（附近）', area: '莱阳市', latitude: 36.71, longitude: 120.96, type: '泥沙滩', harvest: '蛤蜊 · 蛏子', verification: '公开资料待复核', terrainSafety: 14, ...pendingGuide },
+  { id: 'changdao-yueya-bay', cityId: 'yantai', cityName: '烟台', name: '长岛月牙湾（景区附近）', area: '长岛综试区', latitude: 37.993, longitude: 120.704, type: '卵石滩', harvest: '海螺 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 14, ...pendingGuide },
+
+  { id: 'qingdao-shilaoren', cityId: 'qingdao', cityName: '青岛', name: '石老人海水浴场（附近）', area: '崂山区', latitude: 36.09231, longitude: 120.47021, type: '沙滩 + 礁石', harvest: '海螺 · 小螃蟹', verification: '附近导航点已核验', terrainSafety: 15, entry: '海口路287号附近导航点', shoreline: '石老人海水浴场公开岸段，以浴场开放边界为准', direction: '优先在公开沙滩活动，不攀爬离岸礁石', retreat: '听从浴场旗语和管理提示，回涨前离开低位礁石' },
+  { id: 'qingdao-jinshatan', cityId: 'qingdao', cityName: '青岛', name: '青岛金沙滩（附近）', area: '西海岸新区', latitude: 35.9609, longitude: 120.2417, type: '沙滩', harvest: '蛤蜊 · 小螃蟹', verification: '附近导航点已核验', terrainSafety: 18, entry: '金沙滩旅游度假区附近导航点', shoreline: '公开海水浴场岸段，以景区当日开放范围为准', direction: '只在平缓近岸与公开区域活动', retreat: '回涨前返回固定岸线，服从浴场管理' },
+  { id: 'qingdao-third-bath', cityId: 'qingdao', cityName: '青岛', name: '第三海水浴场', area: '市南区', latitude: 36.0588, longitude: 120.37, type: '沙滩', harvest: '小螃蟹 · 海螺', verification: '公开资料待复核', terrainSafety: 17, ...pendingGuide },
+  { id: 'qingdao-yangkou', cityId: 'qingdao', cityName: '青岛', name: '仰口海水浴场（附近）', area: '崂山区', latitude: 36.239, longitude: 120.68, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 17, ...pendingGuide },
+  { id: 'qingdao-tianheng', cityId: 'qingdao', cityName: '青岛', name: '田横岛度假区岸段（附近）', area: '即墨区', latitude: 36.424, longitude: 120.987, type: '礁石 + 沙滩', harvest: '海螺 · 螃蟹', verification: '公开资料待复核', terrainSafety: 14, ...pendingGuide },
+
+  { id: 'weihai-international', cityId: 'weihai', cityName: '威海', name: '威海国际海水浴场', area: '环翠区', latitude: 37.527543, longitude: 122.042078, type: '沙滩', harvest: '蛤蜊 · 小螃蟹', verification: 'POI坐标已核验', terrainSafety: 18, entry: '北环海路178号公共入口', shoreline: '国际海水浴场公开岸段，以当日旗语和管理区域为准', direction: '只在公开沙滩和退潮裸露近岸活动', retreat: '回涨前返回固定岸线，遇红旗立即停止' },
+  { id: 'weihai-xiaoshidao', cityId: 'weihai', cityName: '威海', name: '小石岛海水浴场（附近）', area: '环翠区', latitude: 37.55, longitude: 122.006, type: '沙滩 + 礁石', harvest: '蛏子 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 15, ...pendingGuide },
+  { id: 'weihai-naxianghai', cityId: 'weihai', cityName: '威海', name: '那香海钻石沙滩（附近）', area: '荣成市', latitude: 37.356, longitude: 122.61, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
+  { id: 'weihai-yintan', cityId: 'weihai', cityName: '威海', name: '乳山银滩海洋公园（附近）', area: '乳山市', latitude: 36.841, longitude: 121.695, type: '沙滩', harvest: '蛤蜊 · 贝类', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
+  { id: 'weihai-nanhai', cityId: 'weihai', cityName: '威海', name: '南海公园（附近）', area: '文登区', latitude: 36.969, longitude: 121.866, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
+
+  { id: 'rizhao-wanpingkou', cityId: 'rizhao', cityName: '日照', name: '万平口海滨风景区（3号停车场附近）', area: '东港区', latitude: 35.424022, longitude: 119.569466, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '附近导航点已核验', terrainSafety: 18, entry: '海曲东路398号万平口3号停车场附近', shoreline: '万平口公开沙滩岸段，以景区开放边界为准', direction: '从公开入口进入，不跨越游泳区和管理隔离', retreat: '浪大、红旗或景区关闭时不下滩' },
+  { id: 'rizhao-renjiatai', cityId: 'rizhao', cityName: '日照', name: '任家台礁石公园（附近）', area: '山海天旅游度假区', latitude: 35.542, longitude: 119.616, type: '礁石', harvest: '海螺 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 13, ...pendingGuide },
+  { id: 'rizhao-forest-park', cityId: 'rizhao', cityName: '日照', name: '海滨国家森林公园沙滩（附近）', area: '东港区', latitude: 35.555, longitude: 119.632, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 18, ...pendingGuide },
+  { id: 'rizhao-duodao', cityId: 'rizhao', cityName: '日照', name: '多岛海赶海园（附近）', area: '岚山区', latitude: 35.119, longitude: 119.374, type: '礁石 + 沙滩', harvest: '海螺 · 螃蟹', verification: '公开资料待复核', terrainSafety: 14, ...pendingGuide },
+
+  { id: 'weifang-happy-sea', cityId: 'weifang', cityName: '潍坊', name: '欢乐海沙滩景区（附近）', area: '滨海区', latitude: 37.12, longitude: 119.235, type: '沙滩', harvest: '贝类 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 17, ...pendingGuide },
+  { id: 'weifang-yangkou', cityId: 'weifang', cityName: '潍坊', name: '羊口港滨海岸段（附近）', area: '寿光市', latitude: 37.24, longitude: 118.95, type: '泥沙滩', harvest: '蛤蜊 · 蛏子', verification: '公开资料待复核', terrainSafety: 12, ...pendingGuide },
+  { id: 'weifang-xiaying', cityId: 'weifang', cityName: '潍坊', name: '下营滨海岸段（附近）', area: '昌邑市', latitude: 37.08, longitude: 119.55, type: '泥沙滩', harvest: '蛤蜊 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 12, ...pendingGuide },
+
+  { id: 'dongying-estuary', cityId: 'dongying', cityName: '东营', name: '黄河口生态旅游区（附近）', area: '垦利区', latitude: 37.76, longitude: 119.13, type: '河口湿地', harvest: '仅观察，不采集', verification: '公开资料待复核', terrainSafety: 8, ...pendingGuide },
+  { id: 'dongying-red-beach', cityId: 'dongying', cityName: '东营', name: '红滩湿地岸段（附近）', area: '垦利区', latitude: 37.66, longitude: 118.98, type: '湿地', harvest: '仅观察，不采集', verification: '公开资料待复核', terrainSafety: 8, ...pendingGuide },
+  { id: 'dongying-gudao', cityId: 'dongying', cityName: '东营', name: '孤岛滨海岸段（附近）', area: '河口区', latitude: 37.86, longitude: 118.82, type: '泥滩', harvest: '蛤蜊 · 小螃蟹', verification: '公开资料待复核', terrainSafety: 10, ...pendingGuide },
+
+  { id: 'binzhou-shell-dike', cityId: 'binzhou', cityName: '滨州', name: '贝壳堤岛湿地（附近）', area: '无棣县', latitude: 38.1, longitude: 118.02, type: '湿地 + 贝壳堤', harvest: '仅观察，不采集', verification: '公开资料待复核', terrainSafety: 8, ...pendingGuide },
+  { id: 'binzhou-zhanhua-coast', cityId: 'binzhou', cityName: '滨州', name: '沾化滨海湿地岸段（附近）', area: '沾化区', latitude: 38.02, longitude: 118.16, type: '泥滩 + 湿地', harvest: '仅观察，不采集', verification: '公开资料待复核', terrainSafety: 8, ...pendingGuide }
+)
+
 function harvestAssessment(spot, reports) {
   const item = (reports || []).find(report => report.spotId === spot.id)
   const count = Number(item && item.count || 0)
@@ -78,10 +124,11 @@ function tideWindowFromLow(time) {
   return format(Math.max(0, minutes - 120)) + '—' + format(Math.min(1439, minutes + 30))
 }
 
-function getSpots(location, conditions, reports) {
-  return spots.map(item => {
+function getSpots(location, conditions, reports, cityId) {
+  const selectedCityId = cityId || 'yantai'
+  return spots.filter(item => (item.cityId || 'yantai') === selectedCityId).map(item => {
     const km = distanceKm(location, item)
-    const localConditions = conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions
+    const localConditions = selectedCityId === 'yantai' ? (conditions && conditions.regions && conditions.regions[regionKey(item)] || conditions) : conditions
     const verified = item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验'
     const scoreable = Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
     const safetyScore = scoreable ? safetyScoreWithConditions(item.terrainSafety, localConditions) : null
@@ -99,6 +146,8 @@ function getSpots(location, conditions, reports) {
       ? '目标海货：' + item.harvest + '；现场样本不足，暂不预测数量'
       : '预测海货：' + item.harvest + '；近14天趋势' + harvest.label + '（' + harvest.confidence + '置信）'
     return Object.assign({}, item, {
+      cityId: item.cityId || 'yantai',
+      cityName: item.cityName || '烟台',
       score: safetyScore,
       safetyScore,
       harvestScore: harvest.score,
@@ -157,4 +206,4 @@ function getTodaySummary() {
   }
 }
 
-module.exports = { spots, getSpots, getSpot, getTodaySummary, harvestAssessment }
+module.exports = { cities, spots, getSpots, getSpot, getTodaySummary, harvestAssessment }
