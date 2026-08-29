@@ -5,23 +5,53 @@ Page({
     summary: {},
     spots: [],
     calendar: [],
+    cityOptions: api.cities,
+    cityIndex: 0,
+    cityId: 'yantai',
+    cityName: '烟台',
     locationLabel: '烟台 · 默认范围',
-    locationStatus: '未启用精准定位，按烟台沿海展示',
+    locationStatus: '选择城市查看沿海地点',
     loading: true
   },
 
   onLoad() {
+    const saved = wx.getStorageSync('selected_coastal_city') || 'yantai'
+    const index = Math.max(0, api.cities.findIndex(item => item.id === saved))
+    const city = api.cities[index]
+    this.setData({ cityIndex: index, cityId: city.id, cityName: city.name, locationLabel: city.name + ' · 沿海范围' })
     this.loadData()
+  },
+
+  onShow() {
+    const saved = wx.getStorageSync('selected_coastal_city')
+    if (saved && saved !== this.data.cityId) {
+      const index = api.cities.findIndex(item => item.id === saved)
+      if (index >= 0) {
+        const city = api.cities[index]
+        this.setData({ cityIndex: index, cityId: city.id, cityName: city.name, locationLabel: city.name + ' · 沿海范围' })
+        this.loadData()
+      }
+    }
   },
 
   onPullDownRefresh() {
     this.loadData(true)
   },
 
+  chooseCity(e) {
+    const index = Number(e.detail.value)
+    const city = api.cities[index]
+    if (!city) return
+    wx.setStorageSync('selected_coastal_city', city.id)
+    getApp().globalData.selectedCityId = city.id
+    this.setData({ cityIndex: index, cityId: city.id, cityName: city.name, locationLabel: city.name + ' · 沿海范围' })
+    this.loadData()
+  },
+
   loadData(stopRefresh) {
     this.setData({ loading: true })
     const app = getApp()
-    api.getHomeData(app.globalData.location).then(data => {
+    api.getHomeData(app.globalData.location, this.data.cityId).then(data => {
       this.setData({
         summary: data.summary,
         spots: data.spots,
@@ -39,8 +69,8 @@ Page({
 
   locate() {
     wx.showModal({
-      title: '精准定位暂未启用',
-      content: '当前小程序尚未取得微信精准定位接口权限，现按烟台沿海默认范围展示地点。地图导航和地点海况仍可正常使用。',
+      title: '城市与定位说明',
+      content: '当前可手动切换山东沿海城市。精准定位权限通过后，将自动选择附近城市并按实际距离排序。',
       showCancel: false
     })
   },
@@ -50,7 +80,7 @@ Page({
   },
 
   goAi() {
-    wx.setStorageSync('ai_prefill', '请根据今天的天气、潮汐和距离，帮我安排一条烟台赶海路线。')
+    wx.setStorageSync('ai_prefill', '请根据今天的天气、潮汐和地点信息，帮我安排一条' + this.data.cityName + '赶海路线。数据未接入时请明确说明。')
     wx.switchTab({ url: '/pages/ai/ai' })
   },
 
