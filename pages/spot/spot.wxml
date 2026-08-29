@@ -50,7 +50,7 @@
   <view class="safety-card">
     <view class="safety-title"><text>安全提醒</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
     <view class="safety-text">撤离：{{spot.retreat}}</view>
-    <view class="safety-foot">方位和离岸距离为保守参考带，并非测绘边界；潮位变化、岸段封闭或现场警戒时，以现场管理提示优先。</view>
+    <view class="safety-foot">方位和离岸距离为保守参考带，并非测绘边界；潮位变化、岸段封闭或现场警戒时，以现场管理提示优先。{{spot.modelNotice ? "　" + spot.modelNotice + "；数据：Open-Meteo（CC BY 4.0）。" : ""}}</view>
   </view>
 
   <view class="detail-actions">
