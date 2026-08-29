@@ -2,9 +2,9 @@
   <view class="topline">
     <view>
       <view class="brand">赶海雷达</view>
-      <view class="eyebrow">SHANDONG COASTAL GUIDE · 01</view>
+      <view class="eyebrow">CHINA COASTAL GUIDE · 01</view>
     </view>
-    <picker mode="selector" range="{{cityOptions}}" range-key="name" value="{{cityIndex}}" bindchange="chooseCity">
+    <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity">
       <view class="location-chip">
         <text class="location-dot">●</text>
         <view>
