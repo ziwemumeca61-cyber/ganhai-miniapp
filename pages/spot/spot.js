@@ -18,7 +18,7 @@ Page({
   },
 
   onShareAppMessage() {
-    return { title: (this.data.spot ? this.data.spot.name : '烟台赶海点') + ' · 海况与现场核验', path: '/pages/spot/spot?id=' + (this.data.spot ? this.data.spot.id : 'first-bath') }
+    return { title: (this.data.spot ? this.data.spot.name : '全国赶海点') + ' · 海况与现场核验', path: '/pages/spot/spot?id=' + (this.data.spot ? this.data.spot.id : 'first-bath') }
   },
 
   openLocation() {
