@@ -2,16 +2,18 @@
   <view class="topline">
     <view>
       <view class="brand">赶海雷达</view>
-      <view class="eyebrow">YANTAI COASTAL GUIDE · 01</view>
+      <view class="eyebrow">SHANDONG COASTAL GUIDE · 01</view>
     </view>
-    <view class="location-chip" bindtap="locate">
-      <text class="location-dot">●</text>
-      <view>
-        <view class="location-name">{{locationLabel}}</view>
-        <view class="location-status">{{locationStatus}}</view>
+    <picker mode="selector" range="{{cityOptions}}" range-key="name" value="{{cityIndex}}" bindchange="chooseCity">
+      <view class="location-chip">
+        <text class="location-dot">●</text>
+        <view>
+          <view class="location-name">{{locationLabel}}</view>
+          <view class="location-status">{{locationStatus}}</view>
+        </view>
+        <text class="chevron">⌄</text>
       </view>
-      <text class="chevron">⌄</text>
-    </view>
+    </picker>
   </view>
 
   <view class="hero card">
@@ -54,7 +56,7 @@
   </view>
 
   <view class="quick-actions">
-    <view class="quick-action" bindtap="goMap"><view class="action-icon map-icon">⌁</view><text>附近赶海点</text></view>
+    <view class="quick-action" bindtap="goMap"><view class="action-icon map-icon">⌁</view><text>沿海地点地图</text></view>
     <view class="quick-action" bindtap="goAi"><view class="action-icon ai-icon">✦</view><text>问AI怎么去</text></view>
     <view class="quick-action" bindtap="locate"><view class="action-icon locate-icon">⊙</view><text>位置说明</text></view>
   </view>
@@ -71,7 +73,7 @@
   </scroll-view>
 
   <view class="section-title">
-    <text class="title">烟台沿海推荐</text>
+    <text class="title">{{cityName}}沿海地点</text>
     <text class="link" bindtap="goMap">查看地图 →</text>
   </view>
 
