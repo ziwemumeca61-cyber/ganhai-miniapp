@@ -7,7 +7,7 @@
     </view>
     <view class="ai-orb"><text>✦</text></view>
   </view>
-  <view class="ai-tip"><text class="tip-icon">i</text><text>AI会读取烟台天气、潮汐和地点数据；预测结果仅作出行参考。</text></view>
+  <view class="ai-tip"><text class="tip-icon">i</text><text>AI会读取{{cityName}}天气、潮汐和地点数据；预测结果仅作出行参考。</text></view>
 
   <scroll-view class="chat-list" scroll-y="true" scroll-into-view="{{scrollId}}" scroll-with-animation="true">
     <view wx:for="{{messages}}" wx:key="id" id="{{item.id}}" class="message-row {{item.role}}">

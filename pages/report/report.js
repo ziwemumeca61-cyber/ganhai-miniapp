@@ -1,7 +1,11 @@
 const { spots } = require('../../utils/data')
 const ai = require('../../services/ai')
+const api = require('../../services/api')
+const { getLocation } = require('../../utils/location')
 
-const verifiedSpots = spots.filter(item => item.verification === 'POI坐标已核验' || item.verification === '附近导航点已核验')
+function citySpots(cityId) {
+  return spots.filter(item => (item.cityId || 'yantai') === cityId)
+}
 
 function relativeTime(value) {
   const time = new Date(value).getTime()
@@ -21,9 +25,13 @@ Page({
     feed: [],
     feedLoading: false,
     feedLoaded: false,
-    spotId: verifiedSpots[0].id,
-    spotName: verifiedSpots[0].name,
-    spotOptions: verifiedSpots,
+    cityOptions: api.cities,
+    cityIndex: 0,
+    cityId: 'yantai',
+    cityName: '烟台',
+    spotId: spots[0].id,
+    spotName: spots[0].name,
+    spotOptions: citySpots('yantai'),
     spotIndex: 0,
     species: ['蛤蜊', '海螺', '海蛎子', '螃蟹', '海肠', '其他'],
     selectedSpecies: '蛤蜊',
@@ -33,23 +41,49 @@ Page({
     imageCount: 0,
     submitting: false,
     aiGenerating: false,
-    onsiteReady: true,
-    locationText: '当前版本不获取精确位置'
+    onsiteReady: false,
+    onsiteLocation: null,
+    locationText: '点击获取位置，发布时只核验距离'
   },
 
   onLoad(options) {
-    const index = options.spotId ? verifiedSpots.findIndex(item => item.id === options.spotId) : -1
-    if (index >= 0) {
+    const app = getApp()
+    const requested = options.spotId ? spots.find(item => item.id === options.spotId) : null
+    const cityId = requested && (requested.cityId || 'yantai') || app.globalData.selectedCityId || 'yantai'
+    const cityIndex = Math.max(0, api.cities.findIndex(item => item.id === cityId))
+    const city = api.cities[cityIndex]
+    const optionsForCity = citySpots(city.id)
+    const index = requested ? optionsForCity.findIndex(item => item.id === requested.id) : 0
+    const selected = optionsForCity[Math.max(0, index)]
+    this.setData({
+      cityId: city.id,
+      cityName: city.name,
+      cityIndex,
+      spotOptions: optionsForCity,
+      spotId: selected.id,
+      spotName: selected.name,
+      spotIndex: Math.max(0, index)
+    })
+    if (requested && index >= 0) {
       this.setData({
         mode: 'publish',
-        spotId: verifiedSpots[index].id,
-        spotName: verifiedSpots[index].name,
-        spotIndex: index
+        spotId: selected.id,
+        spotName: selected.name,
+        spotIndex: Math.max(0, index)
       })
     }
   },
 
   onShow() {
+    const selectedCityId = getApp().globalData.selectedCityId || this.data.cityId
+    if (selectedCityId !== this.data.cityId) {
+      const cityIndex = api.cities.findIndex(item => item.id === selectedCityId)
+      const city = api.cities[cityIndex]
+      const options = city && citySpots(city.id)
+      if (city && options.length) {
+        this.setData({ cityIndex, cityId: city.id, cityName: city.name, spotOptions: options, spotIndex: 0, spotId: options[0].id, spotName: options[0].name, onsiteReady: false, onsiteLocation: null })
+      }
+    }
     if (this.data.mode === 'feed') this.loadFeed()
   },
 
@@ -68,7 +102,7 @@ Page({
       return
     }
     this.setData({ feedLoading: true })
-    wx.cloud.callFunction({ name: 'report', data: { action: 'feed' } }).then(response => {
+    wx.cloud.callFunction({ name: 'report', data: { action: 'feed', cityId: this.data.cityId } }).then(response => {
       const result = response && response.result
       if (!result || !result.ok) throw new Error(result && result.error || '读取失败')
       const feed = (result.items || []).map(item => Object.assign({}, item, {
@@ -93,8 +127,30 @@ Page({
 
   chooseSpot(e) {
     const index = Number(e.detail.value)
-    const spot = verifiedSpots[index]
-    this.setData({ spotId: spot.id, spotName: spot.name, spotIndex: index })
+    const spot = this.data.spotOptions[index]
+    this.setData({ spotId: spot.id, spotName: spot.name, spotIndex: index, onsiteReady: false, onsiteLocation: null, locationText: '地点已改变，请重新核验位置' })
+  },
+
+  chooseCity(e) {
+    const cityIndex = Number(e.detail.value)
+    const city = api.cities[cityIndex]
+    const options = citySpots(city.id)
+    const first = options[0]
+    if (!first) return
+    getApp().globalData.selectedCityId = city.id
+    this.setData({
+      cityIndex,
+      cityId: city.id,
+      cityName: city.name,
+      spotOptions: options,
+      spotIndex: 0,
+      spotId: first.id,
+      spotName: first.name,
+      onsiteReady: false,
+      onsiteLocation: null,
+      locationText: '点击获取位置，发布时只核验距离'
+    })
+    if (this.data.mode === 'feed') this.loadFeed(true)
   },
 
   chooseSpecies(e) { this.setData({ selectedSpecies: e.currentTarget.dataset.value }) },
@@ -102,10 +158,19 @@ Page({
   onNote(e) { this.setData({ note: e.detail.value }) },
 
   verifyLocation() {
-    wx.showModal({
-      title: '不获取精确位置',
-      content: '当前版本未启用微信精准定位接口。你选择的地点会标注为“用户自选地点”，不会计入定位核验样本。',
-      showCancel: false
+    if (this.data.submitting) return
+    this.setData({ locationText: '正在获取高精度位置…' })
+    getLocation((error, location) => {
+      if (error || !location) {
+        this.setData({ onsiteReady: false, onsiteLocation: null, locationText: '定位失败，点击重试' })
+        wx.showModal({ title: '无法核验位置', content: '请在系统和微信中开启精确位置权限后重试。', showCancel: false })
+        return
+      }
+      this.setData({
+        onsiteReady: true,
+        onsiteLocation: { latitude: location.latitude, longitude: location.longitude, accuracy: location.accuracy },
+        locationText: '已获取 · 精度约' + Math.round(location.accuracy || 0) + '米，精确坐标不会保存'
+      })
     })
   },
 
@@ -128,13 +193,20 @@ Page({
       wx.showToast({ title: '云环境尚未启用', icon: 'none' })
       return
     }
+    if (!this.data.onsiteReady || !this.data.onsiteLocation) {
+      wx.showToast({ title: '请先完成现场定位核验', icon: 'none' })
+      this.verifyLocation()
+      return
+    }
     this.setData({ submitting: true })
     wx.cloud.callFunction({ name: 'report', data: {
       action: 'submit',
       spotId: this.data.spotId,
+      cityId: this.data.cityId,
       species: this.data.selectedSpecies,
       amount: this.data.amount,
-      note: this.data.note
+      note: this.data.note,
+      location: this.data.onsiteLocation
     } }).then(response => {
       const result = response && response.result
       if (!result || !result.ok) throw new Error(result && result.error || '保存失败')
@@ -143,8 +215,9 @@ Page({
         submitting: false,
         note: '',
         imageCount: 0,
-        onsiteReady: true,
-        locationText: '当前版本不获取精确位置'
+        onsiteReady: false,
+        onsiteLocation: null,
+        locationText: '点击获取位置，发布时只核验距离'
       })
       wx.showToast({ title: '已发布到赶海圈', icon: 'success' })
       this.loadFeed(true)

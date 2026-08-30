@@ -7,7 +7,7 @@
     "pages/report/report"
   ],
   "window": {
-    "navigationBarTitleText": "山东赶海雷达",
+    "navigationBarTitleText": "全国赶海雷达",
     "navigationBarBackgroundColor": "#f6fbfc",
     "navigationBarTextStyle": "black",
     "backgroundColor": "#f4f8fa",
@@ -42,7 +42,7 @@
   "lazyCodeLoading": "requiredComponents",
   "permission": {
     "scope.userLocation": {
-      "desc": "用于在设备端计算与山东沿海赶海地点的距离、自动推荐附近地点和显示地图位置"
+      "desc": "用于计算当前位置与沿海赶海地点的距离、推荐附近地点，并在用户发布现场记录时核验是否到场；不会公开精确坐标"
     }
   },
   "requiredPrivateInfos": [

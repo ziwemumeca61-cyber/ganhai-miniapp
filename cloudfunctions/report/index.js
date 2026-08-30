@@ -53,11 +53,14 @@ async function summaries() {
   }
 }
 
-async function feed() {
+async function feed(event) {
   try {
-    const result = await db.collection('field_reports').orderBy('createdAt', 'desc').limit(30).get()
-    const items = (result.data || []).map(item => ({
+    const selectedCityId = String(event && event.cityId || '').slice(0, 40)
+    const result = await db.collection('field_reports').orderBy('createdAt', 'desc').limit(100).get()
+    const records = (result.data || []).filter(item => !selectedCityId || item.cityId === selectedCityId || selectedCityId === 'yantai' && !item.cityId).slice(0, 30)
+    const items = records.map(item => ({
       id: item._id,
+      cityId: item.cityId || 'yantai',
       spotId: item.spotId,
       spotName: item.spotName || spots[item.spotId] && spots[item.spotId].name || '已核验地点',
       species: String(item.species || '其他').slice(0, 12),
@@ -78,23 +81,33 @@ async function submit(event) {
   const target = spots[event.spotId]
   if (!target) return { ok: false, error: '请选择已收录的赶海地点' }
   if (!weights[event.amount]) return { ok: false, error: '请选择收获量' }
+  const latitude = Number(event.location && event.location.latitude)
+  const longitude = Number(event.location && event.location.longitude)
+  const accuracy = Number(event.location && event.location.accuracy)
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return { ok: false, error: '未收到有效定位，请重新核验' }
+  if (!Number.isFinite(accuracy) || accuracy <= 0 || accuracy > 300) return { ok: false, error: '定位精度不足（需在300米内），请到室外重新定位' }
+  const onsiteDistance = distanceMeters({ latitude, longitude }, target)
+  if (onsiteDistance > 2500 + accuracy) return { ok: false, error: '当前位置距所选地点约' + Math.round(onsiteDistance / 100) / 10 + '公里，请到现场或改选正确地点' }
   const now = new Date()
   try {
     const duplicate = await db.collection('field_reports').where({ _openid: context.OPENID, createdAt: command.gte(new Date(Date.now() - 10 * 60000)) }).limit(1).get()
     if (duplicate.data && duplicate.data.length) return { ok: false, error: '10分钟内请勿重复发布' }
     const result = await db.collection('field_reports').add({ data: {
       spotId: event.spotId,
+      cityId: String(event.cityId || 'yantai').slice(0, 40),
       spotName: target.name,
       species: String(event.species || '其他').slice(0, 12),
       amount: event.amount,
       amountWeight: weights[event.amount],
       note: String(event.note || '').slice(0, 120),
-      verified: false,
-      verificationLabel: '用户自选地点',
+      verified: true,
+      verificationLabel: '现场定位已核验',
+      distanceMeters: onsiteDistance,
+      locationAccuracy: Math.round(accuracy),
       observedAt: now,
       createdAt: now
     } })
-    return { ok: true, id: result._id, verified: false }
+    return { ok: true, id: result._id, verified: true, distanceMeters: onsiteDistance }
   } catch (error) {
     console.error('report submit failed', error)
     return { ok: false, error: '请先在云数据库创建 field_reports 集合并部署 report 云函数' }
@@ -103,6 +116,6 @@ async function submit(event) {
 
 exports.main = event => {
   if (event && event.action === 'submit') return submit(event)
-  if (event && event.action === 'feed') return feed()
+  if (event && event.action === 'feed') return feed(event)
   return summaries()
 }

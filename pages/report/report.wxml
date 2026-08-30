@@ -4,12 +4,13 @@
       <view>
         <view class="eyebrow">GANHAI COMMUNITY</view>
         <view class="report-title">赶海圈</view>
-        <view class="report-subtitle">看看烟台海友分享的真实收获。</view>
+        <view class="report-subtitle">看看{{cityName}}海友分享的真实收获。</view>
       </view>
       <view class="publish-btn" bindtap="openPublish">＋ 发布战果</view>
     </view>
 
-    <view class="circle-rule">历史定位核验动态会标注“可信现场”；新动态按用户选择地点发布，不获取精确位置。</view>
+    <view class="feed-city-row"><text>当前城市</text><picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="city-picker">{{cityName}}⌄</view></picker></view>
+    <view class="circle-rule">发布时只核验你是否在所选地点附近，精确坐标不会保存或展示；核验动态将计入真实收获样本。</view>
 
     <view wx:if="{{feedLoading && !feedLoaded}}" class="feed-state">正在读取赶海圈…</view>
     <view wx:elif="{{feedLoaded && !feed.length}}" class="empty-card card">
@@ -39,20 +40,23 @@
     <view class="publish-head">
       <view class="back-link" bindtap="backToFeed">‹ 返回赶海圈</view>
       <view class="report-title">分享今天的现场</view>
-      <view class="report-subtitle">当前版本不获取精确位置；发布内容可进入动态，但不计入定位核验样本。</view>
+      <view class="report-subtitle">完成现场定位核验后，动态会计入该地点的真实收获样本。</view>
     </view>
 
-    <view class="location-check ready" bindtap="verifyLocation">
+    <view class="location-check {{onsiteReady ? 'ready' : ''}}" bindtap="verifyLocation">
       <view class="location-check-icon">○</view>
-      <view><text class="location-check-title">不获取精确位置</text><text class="location-check-text">地点由你选择，发布时标注“用户自选地点”</text></view>
+      <view><text class="location-check-title">{{onsiteReady ? '现场位置已获取' : '核验当前位置'}}</text><text class="location-check-text">{{locationText}}</text></view>
     </view>
 
     <view class="report-card card">
       <view class="form-label">赶海地点</view>
+      <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity">
+        <view class="city-form-picker"><text>城市</text><text>{{cityName}}⌄</text></view>
+      </picker>
       <picker mode="selector" range="{{spotOptions}}" range-key="name" value="{{spotIndex}}" bindchange="chooseSpot">
         <view class="spot-picker"><text>{{spotName}}</text><text>⌄</text></view>
       </picker>
-      <view class="form-hint">可选择已收录地点；请确保分享内容与所选地点一致。</view>
+      <view class="form-hint">已收录的附近参考点也可选择；请确保分享内容与所选地点一致。</view>
 
       <view class="form-label amount-label">今天遇到的品类</view>
       <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
@@ -65,7 +69,7 @@
       <view class="photo-line" bindtap="addPhoto"><view class="photo-icon">＋</view><view><text class="photo-title">选择现场照片</text><text class="photo-tip">{{imageCount ? '已选择 ' + imageCount + ' 张；本版暂不上传云端' : '照片上传将在后续版本启用'}}</text></view><text class="photo-arrow">›</text></view>
     </view>
 
-    <view class="privacy-note">当前版本不获取、上传或保存你的精确位置；自选地点动态不计入定位核验样本。</view>
+    <view class="privacy-note">定位坐标仅在发布时用于计算与地点的距离，云端不保存精确经纬度，也不会向其他用户展示。</view>
     <view class="primary-btn submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submit">{{submitting ? '正在发布…' : '发布到赶海圈'}}</view>
   </block>
 </view>

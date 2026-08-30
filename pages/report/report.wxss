@@ -47,6 +47,11 @@
   line-height: 1.55;
 }
 
+.feed-city-row { display: flex; align-items: center; justify-content: space-between; margin-top: 24rpx; padding: 16rpx 20rpx; border-radius: 18rpx; background: #fff; color: #789196; font-size: 21rpx; }
+.city-picker { padding: 8rpx 14rpx; border-radius: 99rpx; background: #eaf7f4; color: #087f88; font-weight: 700; }
+.city-form-picker { display: flex; justify-content: space-between; margin-top: 16rpx; padding: 15rpx 18rpx; border: 1rpx solid #e4eeee; border-radius: 16rpx; color: #6f888d; font-size: 21rpx; }
+.city-form-picker text:last-child { color: #087f88; font-weight: 700; }
+
 .feed-list {
   margin-top: 24rpx;
 }
