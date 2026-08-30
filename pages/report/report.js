@@ -4,7 +4,7 @@ const api = require('../../services/api')
 const { getLocation } = require('../../utils/location')
 
 function citySpots(cityId) {
-  return spots.filter(item => (item.cityId || 'yantai') === cityId)
+  return spots.filter(item => (item.cityId || 'yantai') === cityId && String(item.harvest || '').indexOf('仅观察') < 0)
 }
 
 function relativeTime(value) {
@@ -38,7 +38,6 @@ Page({
     amount: '少量',
     amounts: ['少量', '一般', '较多', '满载'],
     note: '',
-    imageCount: 0,
     submitting: false,
     aiGenerating: false,
     onsiteReady: false,
@@ -60,8 +59,8 @@ Page({
       cityName: city.name,
       cityIndex,
       spotOptions: optionsForCity,
-      spotId: selected.id,
-      spotName: selected.name,
+      spotId: selected ? selected.id : '',
+      spotName: selected ? selected.name : '当前城市暂无可上报采集点',
       spotIndex: Math.max(0, index)
     })
     if (requested && index >= 0) {
@@ -80,8 +79,9 @@ Page({
       const cityIndex = api.cities.findIndex(item => item.id === selectedCityId)
       const city = api.cities[cityIndex]
       const options = city && citySpots(city.id)
-      if (city && options.length) {
-        this.setData({ cityIndex, cityId: city.id, cityName: city.name, spotOptions: options, spotIndex: 0, spotId: options[0].id, spotName: options[0].name, onsiteReady: false, onsiteLocation: null })
+      if (city) {
+        this._feedRequestId = (this._feedRequestId || 0) + 1
+        this.setData({ cityIndex, cityId: city.id, cityName: city.name, spotOptions: options, spotIndex: 0, spotId: options.length ? options[0].id : '', spotName: options.length ? options[0].name : '当前城市暂无可上报采集点', onsiteReady: false, onsiteLocation: null, feedLoading: false, feedLoaded: false, feed: [] })
       }
     }
     if (this.data.mode === 'feed') this.loadFeed()
@@ -94,6 +94,9 @@ Page({
 
   loadFeed(silent) {
     if (this.data.feedLoading) return
+    const requestId = (this._feedRequestId || 0) + 1
+    this._feedRequestId = requestId
+    const cityId = this.data.cityId
     const app = getApp()
     if (!app.globalData.cloudEnabled || !wx.cloud) {
       this.setData({ feedLoading: false, feedLoaded: true, feed: [] })
@@ -102,7 +105,8 @@ Page({
       return
     }
     this.setData({ feedLoading: true })
-    wx.cloud.callFunction({ name: 'report', data: { action: 'feed', cityId: this.data.cityId } }).then(response => {
+    wx.cloud.callFunction({ name: 'report', data: { action: 'feed', cityId } }).then(response => {
+      if (requestId !== this._feedRequestId || cityId !== this.data.cityId) return
       const result = response && response.result
       if (!result || !result.ok) throw new Error(result && result.error || '读取失败')
       const feed = (result.items || []).map(item => Object.assign({}, item, {
@@ -111,12 +115,19 @@ Page({
       }))
       this.setData({ feed, feedLoading: false, feedLoaded: true })
     }).catch(error => {
+      if (requestId !== this._feedRequestId) return
       this.setData({ feedLoading: false, feedLoaded: true })
       if (!silent) wx.showToast({ title: error.message || '动态加载失败', icon: 'none' })
-    }).finally(() => wx.stopPullDownRefresh())
+    }).finally(() => {
+      if (requestId === this._feedRequestId) wx.stopPullDownRefresh()
+    })
   },
 
   openPublish() {
+    if (!this.data.spotOptions.length) {
+      wx.showModal({ title: '当前城市暂不可发布', content: '当前收录地点均为生态观察或禁止采集岸段，因此不开放战果上报。', showCancel: false })
+      return
+    }
     this.setData({ mode: 'publish' })
   },
 
@@ -128,6 +139,7 @@ Page({
   chooseSpot(e) {
     const index = Number(e.detail.value)
     const spot = this.data.spotOptions[index]
+    if (!spot) return
     this.setData({ spotId: spot.id, spotName: spot.name, spotIndex: index, onsiteReady: false, onsiteLocation: null, locationText: '地点已改变，请重新核验位置' })
   },
 
@@ -136,21 +148,25 @@ Page({
     const city = api.cities[cityIndex]
     const options = citySpots(city.id)
     const first = options[0]
-    if (!first) return
     getApp().globalData.selectedCityId = city.id
+    this._feedRequestId = (this._feedRequestId || 0) + 1
     this.setData({
       cityIndex,
       cityId: city.id,
       cityName: city.name,
       spotOptions: options,
       spotIndex: 0,
-      spotId: first.id,
-      spotName: first.name,
+      spotId: first ? first.id : '',
+      spotName: first ? first.name : '当前城市暂无可上报采集点',
       onsiteReady: false,
       onsiteLocation: null,
-      locationText: '点击获取位置，发布时只核验距离'
+      locationText: '点击获取位置，发布时只核验距离',
+      feedLoading: false,
+      feedLoaded: false,
+      feed: []
+    }, () => {
+      if (this.data.mode === 'feed') this.loadFeed(true)
     })
-    if (this.data.mode === 'feed') this.loadFeed(true)
   },
 
   chooseSpecies(e) { this.setData({ selectedSpecies: e.currentTarget.dataset.value }) },
@@ -182,12 +198,12 @@ Page({
     }).catch(() => this.setData({ aiGenerating: false }))
   },
 
-  addPhoto() {
-    wx.chooseMedia({ count: 3, mediaType: ['image'], sourceType: ['album', 'camera'], success: res => this.setData({ imageCount: res.tempFiles.length }) })
-  },
-
   submit() {
     if (this.data.submitting) return
+    if (!this.data.spotId) {
+      wx.showToast({ title: '当前城市没有可上报采集点', icon: 'none' })
+      return
+    }
     const app = getApp()
     if (!app.globalData.cloudEnabled || !wx.cloud) {
       wx.showToast({ title: '云环境尚未启用', icon: 'none' })
@@ -214,7 +230,6 @@ Page({
         mode: 'feed',
         submitting: false,
         note: '',
-        imageCount: 0,
         onsiteReady: false,
         onsiteLocation: null,
         locationText: '点击获取位置，发布时只核验距离'

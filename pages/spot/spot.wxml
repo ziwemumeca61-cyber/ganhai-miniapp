@@ -51,10 +51,12 @@
     <view class="safety-title"><text>安全提醒</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
     <view class="safety-text">撤离：{{spot.retreat}}</view>
     <view class="safety-foot">方位和离岸距离为保守参考带，并非测绘边界；潮位变化、岸段封闭或现场警戒时，以现场管理提示优先。{{spot.modelNotice ? "　" + spot.modelNotice + "；数据：Open-Meteo（CC BY 4.0）。" : ""}}</view>
+    <view class="spot-feedback" bindtap="showFeedback">{{feedbackSubmitting ? '正在提交…' : '位置、入口或采集规定有误？点这里反馈'}}</view>
   </view>
 
   <view class="detail-actions">
-    <view class="ghost-btn" bindtap="goReport">上报战果</view>
+    <view wx:if="{{spot.canReport}}" class="ghost-btn" bindtap="goReport">上报战果</view>
+    <view wx:else class="ghost-btn disabled">仅观察，不采集</view>
     <view class="primary-btn" bindtap="openLocation">打开导航</view>
   </view>
 </view>

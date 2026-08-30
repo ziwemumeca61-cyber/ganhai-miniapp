@@ -406,6 +406,8 @@
   line-height: 1.5;
 }
 
+.spot-feedback { margin-top: 20rpx; padding-top: 18rpx; border-top: 1rpx solid rgba(255,255,255,.16); color: #bde7df; font-size: 21rpx; text-align: center; }
+
 .detail-actions {
   display: flex;
   gap: 16rpx;
@@ -415,3 +417,5 @@
 .detail-actions .ghost-btn, .detail-actions .primary-btn {
   flex: 1;
 }
+
+.detail-actions .ghost-btn.disabled { border-color: #e2e9e9; background: #f3f6f6; color: #93a3a6; }

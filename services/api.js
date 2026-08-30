@@ -32,6 +32,11 @@ function getReportSummaries() {
   return callCloud('report', { action: 'summary' }).then(result => result && result.ok ? result.summaries || [] : [])
 }
 
+function displayTime(value) {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? new Date().toLocaleString() : date.toLocaleString()
+}
+
 function getHomeData(location, cityId) {
   const selectedCityId = cityId || 'yantai'
   const selectedCity = cities.find(item => item.id === selectedCityId) || cities[0]
@@ -42,7 +47,10 @@ function getHomeData(location, cityId) {
       const subtitle = !live
         ? '云端海况服务未连接，请检查 forecast 云函数'
         : live.reason || '当天官方海况尚未通过校验'
-      const summary = Object.assign({}, fallback, { subtitle })
+      const summary = Object.assign({}, fallback, {
+        subtitle,
+        updatedAt: live && live.lastValid && live.lastValid.checkedAt ? displayTime(live.lastValid.checkedAt) + '（已过期）' : fallback.updatedAt
+      })
       return { source: live && live.source || 'waiting-live-data', summary, spots: getSpots(location, summary.conditions, reports, selectedCityId) }
     }
     const conditions = live.conditions
@@ -51,10 +59,12 @@ function getHomeData(location, cityId) {
       safetyScore: live.summary && live.summary.safetyScore,
       label: safetyLevel(conditions),
       safetyLevel: safetyLevel(conditions),
-      subtitle: conditions.blocked ? (conditions.reasons || []).join('、') : (conditions.regionLabel || selectedCity.name + '近岸') + '潮位、浪高与实时天气已通过校验',
+      subtitle: conditions.blocked
+        ? (conditions.reasons || []).join('、')
+        : (conditions.regionLabel || selectedCity.name + '近岸') + (live.cached ? '海况缓存仍在10分钟有效期内' : '潮位、浪高与实时天气已通过校验'),
       dataReady: true,
       conditions,
-      updatedAt: new Date().toLocaleString()
+      updatedAt: displayTime(live.checkedAt)
     })
     return { source: live.source, summary, spots: getSpots(location, conditions, reports, selectedCityId) }
   })

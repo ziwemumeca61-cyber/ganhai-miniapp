@@ -218,6 +218,7 @@ function getSpots(location, conditions, reports, cityId) {
       confidence: harvest.confidence,
       sampleCount: harvest.count,
       catchForecast,
+      canReport: item.harvest.indexOf('仅观察') < 0,
       shoreSide: guide.shoreSide,
       offshoreRange: guide.offshoreRange,
       rankScore,

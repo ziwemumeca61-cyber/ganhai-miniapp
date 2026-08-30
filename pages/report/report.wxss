@@ -291,50 +291,6 @@
   opacity: .55;
 }
 
-.photo-line {
-  display: flex;
-  align-items: center;
-  margin-top: 24rpx;
-  padding-top: 22rpx;
-  border-top: 1rpx solid #edf3f3;
-}
-
-.photo-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 68rpx;
-  height: 68rpx;
-  margin-right: 14rpx;
-  border-radius: 20rpx;
-  background: #edf8f6;
-  color: #49a89d;
-  font-size: 40rpx;
-  font-weight: 300;
-}
-
-.photo-title, .photo-tip {
-  display: block;
-}
-
-.photo-title {
-  color: #456971;
-  font-size: 23rpx;
-  font-weight: 600;
-}
-
-.photo-tip {
-  margin-top: 5rpx;
-  color: #9bafb3;
-  font-size: 18rpx;
-}
-
-.photo-arrow {
-  margin-left: auto;
-  color: #9ab1b4;
-  font-size: 36rpx;
-}
-
 .privacy-note {
   margin: 20rpx 8rpx;
   color: #9baeb2;
@@ -408,6 +364,8 @@
   color: #315e64;
   font-size: 23rpx;
 }
+
+.spot-picker.empty { color: #9a6d45; background: #fff7eb; }
 
 .form-hint {
   margin-top: 10rpx;

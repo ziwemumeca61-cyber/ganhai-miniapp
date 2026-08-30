@@ -33,6 +33,21 @@ async function requestCloudAI(messages, modelName) {
   }
 }
 
+function selectRelevantSpots(question, spots) {
+  const text = String(question || '').replace(/\s+/g, '')
+  const mentioned = spots.filter(item => {
+    const full = String(item.name || '').replace(/\s+/g, '')
+    const withoutNote = full.replace(/[（(][^）)]*[）)]/g, '')
+    const short = withoutNote.replace(/海水浴场|海滨公园|赶海园|风景区|岸段|沙滩|附近/g, '')
+    return [full, withoutNote, short].some(alias => alias.length >= 3 && text.indexOf(alias) >= 0)
+  })
+  const selected = []
+  mentioned.concat(spots).forEach(item => {
+    if (selected.length < 10 && !selected.some(existing => existing.id === item.id)) selected.push(item)
+  })
+  return selected
+}
+
 async function ask(question, context) {
   const app = getApp()
   const selectedCityId = context && context.cityId || app && app.globalData && app.globalData.selectedCityId || 'yantai'
@@ -40,10 +55,10 @@ async function ask(question, context) {
   const cityName = context && context.city || selectedCity.name
   const data = await api.getHomeData(app && app.globalData && app.globalData.location, selectedCity.id)
   if (!data.summary.dataReady || data.summary.conditions && data.summary.conditions.blocked) return { answer: safeLocalAnswer(data), source: '安全数据闸门' }
-  const spots = data.spots.slice(0, 6).map(item => {
+  const spots = selectRelevantSpots(question, data.spots).map(item => {
     const safety = item.safetyScore === null ? '安全待评估' : '安全' + item.safetyScore
     const harvest = item.harvestScore === null ? '收获' + item.harvestLabel + '/' + item.confidence + '置信/' + item.sampleCount + '条' : '收获' + item.harvestScore + '/' + item.confidence + '置信/' + item.sampleCount + '条'
-    return item.name + '(' + item.verification + '，' + safety + '，' + harvest + ')'
+    return item.name + '(' + item.verification + '，' + safety + '，' + harvest + '，距离' + item.distanceLabel + '，时段' + item.bestWindow + '，入口' + item.entry + '，撤离' + item.retreat + ')'
   }).join('；')
   const cloudResult = await requestCloudAI([
     { role: 'system', content: '你是全国沿海赶海向导，当前服务城市是' + cityName + '。只能基于提供的结构化数据回答。海况安全分与收获概率必须分开；少于20条现场样本不能称为推荐；不得编造离岸距离、收获、开放边界或潮汐。先说结论，再说观察窗口、地点核验和撤离提醒。' },

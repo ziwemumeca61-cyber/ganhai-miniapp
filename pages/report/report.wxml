@@ -53,10 +53,11 @@
       <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity">
         <view class="city-form-picker"><text>城市</text><text>{{cityName}}⌄</text></view>
       </picker>
-      <picker mode="selector" range="{{spotOptions}}" range-key="name" value="{{spotIndex}}" bindchange="chooseSpot">
+      <picker wx:if="{{spotOptions.length}}" mode="selector" range="{{spotOptions}}" range-key="name" value="{{spotIndex}}" bindchange="chooseSpot">
         <view class="spot-picker"><text>{{spotName}}</text><text>⌄</text></view>
       </picker>
-      <view class="form-hint">已收录的附近参考点也可选择；请确保分享内容与所选地点一致。</view>
+      <view wx:else class="spot-picker empty"><text>{{spotName}}</text></view>
+      <view class="form-hint">{{spotOptions.length ? '已收录的附近参考点也可选择；请确保分享内容与所选地点一致。' : '生态观察或禁止采集地点不开放战果上报。'}}</view>
 
       <view class="form-label amount-label">今天遇到的品类</view>
       <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
@@ -66,7 +67,6 @@
 
       <view class="note-head"><view class="form-label note-label">补充一句（可选）</view><view class="ai-draft-btn {{aiGenerating ? 'disabled' : ''}}" bindtap="generateDraft">✦ {{aiGenerating ? '整理中' : 'AI帮我整理'}}</view></view>
       <textarea class="note-input" maxlength="120" placeholder="例如：公共入口附近沙滩，回涨前已撤离" value="{{note}}" bindinput="onNote"></textarea>
-      <view class="photo-line" bindtap="addPhoto"><view class="photo-icon">＋</view><view><text class="photo-title">选择现场照片</text><text class="photo-tip">{{imageCount ? '已选择 ' + imageCount + ' 张；本版暂不上传云端' : '照片上传将在后续版本启用'}}</text></view><text class="photo-arrow">›</text></view>
     </view>
 
     <view class="privacy-note">定位坐标仅在发布时用于计算与地点的距离，云端不保存精确经纬度，也不会向其他用户展示。</view>

@@ -1,7 +1,7 @@
 const api = require('../../services/api')
 
 Page({
-  data: { spot: null, forecast: [] },
+  data: { spot: null, forecast: [], feedbackSubmitting: false },
 
   onLoad(options) {
     api.getSpotDetail(options.id).then(data => {
@@ -43,5 +43,48 @@ Page({
       showCancel: false,
       confirmText: '知道了'
     })
+  },
+
+  showFeedback() {
+    if (!this.data.spot || this.data.feedbackSubmitting) return
+    const types = ['位置不准', '入口封闭', '禁止采集', '入口建议', '其他']
+    wx.showActionSheet({
+      itemList: types,
+      success: choice => {
+        const issueType = types[choice.tapIndex]
+        wx.showModal({
+          title: issueType,
+          content: '',
+          editable: true,
+          placeholderText: issueType === '入口建议' ? '请描述公开入口或附近标志物' : '请描述现场具体情况',
+          confirmText: '提交反馈',
+          success: modal => {
+            const note = String(modal.content || '').trim()
+            if (!modal.confirm) return
+            if (!note) {
+              wx.showToast({ title: '请填写具体情况', icon: 'none' })
+              return
+            }
+            this.submitFeedback(issueType, note)
+          }
+        })
+      }
+    })
+  },
+
+  submitFeedback(issueType, note) {
+    const app = getApp()
+    if (!app.globalData.cloudEnabled || !wx.cloud) {
+      wx.showToast({ title: '云环境尚未启用', icon: 'none' })
+      return
+    }
+    this.setData({ feedbackSubmitting: true })
+    wx.cloud.callFunction({ name: 'report', data: { action: 'feedback', spotId: this.data.spot.id, issueType, note } }).then(response => {
+      const result = response && response.result
+      if (!result || !result.ok) throw new Error(result && result.error || '提交失败')
+      wx.showToast({ title: '感谢反馈', icon: 'success' })
+    }).catch(error => {
+      wx.showModal({ title: '暂未提交', content: error.message || '请稍后重试', showCancel: false })
+    }).finally(() => this.setData({ feedbackSubmitting: false }))
   }
 })

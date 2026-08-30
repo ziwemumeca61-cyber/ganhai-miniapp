@@ -1,11 +1,44 @@
 const cloud = require('wx-server-sdk')
 const https = require('https')
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV })
+const db = cloud.database()
 
 const HOME = 'https://hyj.yantai.gov.cn/'
 const INDEX = 'https://hyj.yantai.gov.cn/col/col1638/index.html'
 const MODEL_CACHE_TTL = 10 * 60 * 1000
+const PERSISTENT_CACHE_FRESH_MS = 10 * 60 * 1000
+const PERSISTENT_CACHE_COLLECTION = 'forecast_cache'
 const modelCache = new Map()
+
+const cacheDocumentId = cityId => 'city-' + String(cityId || 'yantai').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50)
+
+async function savePersistentCache(cityId, value) {
+  try {
+    await db.collection(PERSISTENT_CACHE_COLLECTION).doc(cacheDocumentId(cityId)).set({ data: {
+      cityId,
+      checkedAt: value.checkedAt || new Date().toISOString(),
+      value,
+      updatedAt: db.serverDate()
+    } })
+  } catch (error) {
+    console.warn('forecast persistent cache write skipped', error.message)
+  }
+}
+
+async function readPersistentCache(cityId) {
+  try {
+    const result = await db.collection(PERSISTENT_CACHE_COLLECTION).doc(cacheDocumentId(cityId)).get()
+    const data = result && result.data
+    const value = data && data.value
+    const checkedAt = value && value.checkedAt || data && data.checkedAt
+    const time = new Date(checkedAt).getTime()
+    if (!value || !Number.isFinite(time)) return null
+    return { value, checkedAt, ageMs: Math.max(0, Date.now() - time) }
+  } catch (error) {
+    console.warn('forecast persistent cache read skipped', error.message)
+    return null
+  }
+}
 const OFFICIAL_TIDE_STATIONS = {
   shanghai: {
     id: 'sh-luchaogang',
@@ -534,27 +567,64 @@ async function nationwideModel(event) {
 
 exports.main = async event => {
   const cityId = String(event && event.cityId || 'yantai')
+  let result
   if (cityId === 'yantai') {
     const officialResult = await yantaiOfficial(event)
-    if (officialResult && officialResult.conditions && officialResult.conditions.dataReady) return officialResult
+    if (officialResult && officialResult.conditions && officialResult.conditions.dataReady) {
+      result = officialResult
+    } else {
+      try {
+        const fallback = await nationwideModel(event)
+        fallback.source = '烟台官方预报不可用，已切换 ' + fallback.source
+        fallback.officialFallbackReason = officialResult && officialResult.reason
+        result = fallback
+      } catch (error) {
+        result = officialResult
+      }
+    }
+  } else {
     try {
-      const fallback = await nationwideModel(event)
-      fallback.source = '烟台官方预报不可用，已切换 ' + fallback.source
-      fallback.officialFallbackReason = officialResult && officialResult.reason
-      return fallback
+      result = await nationwideModel(event)
     } catch (error) {
-      return officialResult
+      console.error('nationwide forecast failed', error)
+      result = {
+        source: 'nationwide-forecast-failed',
+        checkedAt: new Date().toISOString(),
+        reason: error.message,
+        conditions: { dataReady: false, blocked: false }
+      }
     }
   }
-  try {
-    return await nationwideModel(event)
-  } catch (error) {
-    console.error('nationwide forecast failed', error)
-    return {
-      source: 'nationwide-forecast-failed',
+
+  if (!result) {
+    result = {
+      source: 'forecast-unavailable',
       checkedAt: new Date().toISOString(),
-      reason: error.message,
+      reason: '实时海况服务未返回有效结果',
       conditions: { dataReady: false, blocked: false }
     }
   }
+
+  if (result.conditions && result.conditions.dataReady) {
+    await savePersistentCache(cityId, result)
+    return result
+  }
+
+  const cached = await readPersistentCache(cityId)
+  if (!cached) return result
+  const ageMinutes = Math.max(1, Math.round(cached.ageMs / 60000))
+  if (cached.ageMs <= PERSISTENT_CACHE_FRESH_MS) {
+    const value = JSON.parse(JSON.stringify(cached.value))
+    value.cached = true
+    value.cacheAgeMinutes = ageMinutes
+    value.source = '最近有效缓存 · ' + value.source
+    value.conditions.regionLabel = '缓存' + ageMinutes + '分钟前 · ' + (value.conditions.regionLabel || String(event && event.cityName || '当前城市') + '近岸')
+    value.conditions.modelNotice = (value.conditions.modelNotice ? value.conditions.modelNotice + '；' : '') + '实时接口暂不可用，当前为' + ageMinutes + '分钟前的最近有效数据'
+    return value
+  }
+  return Object.assign({}, result || {}, {
+    reason: String(result && result.reason || '实时海况接口暂不可用') + '；上次有效数据为' + ageMinutes + '分钟前，因超过10分钟已停止评分',
+    lastValid: { checkedAt: cached.checkedAt, ageMinutes },
+    conditions: { dataReady: false, blocked: false }
+  })
 }
