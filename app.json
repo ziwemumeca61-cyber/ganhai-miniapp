@@ -42,7 +42,7 @@
   "lazyCodeLoading": "requiredComponents",
   "permission": {
     "scope.userLocation": {
-      "desc": "用于计算当前位置与沿海赶海地点的距离、推荐附近地点，并在用户发布现场记录时核验是否到场；不会公开精确坐标"
+      "desc": "用于推荐附近赶海点及现场定位核验"
     }
   },
   "requiredPrivateInfos": [
