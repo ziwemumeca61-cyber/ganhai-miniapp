@@ -217,12 +217,10 @@
 }
 
 .preview-desc {
-  overflow: hidden;
   margin-top: 8rpx;
   color: #789197;
   font-size: 19rpx;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.5;
 }
 
 .preview-actions {

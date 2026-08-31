@@ -24,7 +24,14 @@ Page({
   openLocation() {
     const spot = this.data.spot
     if (!spot) return
-    wx.openLocation({ latitude: spot.latitude, longitude: spot.longitude, name: spot.name, address: spot.entry + '；以现场开放边界为准' })
+    wx.openLocation({ latitude: spot.latitude, longitude: spot.longitude, name: spot.name + ' · 导航参考点', address: spot.entry + '；优先查看：' + spot.bestZone + '；以现场开放边界为准' })
+  },
+
+  copyZoneGuide() {
+    const spot = this.data.spot
+    if (!spot) return
+    const text = spot.name + '\n优先赶海区：' + spot.bestZone + '\n导航到：' + spot.entry + '\n到达后：' + spot.shoreSide + '\n重点看：' + spot.offshoreRange + '\n现场特征：' + spot.searchFeature + '\n参考坐标：' + spot.coordinateLabel + '\n提示：导航坐标是附近参考点，是否开放以现场管理为准。'
+    wx.setClipboardData({ data: text, success: () => wx.showToast({ title: '路线已复制', icon: 'success' }) })
   },
 
   goReport() { wx.navigateTo({ url: '/pages/report/report?spotId=' + this.data.spot.id }) },
@@ -32,7 +39,7 @@ Page({
   askAI() {
     const spot = this.data.spot
     if (!spot) return
-    wx.setStorageSync('ai_prefill', '请分别说明' + spot.name + '的海况安全、收获置信度、公共入口和撤离提示。数据不足时不要推荐。')
+    wx.setStorageSync('ai_prefill', '请分别说明' + spot.name + '的海况安全、收获置信度、优先赶海区、公共入口和撤离提示。数据不足时不要推荐。')
     wx.switchTab({ url: '/pages/ai/ai' })
   },
 
@@ -47,7 +54,7 @@ Page({
 
   showFeedback() {
     if (!this.data.spot || this.data.feedbackSubmitting) return
-    const types = ['位置不准', '入口封闭', '禁止采集', '入口建议', '其他']
+    const types = ['位置不准', '入口封闭', '禁止采集', '入口建议', '赶海区建议', '其他']
     wx.showActionSheet({
       itemList: types,
       success: choice => {
@@ -56,7 +63,7 @@ Page({
           title: issueType,
           content: '',
           editable: true,
-          placeholderText: issueType === '入口建议' ? '请描述公开入口或附近标志物' : '请描述现场具体情况',
+          placeholderText: issueType === '入口建议' ? '请描述公开入口或附近标志物' : issueType === '赶海区建议' ? '请描述从哪个地标往哪个方向、哪一段滩面更合适' : '请描述现场具体情况',
           confirmText: '提交反馈',
           success: modal => {
             const note = String(modal.content || '').trim()

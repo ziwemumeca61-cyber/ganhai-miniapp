@@ -29,7 +29,8 @@
       <view class="preview-main">
         <view class="preview-kicker">{{selected.verification}} · {{selected.type}}</view>
         <view class="preview-title">{{selected.name}}</view>
-        <view class="preview-desc">{{selected.shoreSide}} · {{selected.offshoreRange}}</view>
+        <view class="preview-desc">优先区：{{selected.bestZone}}</view>
+        <view class="preview-desc">{{selected.shoreSide}}</view>
         <view class="preview-desc">{{selected.catchForecast}}</view>
       </view>
       <view class="preview-actions">

@@ -23,22 +23,35 @@ const pendingGuide = {
 }
 
 const positionGuides = {
-  jinshatan: { shoreSide: '瞭望台北侧近岸沙滩', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
-  jiahekou: { shoreSide: '古贝广场北侧、夹河口外侧岸段', offshoreRange: '固定岸线外约0—100米泥沙滩' },
-  'first-bath': { shoreSide: '公共入口东侧裸露礁石与近岸沙滩', offshoreRange: '固定岸线外约0—50米' },
-  jinhaiwan: { shoreSide: '旅游大世界临海一侧近岸', offshoreRange: '固定岸线外约0—60米' },
-  'moon-bay': { shoreSide: '月亮老人东侧可见礁石岸段', offshoreRange: '固定岸线外约0—40米' },
-  dongpaotai: { shoreSide: '东炮台东侧往海韵广场方向', offshoreRange: '固定岸线外约0—40米' },
-  'second-bath': { shoreSide: '入口北侧礁石、南侧沙滩', offshoreRange: '固定岸线外约0—60米' },
-  yanda: { shoreSide: '导航点东侧、烟台大学临海一侧', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
-  tianyuewan: { shoreSide: '酒店临海东侧公开沙滩方向', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
-  beizhai: { shoreSide: '北寨临海一侧、辛安河口外侧', offshoreRange: '固定岸线外约0—60米' },
-  fenbei: { shoreSide: '辛安河特大桥西北侧公开沙滩', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
-  'yangmadao-front': { shoreSide: '养马岛海水浴场南侧近岸', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
-  'yangmadao-back': { shoreSide: '养马岛北侧后海礁石岸段', offshoreRange: '固定岸线外约0—40米' },
-  'haiyang-wanmi': { shoreSide: '海景路南侧公开海滩', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
-  'longkou-donghai-west': { shoreSide: '海涛二路西侧海水浴场近岸', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
-  'penglai-bath-nearby': { shoreSide: '仙境路北侧海滩方向', offshoreRange: '固定岸线外约0—80米退潮裸露区' }
+  jinshatan: { bestZone: '瞭望台北侧，退潮后刚露出的湿沙与浅水沟', shoreSide: '从瞭望台附近公开通道到岸边后向北侧查看', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  jiahekou: { bestZone: '古贝广场北侧、夹河口外缘的湿润泥沙带', shoreSide: '从古贝广场临海一侧寻找公开通道', offshoreRange: '固定岸线外约0—100米泥沙滩' },
+  'first-bath': { bestZone: '公共入口东侧，沙滩与裸露礁石交界处', shoreSide: '从第一海水浴场公共入口到岸边后向东侧查看', offshoreRange: '固定岸线外约0—50米' },
+  jinhaiwan: { bestZone: '旅游大世界临海一侧，沙滩与低位礁石交界处', shoreSide: '到达旅游大世界临海一侧后沿公开岸段查看', offshoreRange: '固定岸线外约0—60米' },
+  'moon-bay': { bestZone: '月亮老人东侧、与岸线相连的低位礁石潮池', shoreSide: '从公共步行入口到月亮老人附近后向东侧查看', offshoreRange: '固定岸线外约0—40米' },
+  dongpaotai: { bestZone: '东炮台东侧往海韵广场方向的低位礁石缝', shoreSide: '从东炮台公园公共入口下到开放岸段后向东查看', offshoreRange: '固定岸线外约0—40米' },
+  'second-bath': { bestZone: '公共入口北侧，礁石与沙滩交界处', shoreSide: '从第二海水浴场公共入口到岸边后向北侧查看', offshoreRange: '固定岸线外约0—60米' },
+  yanda: { bestZone: '烟台大学临海东侧，退潮后刚露出的湿沙带', shoreSide: '从滨海中路附近公开通道到岸边后向烟大临海一侧查看', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  tianyuewan: { bestZone: '天越湾酒店临海东侧公开沙滩的湿沙带', shoreSide: '导航到酒店附近后，从现场公开通道前往临海东侧', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  beizhai: { bestZone: '北寨临海一侧、辛安河口外缘的湿沙带', shoreSide: '到达北寨临海一侧后，仅从现场公开通道接近岸边', offshoreRange: '固定岸线外约0—60米' },
+  fenbei: { bestZone: '辛安河特大桥西北侧、远离主河槽的公开湿沙带', shoreSide: '从滨海东路靠海河西路一侧公共入口到岸边后向西北侧查看', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'yangmadao-front': { bestZone: '养马岛海水浴场南侧，湿沙与碎石交界处', shoreSide: '从海水浴场公共入口到岸边后向南侧公开区域查看', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'yangmadao-back': { bestZone: '养马岛北侧后海、与岸线相连的低位礁石潮池', shoreSide: '仅从北侧公开通道接近，不翻越围挡或进入孤立礁石', offshoreRange: '固定岸线外约0—40米' },
+  'haiyang-wanmi': { bestZone: '海景路南侧公共入口正对的退潮湿沙带', shoreSide: '从凤城万米海滩公共入口到岸边后查看新露出的湿沙', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
+  'longkou-donghai-west': { bestZone: '海涛二路西侧浴场，退潮后刚露出的湿沙带', shoreSide: '从海涛二路6号浴场入口到岸边后沿公开区域查看', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
+  'penglai-bath-nearby': { bestZone: '仙境路北侧公开通道抵达海滩后的湿沙带', shoreSide: '导航点不是入口，到达后先寻找现场公开通道再往北侧海滩', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'qingdao-shilaoren': { bestZone: '海水浴场开放岸段内，退潮后刚露出的湿沙带', shoreSide: '从海口路附近公共入口到岸边后，仅在浴场开放范围查看', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'qingdao-jinshatan': { bestZone: '金沙滩公开浴场内，退潮后仍湿润的沙带', shoreSide: '从景区公开入口到岸边后，避开游泳分隔区和封闭区', offshoreRange: '固定岸线外约0—100米退潮裸露区' },
+  'weihai-international': { bestZone: '国际海水浴场开放岸段内，退潮后刚露出的湿沙带', shoreSide: '从北环海路178号公共入口到岸边后按当日旗语选择开放岸段', offshoreRange: '固定岸线外约0—80米退潮裸露区' },
+  'rizhao-wanpingkou': { bestZone: '3号停车场临海一侧，公开沙滩的新露湿沙带', shoreSide: '从3号停车场附近景区入口进入后前往临海公开岸段', offshoreRange: '固定岸线外约0—100米退潮裸露区' }
+}
+
+function searchFeatureFor(item) {
+  const type = String(item.type || '')
+  if (String(item.harvest || '').indexOf('仅观察') >= 0) return '该岸段只作生态观察：不采集、不挖掘、不翻石、不带走生物，并服从保护区和现场管理要求'
+  if (type.indexOf('泥') >= 0 || type.indexOf('湿地') >= 0) return '优先观察水线刚退去的湿润泥沙、小孔和轻微鼓包；避开主河槽、软泥和保护区'
+  if (type.indexOf('礁石') >= 0) return '优先查看与固定岸线相连的低位礁石缝和浅潮池；不跳孤立礁石，不背对海浪'
+  if (type.indexOf('河口') >= 0) return '只查看河口外缘的公开浅滩，避开主河槽、排水口、突变深沟和湿地保护范围'
+  return '优先观察水线刚退去、仍然湿润的沙带和浅水沟；避开干沙、游泳区和封闭岸段'
 }
 
 const spots = [
@@ -200,10 +213,23 @@ function getSpots(location, conditions, reports, cityId) {
     const estimatedWindow = !officialWindow && lowTide !== '--:--' ? tideWindowFromLow(lowTide) : null
     const window = officialWindow || estimatedWindow || (localConditions && localConditions.dataReady ? '今日低潮窗口已过' : '潮汐数据待更新')
     const windowBasis = officialWindow ? '官方潮汐窗口' : estimatedWindow ? '按低潮前2小时至后30分钟估算' : localConditions && localConditions.dataReady ? '今日窗口已结束' : '等待官方潮汐数据'
-    const guide = positionGuides[item.id] || { shoreSide: item.shoreline, offshoreRange: '仅限退潮后裸露的近岸区域' }
+    const observeOnly = item.harvest.indexOf('仅观察') >= 0
+    const guide = positionGuides[item.id]
+    const hasSpecificZone = Boolean(guide && guide.bestZone)
+    const zoneGuide = guide || {
+      bestZone: observeOnly ? '生态观察岸段，不设置采集优先区' : '尚未核验到具体优先岸段',
+      shoreSide: '当前只确认到附近导航点，请先寻找现场公开入口',
+      offshoreRange: '仅限退潮后裸露、与固定岸线相连的近岸区域'
+    }
+    const zoneStatus = observeOnly
+      ? '仅观察，不采集'
+      : hasSpecificZone
+      ? verified ? '具体岸段已标注' : '岸段描述待实地复核'
+      : '具体区域待海友核验'
+    const searchFeature = searchFeatureFor(item)
     const distanceScore = km === null ? 50 : Math.max(0, 100 - km * 2)
     const rankScore = Math.round(Number(safetyScore || 0) * 0.6 + distanceScore * 0.35 + (verified ? 5 : 0))
-    const catchForecast = item.harvest.indexOf('仅观察') >= 0
+    const catchForecast = observeOnly
       ? '生态保护或观察岸段：仅观察，不采集'
       : harvest.count < 5
         ? '目标海货：' + item.harvest + '；现场样本不足，暂不预测数量'
@@ -218,9 +244,19 @@ function getSpots(location, conditions, reports, cityId) {
       confidence: harvest.confidence,
       sampleCount: harvest.count,
       catchForecast,
-      canReport: item.harvest.indexOf('仅观察') < 0,
-      shoreSide: guide.shoreSide,
-      offshoreRange: guide.offshoreRange,
+      canReport: !observeOnly,
+      bestZone: zoneGuide.bestZone,
+      bestZoneAvailable: hasSpecificZone,
+      zoneStatus,
+      shoreSide: zoneGuide.shoreSide,
+      offshoreRange: zoneGuide.offshoreRange,
+      searchFeature,
+      coordinateLabel: Number(item.latitude).toFixed(5) + ', ' + Number(item.longitude).toFixed(5),
+      zoneSteps: [
+        { label: '导航到', text: item.entry },
+        { label: '到达后', text: zoneGuide.shoreSide },
+        { label: '重点看', text: zoneGuide.offshoreRange + '；' + searchFeature }
+      ],
       rankScore,
       rankReason: (km === null ? '未定位' : formatDistance(km)) + ' · 安全' + (safetyScore === null ? '待更新' : safetyScore + '分') + ' · 距离与安全综合排序',
       recommended,

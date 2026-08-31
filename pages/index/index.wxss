@@ -416,8 +416,8 @@
 
 .spot-bottom {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
   margin-top: 22rpx;
   padding-top: 18rpx;
   border-top: 1rpx solid #edf3f4;
@@ -434,9 +434,10 @@
 }
 
 .spot-direction {
+  margin-top: 13rpx;
   color: #087f88;
   font-size: 20rpx;
-  white-space: nowrap;
+  line-height: 1.55;
 }
 
 .direction-arrow {

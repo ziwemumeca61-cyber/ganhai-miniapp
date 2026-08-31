@@ -58,7 +58,7 @@ async function ask(question, context) {
   const spots = selectRelevantSpots(question, data.spots).map(item => {
     const safety = item.safetyScore === null ? '安全待评估' : '安全' + item.safetyScore
     const harvest = item.harvestScore === null ? '收获' + item.harvestLabel + '/' + item.confidence + '置信/' + item.sampleCount + '条' : '收获' + item.harvestScore + '/' + item.confidence + '置信/' + item.sampleCount + '条'
-    return item.name + '(' + item.verification + '，' + safety + '，' + harvest + '，距离' + item.distanceLabel + '，时段' + item.bestWindow + '，入口' + item.entry + '，撤离' + item.retreat + ')'
+    return item.name + '(' + item.verification + '，' + safety + '，' + harvest + '，距离' + item.distanceLabel + '，时段' + item.bestWindow + '，优先赶海区' + item.bestZone + '，现场特征' + item.searchFeature + '，入口' + item.entry + '，撤离' + item.retreat + ')'
   }).join('；')
   const cloudResult = await requestCloudAI([
     { role: 'system', content: '你是全国沿海赶海向导，当前服务城市是' + cityName + '。只能基于提供的结构化数据回答。海况安全分与收获概率必须分开；少于20条现场样本不能称为推荐；不得编造离岸距离、收获、开放边界或潮汐。先说结论，再说观察窗口、地点核验和撤离提醒。' },

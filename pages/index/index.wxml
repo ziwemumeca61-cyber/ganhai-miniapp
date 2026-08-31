@@ -89,7 +89,7 @@
       </view>
       <view class="spot-bottom">
         <view class="spot-tags"><text wx:for="{{item.tags}}" wx:key="*this" class="mini-tag">{{item}}</text></view>
-        <view class="spot-direction"><text class="direction-arrow">↗</text>{{item.shoreSide}} · {{item.offshoreRange}}</view>
+        <view class="spot-direction"><text class="direction-arrow">↗</text>优先区：{{item.bestZone}}</view>
       </view>
     </view>
   </block>

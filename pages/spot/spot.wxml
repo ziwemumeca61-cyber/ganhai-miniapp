@@ -1,26 +1,29 @@
 <view wx:if="{{spot}}" class="page-shell spot-page">
   <view class="detail-head">
     <view>
-      <view class="eyebrow">{{spot.area}} · 今日赶海点</view>
+      <view class="eyebrow">{{spot.area}} · {{spot.canReport ? '今日赶海点' : '生态观察点'}}</view>
       <view class="detail-title">{{spot.name}}</view>
-      <view class="detail-meta"><text>距当前位置约 {{spot.distance}} km</text><text class="meta-dot">·</text><text>{{spot.update}}</text></view>
+      <view class="detail-meta"><text>{{spot.distanceLabel}}</text><text class="meta-dot">·</text><text>{{spot.update}}</text></view>
     </view>
     <view class="detail-score"><text>{{spot.safetyScore === null ? '--' : spot.safetyScore}}</text><text>海况安全分</text></view>
   </view>
 
   <view class="zone-card card">
-    <view class="zone-header"><view><text class="zone-kicker">VERIFIED SHORE GUIDE</text><text class="zone-title">{{spot.verification}}</text></view><view class="compass"><text>N</text><text class="compass-arrow">↑</text><text>E</text></view></view>
-    <view class="position-facts">
-      <view class="position-fact"><text>具体方位</text><text>{{spot.shoreSide}}</text></view>
-      <view class="position-fact"><text>离岸范围</text><text>{{spot.offshoreRange}}</text></view>
+    <view class="zone-header"><view><text class="zone-kicker">PRIORITY SHORE ZONE</text><text class="zone-title">优先赶海区</text></view><view class="zone-status {{spot.bestZoneAvailable ? 'ready' : 'pending'}}">{{spot.zoneStatus}}</view></view>
+    <view class="best-zone {{spot.bestZoneAvailable ? '' : 'pending'}}">
+      <text class="best-zone-label">具体去哪一段</text>
+      <text class="best-zone-name">{{spot.bestZone}}</text>
+      <text class="best-zone-source">地点定位：{{spot.verification}}</text>
+      <text class="best-zone-note">{{!spot.canReport ? '该地点只作生态观察，不提供采集位置。' : spot.bestZoneAvailable ? '这是岸段参考，不代表开放许可；到场先看围挡、旗语和管理提示。' : '这个地点目前只能导航到附近，不能负责任地编造一段“最佳位置”。'}}</text>
     </view>
-    <view class="zone-map">
-      <view class="shoreline"><text>岸线</text></view>
-      <view class="zone-water"><view class="zone-strip one"></view><view class="zone-strip two"></view><view class="zone-strip three"></view><text class="water-label">{{spot.offshoreRange}}</text></view>
-      <view class="distance-label start">入口</view>
-      <view class="distance-label end">目标近岸带</view>
+    <view class="zone-route">
+      <view wx:for="{{spot.zoneSteps}}" wx:key="label" class="route-step">
+        <view class="route-index">{{index + 1}}</view>
+        <view class="route-copy"><text>{{item.label}}</text><text>{{item.text}}</text></view>
+      </view>
     </view>
-    <view class="zone-reason"><text class="reason-icon">✦</text><text>入口：{{spot.entry}}　岸段：{{spot.shoreline}}</text></view>
+    <view class="search-feature"><text class="reason-icon">✦</text><view><text>现场识别特征</text><text>{{spot.searchFeature}}</text></view></view>
+    <view class="coordinate-row" bindtap="copyZoneGuide"><view><text>导航参考坐标</text><text>{{spot.coordinateLabel}}</text></view><text class="copy-link">复制路线</text></view>
     <view class="ai-plan-btn" bindtap="askAI"><text>✦</text><text>让 AI 按有效数据说明安全与收获</text><text class="ai-plan-arrow">→</text></view>
   </view>
 
@@ -51,12 +54,12 @@
     <view class="safety-title"><text>安全提醒</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
     <view class="safety-text">撤离：{{spot.retreat}}</view>
     <view class="safety-foot">方位和离岸距离为保守参考带，并非测绘边界；潮位变化、岸段封闭或现场警戒时，以现场管理提示优先。{{spot.modelNotice ? "　" + spot.modelNotice + "；数据：Open-Meteo（CC BY 4.0）。" : ""}}</view>
-    <view class="spot-feedback" bindtap="showFeedback">{{feedbackSubmitting ? '正在提交…' : '位置、入口或采集规定有误？点这里反馈'}}</view>
+    <view class="spot-feedback" bindtap="showFeedback">{{feedbackSubmitting ? '正在提交…' : '位置、入口、优先赶海区或采集规定有误？点这里反馈'}}</view>
   </view>
 
   <view class="detail-actions">
     <view wx:if="{{spot.canReport}}" class="ghost-btn" bindtap="goReport">上报战果</view>
     <view wx:else class="ghost-btn disabled">仅观察，不采集</view>
-    <view class="primary-btn" bindtap="openLocation">打开导航</view>
+    <view class="primary-btn" bindtap="openLocation">导航到参考点</view>
   </view>
 </view>

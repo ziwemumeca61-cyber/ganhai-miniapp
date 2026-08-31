@@ -137,6 +137,6 @@ Page({
   navigateToSpot() {
     const spot = this.data.selected
     if (!spot || !spot.id) return
-    wx.openLocation({ latitude: spot.latitude, longitude: spot.longitude, name: spot.name, address: `${spot.cityName} · ${spot.area} · ${spot.zone.side}` })
+    wx.openLocation({ latitude: spot.latitude, longitude: spot.longitude, name: `${spot.name} · 导航参考点`, address: `${spot.entry}；优先查看：${spot.bestZone}；以现场开放边界为准` })
   }
 })

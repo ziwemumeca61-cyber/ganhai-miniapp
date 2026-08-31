@@ -97,7 +97,7 @@ async function feed(event) {
 async function feedback(event) {
   const context = cloud.getWXContext()
   const target = spots[event.spotId]
-  const types = ['位置不准', '入口封闭', '禁止采集', '入口建议', '其他']
+  const types = ['位置不准', '入口封闭', '禁止采集', '入口建议', '赶海区建议', '其他']
   const issueType = String(event.issueType || '')
   const note = String(event.note || '').trim().slice(0, 200)
   if (!target) return { ok: false, error: '未找到这个地点' }
