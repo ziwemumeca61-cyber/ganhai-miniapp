@@ -26,14 +26,14 @@
       </view>
       <view class="score-ring">
         <view class="score-number">{{summary.safetyScore === null ? '--' : summary.safetyScore}}</view>
-        <view class="score-label">海况安全分</view>
+        <view class="score-label">首选点安全</view>
       </view>
     </view>
     <view class="hero-line"></view>
     <view class="metrics">
       <view class="metric">
         <text class="metric-icon">↓</text>
-        <view><text class="metric-value">{{summary.lowTide}}</text><text class="metric-label">低潮时间</text></view>
+        <view><text class="metric-value">{{summary.lowTide}}</text><text class="metric-label">首选点低潮</text></view>
       </view>
       <view class="metric">
         <text class="metric-icon sun">☼</text>
@@ -45,14 +45,14 @@
       </view>
     </view>
     <view class="best-window">
-      <view><text class="window-label">观察窗口</text><text class="window-value">{{summary.bestTime}}</text></view>
+      <view><text class="window-label">{{summary.referenceSpot || '首选点'}}窗口</text><text class="window-value">{{summary.bestTime}}</text></view>
       <view class="window-warning">{{summary.safety}}</view>
     </view>
   </view>
 
-  <view wx:if="{{summary.safetyLevel !== '适合赶海'}}" class="safety-banner">
+  <view wx:if="{{summary.showSafetyWarning}}" class="safety-banner">
     <text class="safety-banner-icon">!</text>
-    <view><text class="safety-banner-title">当前不适合直接下海</text><text class="safety-banner-text">天气或潮汐条件发生变化，请先确认现场风浪和管理提示。</text></view>
+    <view><text class="safety-banner-title">{{summary.warningTitle}}</text><text class="safety-banner-text">{{summary.warningText}}</text></view>
   </view>
 
   <view class="quick-actions">

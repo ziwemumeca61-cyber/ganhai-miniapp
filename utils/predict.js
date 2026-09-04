@@ -23,7 +23,7 @@ function safetyLevel(conditions) {
   const data = conditions || {}
   if (data.blocked) return '不建议下滩'
   if (!data.dataReady) return '实时数据待更新'
-  return '海况安全可评估'
+  return '实时海况已更新'
 }
 
 module.exports = { clamp, safetyScoreWithConditions, scoreLabel, safetyLevel }
