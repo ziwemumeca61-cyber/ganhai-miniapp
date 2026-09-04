@@ -89,6 +89,7 @@
       </view>
       <view class="spot-bottom">
         <view class="spot-tags"><text wx:for="{{item.tags}}" wx:key="*this" class="mini-tag">{{item}}</text></view>
+        <view wx:if="{{item.seaIntestineForecast.available}}" class="sea-intestine-chip {{item.seaIntestineForecast.safetyBlocked ? 'blocked' : ''}}">海肠 · {{item.seaIntestineForecast.summary}}</view>
         <view class="spot-direction"><text class="direction-arrow">↗</text>优先区：{{item.bestZone}}</view>
       </view>
     </view>

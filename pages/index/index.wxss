@@ -433,6 +433,9 @@
   font-size: 18rpx;
 }
 
+.sea-intestine-chip { margin-top: 13rpx; padding: 10rpx 13rpx; border-radius: 10rpx; background: #e9f7f5; color: #087f78; font-size: 20rpx; line-height: 1.45; }
+.sea-intestine-chip.blocked { background: #fff0e3; color: #b66b31; }
+
 .spot-direction {
   margin-top: 13rpx;
   color: #087f88;

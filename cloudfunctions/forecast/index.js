@@ -222,7 +222,7 @@ async function official() {
 }
 
 async function weather() {
-  const query = 'latitude=37.536&longitude=121.450&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_gusts_10m&hourly=visibility'
+  const query = 'latitude=37.536&longitude=121.450&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m&hourly=visibility'
   const data = JSON.parse(await get('https://api.open-meteo.com/v1/forecast?' + query))
   const current = data.current || {}
   const index = current.time && data.hourly ? data.hourly.time.indexOf(current.time.slice(0, 13) + ':00') : -1
@@ -231,6 +231,7 @@ async function weather() {
     rain: Number(current.precipitation),
     code: Number(current.weather_code),
     wind: Number(current.wind_speed_10m),
+    windDirection: Number(current.wind_direction_10m),
     gust: Number(current.wind_gusts_10m),
     visibility: index >= 0 ? Number(data.hourly.visibility[index]) : null
   }
@@ -311,6 +312,11 @@ const evaluateRegion = (region, ocean, met) => {
       tideScore: result.tideScore,
       seaWeatherScore: result.seaWeatherScore,
       weatherLabel: met.temp + '℃ · 风速' + met.wind + 'km/h',
+      windSpeed: met.wind,
+      windGust: met.gust,
+      windDirection: met.windDirection,
+      waveHeight: wave.max,
+      waveDirectionText: wave.direction,
       waveLabel: '浪高' + wave.min + '—' + wave.max + 'm · ' + wave.direction + '浪',
       tideSource: '烟台市海洋发展和渔业局',
       tideStation: region.label,
@@ -396,6 +402,7 @@ const formatChinaTime = timestamp => new Intl.DateTimeFormat('zh-CN', {
 
 const modelConditions = (metData, marineData, label) => {
   const met = metData && metData.current || {}
+  const metHourly = metData && metData.hourly || {}
   const hourly = marineData && marineData.hourly || {}
   const times = Array.isArray(hourly.time) ? hourly.time : []
   const levels = Array.isArray(hourly.sea_level_height_msl) ? hourly.sea_level_height_msl : []
@@ -454,6 +461,25 @@ const modelConditions = (metData, marineData, label) => {
   if (code >= 95) reasons.push('存在雷暴天气')
   if (visibility !== null && visibility < 1000) reasons.push('能见度低于1公里')
 
+  const historyStart = now - 18 * 3600000
+  const metIndexByTime = {}
+  ;(metHourly.time || []).forEach((time, index) => { metIndexByTime[String(time)] = index })
+  const transportHistory = times.map((time, index) => {
+    const stamp = localTimestamp(time)
+    if (!finite(stamp) || stamp < historyStart || stamp > now + 3600000) return null
+    const metIndex = metIndexByTime[String(time)]
+    return {
+      time,
+      windSpeed: Number.isInteger(metIndex) && finite(metHourly.wind_speed_10m && metHourly.wind_speed_10m[metIndex]) ? Number(metHourly.wind_speed_10m[metIndex]) : null,
+      windDirection: Number.isInteger(metIndex) && finite(metHourly.wind_direction_10m && metHourly.wind_direction_10m[metIndex]) ? Number(metHourly.wind_direction_10m[metIndex]) : null,
+      waveHeight: finite(hourly.wave_height && hourly.wave_height[index]) ? Number(hourly.wave_height[index]) : null,
+      waveDirection: finite(hourly.wave_direction && hourly.wave_direction[index]) ? Number(hourly.wave_direction[index]) : null,
+      wavePeriod: finite(hourly.wave_period && hourly.wave_period[index]) ? Number(hourly.wave_period[index]) : null,
+      oceanCurrentVelocity: finite(hourly.ocean_current_velocity && hourly.ocean_current_velocity[index]) ? Number(hourly.ocean_current_velocity[index]) : null,
+      oceanCurrentDirection: finite(hourly.ocean_current_direction && hourly.ocean_current_direction[index]) ? Number(hourly.ocean_current_direction[index]) : null
+    }
+  }).filter(Boolean)
+
   return {
     dataReady: true,
     blocked: reasons.length > 0,
@@ -465,11 +491,31 @@ const modelConditions = (metData, marineData, label) => {
     seaWeatherScore,
     weatherLabel: Number(met.temperature_2m).toFixed(1) + '℃ · 风速' + wind.toFixed(1) + 'km/h',
     waveLabel: '浪高约' + wave.toFixed(1) + 'm · 数值模型',
+    windSpeed: wind,
+    windGust: gust,
+    windDirection: finite(met.wind_direction_10m) ? Number(met.wind_direction_10m) : null,
+    waveHeight: wave,
+    waveDirection: valueAt(marineData, 'wave_direction', lowIndex),
+    wavePeriod: valueAt(marineData, 'wave_period', lowIndex),
+    seaSurfaceTemperature: valueAt(marineData, 'sea_surface_temperature', lowIndex),
+    oceanCurrentVelocity: valueAt(marineData, 'ocean_current_velocity', lowIndex),
+    oceanCurrentDirection: valueAt(marineData, 'ocean_current_direction', lowIndex),
+    transportHistory,
     tideSource: 'Open-Meteo潮位模型',
     tideConfidence: '参考',
     stationDistanceKm: null,
     modelNotice: '潮位约8公里分辨率，仅作赶海时间参考，不用于航海'
   }
+}
+
+function valueAt(data, name, preferredIndex) {
+  const current = data && data.current || {}
+  if (finite(current[name])) return Number(current[name])
+  const values = data && data.hourly && data.hourly[name]
+  if (!Array.isArray(values) || !values.length) return null
+  if (Number.isInteger(preferredIndex) && finite(values[preferredIndex])) return Number(values[preferredIndex])
+  const value = values.find(finite)
+  return finite(value) ? Number(value) : null
 }
 
 const withOfficialTide = (conditions, official, point) => {
@@ -509,8 +555,9 @@ async function nationwideModel(event) {
 
   const latitudes = points.map(item => item.latitude.toFixed(6)).join(',')
   const longitudes = points.map(item => item.longitude.toFixed(6)).join(',')
-  const weatherQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_gusts_10m%2Cvisibility'
-  const marineQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&forecast_days=2&cell_selection=sea&current=wave_height%2Csea_level_height_msl&hourly=wave_height%2Csea_level_height_msl'
+  const weatherQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&past_days=1&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m%2Cvisibility&hourly=wind_speed_10m%2Cwind_direction_10m'
+  const marineVariables = 'wave_height%2Cwave_direction%2Cwave_period%2Csea_level_height_msl%2Csea_surface_temperature%2Cocean_current_velocity%2Cocean_current_direction'
+  const marineQuery = 'latitude=' + latitudes + '&longitude=' + longitudes + '&timezone=Asia%2FShanghai&past_days=1&forecast_days=2&cell_selection=sea&current=' + marineVariables + '&hourly=' + marineVariables
   const cityId = String(event && event.cityId || '')
   const officialStation = OFFICIAL_TIDE_STATIONS[cityId]
   const officialPromise = officialStation
@@ -569,12 +616,35 @@ exports.main = async event => {
   const cityId = String(event && event.cityId || 'yantai')
   let result
   if (cityId === 'yantai') {
-    const officialResult = await yantaiOfficial(event)
+    const values = await Promise.allSettled([yantaiOfficial(event), nationwideModel(event)])
+    const officialResult = values[0].status === 'fulfilled' ? values[0].value : null
+    const modelResult = values[1].status === 'fulfilled' ? values[1].value : null
     if (officialResult && officialResult.conditions && officialResult.conditions.dataReady) {
       result = officialResult
+      if (modelResult && modelResult.conditions) {
+        const transportFields = ['windSpeed', 'windGust', 'windDirection', 'waveHeight', 'waveDirection', 'wavePeriod', 'seaSurfaceTemperature', 'oceanCurrentVelocity', 'oceanCurrentDirection', 'transportHistory']
+        const mergeTransport = (officialConditions, modelConditions) => {
+          const merged = Object.assign({}, officialConditions)
+          transportFields.forEach(key => {
+            if (modelConditions && modelConditions[key] !== null && modelConditions[key] !== undefined) merged[key] = modelConditions[key]
+          })
+          return merged
+        }
+        const perSpot = {}
+        const requested = Array.isArray(event && event.locations) ? event.locations : []
+        requested.forEach(point => {
+          const modelSpot = modelResult.conditions.spots && modelResult.conditions.spots[point.id]
+          const officialSpot = officialResult.conditions.regions && officialResult.conditions.regions[Object.keys(REGIONS).find(key => REGIONS[key] === regionFor(point))]
+          if (officialSpot) perSpot[point.id] = mergeTransport(officialSpot, modelSpot)
+        })
+        result.conditions = mergeTransport(result.conditions, modelResult.conditions)
+        result.conditions.spots = perSpot
+        result.source += ' + Open-Meteo风浪洋流'
+      }
     } else {
       try {
-        const fallback = await nationwideModel(event)
+        if (!modelResult) throw new Error(values[1].reason && values[1].reason.message || '数值模型不可用')
+        const fallback = modelResult
         fallback.source = '烟台官方预报不可用，已切换 ' + fallback.source
         fallback.officialFallbackReason = officialResult && officialResult.reason
         result = fallback

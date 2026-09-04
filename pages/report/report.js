@@ -35,6 +35,7 @@ Page({
     spotIndex: 0,
     species: ['蛤蜊', '海螺', '海蛎子', '螃蟹', '海肠', '其他'],
     selectedSpecies: '蛤蜊',
+    found: true,
     amount: '少量',
     amounts: ['少量', '一般', '较多', '满载'],
     note: '',
@@ -111,7 +112,7 @@ Page({
       if (!result || !result.ok) throw new Error(result && result.error || '读取失败')
       const feed = (result.items || []).map(item => Object.assign({}, item, {
         timeLabel: relativeTime(item.createdAt),
-        noteDisplay: item.note || '分享了一次现场收获'
+        noteDisplay: item.note || (item.found ? '分享了一次现场收获' : '记录了一次未发现样本')
       }))
       this.setData({ feed, feedLoading: false, feedLoaded: true })
     }).catch(error => {
@@ -170,6 +171,7 @@ Page({
   },
 
   chooseSpecies(e) { this.setData({ selectedSpecies: e.currentTarget.dataset.value }) },
+  chooseFound(e) { this.setData({ found: e.currentTarget.dataset.value === 'true' }) },
   chooseAmount(e) { this.setData({ amount: e.currentTarget.dataset.value }) },
   onNote(e) { this.setData({ note: e.detail.value }) },
 
@@ -193,7 +195,7 @@ Page({
   generateDraft() {
     if (this.data.aiGenerating) return
     this.setData({ aiGenerating: true })
-    ai.summarizeReport({ spotName: this.data.spotName, species: this.data.selectedSpecies, amount: this.data.amount, note: this.data.note }).then(result => {
+    ai.summarizeReport({ spotName: this.data.spotName, species: this.data.selectedSpecies, amount: this.data.found ? this.data.amount : '未发现', note: this.data.note }).then(result => {
       this.setData({ note: result.answer, aiGenerating: false })
     }).catch(() => this.setData({ aiGenerating: false }))
   },
@@ -220,6 +222,7 @@ Page({
       spotId: this.data.spotId,
       cityId: this.data.cityId,
       species: this.data.selectedSpecies,
+      found: this.data.found,
       amount: this.data.amount,
       note: this.data.note,
       location: this.data.onsiteLocation

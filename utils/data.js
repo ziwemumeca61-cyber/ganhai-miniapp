@@ -1,4 +1,5 @@
 const { distanceKm, formatDistance } = require('./geo')
+const { seaIntestineForecast } = require('./species-predict')
 const { safetyScoreWithConditions, scoreLabel } = require('./predict')
 const { nationalCities, nationalSpots } = require('./national-data')
 
@@ -163,7 +164,7 @@ spots.push(
 spots.push(...nationalSpots)
 
 function harvestAssessment(spot, reports) {
-  const item = (reports || []).find(report => report.spotId === spot.id)
+  const item = (reports || []).find(report => report.spotId === spot.id && (!report.species || report.species === '*'))
   const count = Number(item && item.count || 0)
   const average = Number(item && item.average || 0)
   if (count < 5) return { count, label: '样本不足', score: null, confidence: '无' }
@@ -207,6 +208,7 @@ function getSpots(location, conditions, reports, cityId) {
     const scoreable = Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))
     const safetyScore = scoreable ? safetyScoreWithConditions(item.terrainSafety, localConditions) : null
     const harvest = harvestAssessment(item, reports)
+    const seaIntestine = seaIntestineForecast(item, localConditions, reports)
     const recommended = verified && safetyScore !== null && safetyScore >= 80 && harvest.score !== null
     const lowTide = localConditions && localConditions.nextLow ? localConditions.nextLow : '--:--'
     const officialWindow = localConditions && localConditions.window
@@ -244,6 +246,7 @@ function getSpots(location, conditions, reports, cityId) {
       confidence: harvest.confidence,
       sampleCount: harvest.count,
       catchForecast,
+      seaIntestineForecast: seaIntestine,
       canReport: !observeOnly,
       bestZone: zoneGuide.bestZone,
       bestZoneAvailable: hasSpecificZone,

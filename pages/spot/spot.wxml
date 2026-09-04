@@ -48,6 +48,11 @@
   <view class="decision-card card">
     <view class="decision-title"><text class="decision-index">3</text><text>可能有什么</text><text class="confidence-link" bindtap="showDisclaimer">置信说明 ⓘ</text></view>
     <view class="catch-summary">{{spot.catchForecast}}</view>
+    <view wx:if="{{spot.seaIntestineForecast.available}}" class="sea-intestine-inline {{spot.seaIntestineForecast.safetyBlocked ? 'blocked' : ''}}">
+      <view><text>海肠冲岸</text><text>{{spot.seaIntestineForecast.score}}</text></view>
+      <text>{{spot.seaIntestineForecast.summary}}</text>
+      <text>样本：发现 {{spot.seaIntestineForecast.positiveCount}} · 未发现 {{spot.seaIntestineForecast.negativeCount}}；{{spot.seaIntestineForecast.disclaimer}}</text>
+    </view>
     <view class="species-row">
       <view wx:for="{{spot.species}}" wx:key="name" class="species-pill"><text>{{item.name}}</text><text>{{item.value}}</text></view>
     </view>

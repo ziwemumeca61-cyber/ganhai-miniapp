@@ -371,6 +371,11 @@
 .source-note { margin-top: 18rpx; color: #8ba1a4; font-size: 18rpx; line-height: 1.55; }
 .decision-card .catch-summary { margin: 17rpx 0 0; padding: 17rpx 18rpx; background: #fffaf2; }
 .species-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 17rpx; }
+.sea-intestine-inline { margin-top: 15rpx; padding: 16rpx 18rpx; border-radius: 15rpx; background: #eaf8f5; }
+.sea-intestine-inline.blocked { background: #fff0e3; }
+.sea-intestine-inline > view { display: flex; align-items: center; justify-content: space-between; color: #176e6b; font-size: 21rpx; font-weight: 800; }
+.sea-intestine-inline > view text:last-child { color: #e18b3e; font-size: 34rpx; }
+.sea-intestine-inline > text { display: block; margin-top: 7rpx; color: #648487; font-size: 18rpx; line-height: 1.5; }
 .species-pill { display: flex; align-items: center; gap: 10rpx; padding: 11rpx 15rpx; border-radius: 99rpx; background: #edf7f5; }
 .species-pill text:first-child { color: #2d6669; font-size: 20rpx; font-weight: 700; }
 .species-pill text:last-child { color: #d9873b; font-size: 18rpx; }

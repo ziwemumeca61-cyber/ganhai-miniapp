@@ -30,7 +30,7 @@
           </view>
           <view class="verified-badge">{{item.verified ? '可信现场' : '海友分享'}}</view>
         </view>
-        <view class="feed-result"><text class="species-name">{{item.species}}</text><text class="amount-tag">{{item.amount}}</text></view>
+        <view class="feed-result"><text class="species-name">{{item.species}}</text><text class="amount-tag">{{item.found ? item.amount : '未发现'}}</text></view>
         <view class="feed-note">{{item.noteDisplay}}</view>
       </view>
     </view>
@@ -62,8 +62,10 @@
       <view class="form-label amount-label">今天遇到的品类</view>
       <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
 
-      <view class="form-label amount-label">大概收获</view>
-      <view class="amount-row"><view wx:for="{{amounts}}" wx:key="*this" class="amount-choice {{amount === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseAmount"><text class="amount-dot"></text><text>{{item}}</text></view></view>
+      <view class="form-label amount-label">现场结果</view>
+      <view class="amount-row"><view class="amount-choice {{found ? 'selected' : ''}}" data-value="true" bindtap="chooseFound"><text class="amount-dot"></text><text>发现了</text></view><view class="amount-choice {{!found ? 'selected' : ''}}" data-value="false" bindtap="chooseFound"><text class="amount-dot"></text><text>没有发现</text></view></view>
+      <view wx:if="{{!found}}" class="form-hint">“没有发现”同样会记入预测样本，可以帮助减少假高分。</view>
+      <block wx:if="{{found}}"><view class="form-label amount-label">大概收获</view><view class="amount-row"><view wx:for="{{amounts}}" wx:key="*this" class="amount-choice {{amount === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseAmount"><text class="amount-dot"></text><text>{{item}}</text></view></view></block>
 
       <view class="note-head"><view class="form-label note-label">补充一句（可选）</view><view class="ai-draft-btn {{aiGenerating ? 'disabled' : ''}}" bindtap="generateDraft">✦ {{aiGenerating ? '整理中' : 'AI帮我整理'}}</view></view>
       <textarea class="note-input" maxlength="120" placeholder="例如：公共入口附近沙滩，回涨前已撤离" value="{{note}}" bindinput="onNote"></textarea>

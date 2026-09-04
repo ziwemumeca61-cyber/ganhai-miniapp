@@ -4,7 +4,7 @@ const db = cloud.database()
 const command = db.command
 
 const spots = require('./national-spots')
-const weights = { '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
+const weights = { '未发现': 0, '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
 const radians = value => value * Math.PI / 180
 const distanceMeters = (from, to) => {
   const radius = 6371000
@@ -31,32 +31,34 @@ async function readAll(queryFactory, pageSize = 100, maxPages = 50) {
 }
 
 async function summaries() {
-  const since = new Date(Date.now() - 14 * 86400000)
+  const since = new Date(Date.now() - 90 * 86400000)
   try {
-    const aggregate = db.command.aggregate
-    if (aggregate) {
-      const result = await db.collection('field_reports').aggregate()
-        .match({ createdAt: command.gte(since), verified: true })
-        .group({ _id: '$spotId', count: aggregate.sum(1), total: aggregate.sum('$amountWeight') })
-        .end()
-      const list = result.list || []
-      return { ok: true, summaries: list.map(item => ({ spotId: item._id, count: item.count, average: Number((item.total / item.count).toFixed(2)) })) }
-    }
-    throw new Error('聚合能力不可用')
-  } catch (aggregateError) {
-    try {
-      const rows = await readAll(() => db.collection('field_reports').where({ createdAt: command.gte(since), verified: true }))
-      const grouped = {}
-      rows.forEach(item => {
-        if (!grouped[item.spotId]) grouped[item.spotId] = { spotId: item.spotId, count: 0, total: 0 }
-        grouped[item.spotId].count += 1
-        grouped[item.spotId].total += Number(item.amountWeight || 0)
-      })
-      return { ok: true, summaries: Object.values(grouped).map(item => ({ spotId: item.spotId, count: item.count, average: Number((item.total / item.count).toFixed(2)) })) }
-    } catch (error) {
-      console.warn('field_reports unavailable', aggregateError, error)
-      return { ok: true, summaries: [], needsCollection: true }
-    }
+    const rows = await readAll(() => db.collection('field_reports').where({ createdAt: command.gte(since), verified: true }))
+    const grouped = {}
+    const generic = {}
+    rows.forEach(item => {
+      const species = String(item.species || '其他').slice(0, 12)
+      const found = item.found !== false && item.amount !== '未发现'
+      const key = item.spotId + '|' + species
+      if (!grouped[key]) grouped[key] = { spotId: item.spotId, species, count: 0, positiveCount: 0, negativeCount: 0, total: 0 }
+      const group = grouped[key]
+      group.count += 1
+      group[found ? 'positiveCount' : 'negativeCount'] += 1
+      if (found) {
+        group.total += Number(item.amountWeight || 0)
+        if (Date.now() - new Date(item.createdAt).getTime() <= 14 * 86400000) {
+          if (!generic[item.spotId]) generic[item.spotId] = { spotId: item.spotId, species: '*', count: 0, total: 0 }
+          generic[item.spotId].count += 1
+          generic[item.spotId].total += Number(item.amountWeight || 0)
+        }
+      }
+    })
+    const speciesSummaries = Object.values(grouped).map(item => Object.assign({}, item, { average: item.positiveCount ? Number((item.total / item.positiveCount).toFixed(2)) : 0, windowDays: 90 }))
+    const genericSummaries = Object.values(generic).map(item => ({ spotId: item.spotId, species: '*', count: item.count, average: Number((item.total / item.count).toFixed(2)), windowDays: 14 }))
+    return { ok: true, summaries: genericSummaries.concat(speciesSummaries) }
+  } catch (error) {
+    console.warn('field_reports unavailable', error)
+    return { ok: true, summaries: [], needsCollection: true }
   }
 }
 
@@ -82,7 +84,8 @@ async function feed(event) {
       spotId: item.spotId,
       spotName: item.spotName || spots[item.spotId] && spots[item.spotId].name || '已核验地点',
       species: String(item.species || '其他').slice(0, 12),
-      amount: weights[item.amount] ? item.amount : '已记录',
+      found: item.found !== false && item.amount !== '未发现',
+      amount: Object.prototype.hasOwnProperty.call(weights, item.amount) ? item.amount : '已记录',
       note: String(item.note || '').slice(0, 120),
       verified: item.verified === true,
       createdAt: isoTime(item.createdAt)
@@ -128,7 +131,9 @@ async function submit(event) {
   const target = spots[event.spotId]
   if (!target) return { ok: false, error: '请选择已收录的赶海地点' }
   if (target.collectible === false) return { ok: false, error: '该地点仅供生态观察，不开放收获上报' }
-  if (!weights[event.amount]) return { ok: false, error: '请选择收获量' }
+  const found = event.found !== false
+  const amount = found ? event.amount : '未发现'
+  if (!Object.prototype.hasOwnProperty.call(weights, amount)) return { ok: false, error: '请选择收获量' }
   const latitude = Number(event.location && event.location.latitude)
   const longitude = Number(event.location && event.location.longitude)
   const accuracy = Number(event.location && event.location.accuracy)
@@ -146,8 +151,9 @@ async function submit(event) {
       cityId: target.cityId,
       spotName: target.name,
       species: String(event.species || '其他').slice(0, 12),
-      amount: event.amount,
-      amountWeight: weights[event.amount],
+      found,
+      amount,
+      amountWeight: weights[amount],
       note: String(event.note || '').slice(0, 120),
       verified: true,
       verificationLabel: '现场定位已核验',
