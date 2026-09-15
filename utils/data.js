@@ -3,6 +3,21 @@ const { seaIntestineForecast } = require('./species-predict')
 const { safetyScoreWithConditions, scoreLabel } = require('./predict')
 const { nationalCities, nationalSpots } = require('./national-data')
 
+const shoreZones = [
+  { id: 'west', label: '参考点西侧' },
+  { id: 'middle', label: '参考点附近' },
+  { id: 'east', label: '参考点东侧' }
+]
+const shoreZoneLabels = shoreZones.reduce((result, item) => {
+  result[item.id] = item.label
+  return result
+}, { unknown: '未分段' })
+
+function normalizeShoreZone(value) {
+  const id = String(value || '')
+  return Object.prototype.hasOwnProperty.call(shoreZoneLabels, id) ? id : 'unknown'
+}
+
 const cities = [
   { id: 'yantai', name: '烟台', latitude: 37.536, longitude: 121.45, scale: 8 },
   { id: 'qingdao', name: '青岛', latitude: 36.08, longitude: 120.38, scale: 8 },
@@ -164,13 +179,46 @@ spots.push(
 spots.push(...nationalSpots)
 
 function harvestAssessment(spot, reports) {
-  const item = (reports || []).find(report => report.spotId === spot.id && (!report.species || report.species === '*'))
+  const item = (reports || []).find(report => report.spotId === spot.id && (!report.species || report.species === '*') && (!report.zoneId || report.zoneId === '*'))
   const count = Number(item && item.count || 0)
   const average = Number(item && item.average || 0)
   if (count < 5) return { count, label: '样本不足', score: null, confidence: '无' }
   const label = average < 1.75 ? '偏少' : average < 2.75 ? '一般' : '较好'
   if (count < 20) return { count, label, score: null, confidence: '低' }
   return { count, label, score: Math.round(Math.min(100, average / 4 * 100)), confidence: count < 50 ? '中' : '高' }
+}
+
+function zoneEvidenceFor(spot, reports) {
+  const grouped = {}
+  ;(reports || []).forEach(report => {
+    if (!report || report.spotId !== spot.id || report.species !== '*' || report.zoneId === '*') return
+    const zoneId = normalizeShoreZone(report.zoneId)
+    const positiveCount = Number.isFinite(Number(report.positiveCount)) ? Number(report.positiveCount) : Number(report.count || 0)
+    const negativeCount = Number.isFinite(Number(report.negativeCount)) ? Number(report.negativeCount) : 0
+    const count = Number.isFinite(Number(report.count)) ? Number(report.count) : positiveCount + negativeCount
+    if (!grouped[zoneId]) grouped[zoneId] = { zoneId, positiveCount: 0, negativeCount: 0, count: 0 }
+    grouped[zoneId].positiveCount += Math.max(0, positiveCount)
+    grouped[zoneId].negativeCount += Math.max(0, negativeCount)
+    grouped[zoneId].count += Math.max(0, count || positiveCount + negativeCount)
+  })
+  const zoneRows = shoreZones.map(zone => {
+    const value = grouped[zone.id] || { zoneId: zone.id, positiveCount: 0, negativeCount: 0, count: 0 }
+    const sampleCount = value.positiveCount + value.negativeCount || value.count
+    return Object.assign({}, value, { label: zone.label, sampleCount, discoveryRate: sampleCount ? (value.positiveCount + 1) / (sampleCount + 2) : 0 })
+  })
+  const unknown = grouped.unknown
+  const best = zoneRows.filter(item => item.sampleCount >= 3 && item.positiveCount > 0).sort((a, b) => {
+    if (a.discoveryRate !== b.discoveryRate) return b.discoveryRate - a.discoveryRate
+    if (a.positiveCount !== b.positiveCount) return b.positiveCount - a.positiveCount
+    return b.sampleCount - a.sampleCount
+  })[0] || null
+  const knownCount = zoneRows.reduce((sum, item) => sum + item.sampleCount, 0)
+  const evidenceText = !knownCount && !(unknown && unknown.count)
+    ? '暂无分段样本；发布时选择西侧、附近或东侧，帮助确定最佳岸段'
+    : zoneRows.map(item => item.sampleCount
+      ? item.label + item.sampleCount + '条（发现' + item.positiveCount + '／未发现' + item.negativeCount + '）'
+      : item.label + '暂无').join(' · ') + (unknown && unknown.count ? ' · 未分段' + unknown.count + '条' : '')
+  return { recommended: best || null, text: evidenceText }
 }
 
 function regionKey(item) {
@@ -223,8 +271,16 @@ function getSpots(location, conditions, reports, cityId) {
       shoreSide: '当前只确认到附近导航点，请先寻找现场公开入口',
       offshoreRange: '仅限退潮后裸露、与固定岸线相连的近岸区域'
     }
+    const zoneEvidence = zoneEvidenceFor(item, reports)
+    const dynamicZone = zoneEvidence.recommended
+    const bestZoneAvailable = hasSpecificZone || Boolean(dynamicZone)
+    const bestZone = dynamicZone ? dynamicZone.label + '（现场发现率较高）' : zoneGuide.bestZone
+    const bestZoneSource = dynamicZone ? '现场样本优先参考' : hasSpecificZone ? '附近参考岸段' : '等待现场岸段样本'
+    const bestZoneDetail = dynamicZone ? '当前分段样本：发现' + dynamicZone.positiveCount + '次、未发现' + dynamicZone.negativeCount + '次；附近参考：' + zoneGuide.bestZone : ''
     const zoneStatus = observeOnly
       ? '仅观察，不采集'
+      : dynamicZone
+      ? '现场样本已标注'
       : hasSpecificZone
       ? verified ? '具体岸段已标注' : '岸段描述待实地复核'
       : '具体区域待海友核验'
@@ -248,9 +304,12 @@ function getSpots(location, conditions, reports, cityId) {
       catchForecast,
       seaIntestineForecast: seaIntestine,
       canReport: !observeOnly,
-      bestZone: zoneGuide.bestZone,
-      bestZoneAvailable: hasSpecificZone,
+      bestZone,
+      bestZoneSource,
+      bestZoneDetail,
+      bestZoneAvailable,
       zoneStatus,
+      zoneEvidenceText: zoneEvidence.text,
       shoreSide: zoneGuide.shoreSide,
       offshoreRange: zoneGuide.offshoreRange,
       searchFeature,
@@ -317,4 +376,4 @@ function getTodaySummary() {
   }
 }
 
-module.exports = { cities, spots, getSpots, getSpot, getTodaySummary, harvestAssessment }
+module.exports = { cities, spots, shoreZones, getSpots, getSpot, getTodaySummary, harvestAssessment, zoneEvidenceFor }

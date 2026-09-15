@@ -17,9 +17,9 @@ const mean = values => values.length ? values.reduce((sum, value) => sum + value
 function seaIntestineForecast(spot, conditions, reports) {
   const site = spot && SITES[spot.id]
   if (!site || !conditions || !conditions.dataReady) return { available: false }
-  const report = (reports || []).find(item => item.spotId === spot.id && item.species === '海肠')
-  const positive = Number(report && report.positiveCount || 0)
-  const negative = Number(report && report.negativeCount || 0)
+  const speciesReports = (reports || []).filter(item => item.spotId === spot.id && item.species === '海肠')
+  const positive = speciesReports.reduce((sum, item) => sum + Number(item.positiveCount || 0), 0)
+  const negative = speciesReports.reduce((sum, item) => sum + Number(item.negativeCount || 0), 0)
   const sampleCount = positive + negative
   const history = Array.isArray(conditions.transportHistory) ? conditions.transportHistory : []
   const reasons = [site.basis]

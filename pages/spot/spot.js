@@ -30,7 +30,7 @@ Page({
   copyZoneGuide() {
     const spot = this.data.spot
     if (!spot) return
-    const text = spot.name + '\n优先赶海区：' + spot.bestZone + '\n导航到：' + spot.entry + '\n到达后：' + spot.shoreSide + '\n重点看：' + spot.offshoreRange + '\n现场特征：' + spot.searchFeature + '\n参考坐标：' + spot.coordinateLabel + '\n提示：导航坐标是附近参考点，是否开放以现场管理为准。'
+    const text = spot.name + '\n优先赶海区：' + spot.bestZone + '\n依据：' + spot.bestZoneSource + (spot.bestZoneDetail ? '；' + spot.bestZoneDetail : '') + '\n岸段样本：' + spot.zoneEvidenceText + '\n导航到：' + spot.entry + '\n到达后：' + spot.shoreSide + '\n重点看：' + spot.offshoreRange + '\n现场特征：' + spot.searchFeature + '\n参考坐标：' + spot.coordinateLabel + '\n提示：导航坐标是附近参考点，是否开放以现场管理为准。'
     wx.setClipboardData({ data: text, success: () => wx.showToast({ title: '路线已复制', icon: 'success' }) })
   },
 

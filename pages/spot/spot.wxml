@@ -13,7 +13,10 @@
     <view class="best-zone {{spot.bestZoneAvailable ? '' : 'pending'}}">
       <text class="best-zone-label">优先看这一段</text>
       <text class="best-zone-name">{{spot.bestZone}}</text>
+      <text class="best-zone-source">{{spot.bestZoneSource}}</text>
+      <text wx:if="{{spot.bestZoneDetail}}" class="best-zone-note">{{spot.bestZoneDetail}}</text>
     </view>
+    <view class="zone-evidence">岸段样本：{{spot.zoneEvidenceText}}</view>
     <view class="key-answer"><text>到达后</text><text>{{spot.shoreSide}}</text></view>
     <view class="key-answer"><text>离岸范围</text><text>{{spot.offshoreRange}}</text></view>
     <view class="key-answer"><text>现场找什么</text><text>{{spot.searchFeature}}</text></view>

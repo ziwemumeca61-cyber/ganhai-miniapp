@@ -1,4 +1,4 @@
-const { spots } = require('../../utils/data')
+const { spots, shoreZones } = require('../../utils/data')
 const ai = require('../../services/ai')
 const api = require('../../services/api')
 const { getLocation } = require('../../utils/location')
@@ -38,12 +38,17 @@ Page({
     found: true,
     amount: '少量',
     amounts: ['少量', '一般', '较多', '满载'],
+    zoneOptions: shoreZones,
+    zoneId: 'middle',
+    photos: [],
+    uploadingPhotos: false,
+    uploadProgress: '',
     note: '',
     submitting: false,
     aiGenerating: false,
     onsiteReady: false,
     onsiteLocation: null,
-    locationText: '点击获取位置，发布时只核验距离'
+    locationText: '可选；不定位或距离较远也可以发布'
   },
 
   onLoad(options) {
@@ -82,7 +87,7 @@ Page({
       const options = city && citySpots(city.id)
       if (city) {
         this._feedRequestId = (this._feedRequestId || 0) + 1
-        this.setData({ cityIndex, cityId: city.id, cityName: city.name, spotOptions: options, spotIndex: 0, spotId: options.length ? options[0].id : '', spotName: options.length ? options[0].name : '当前城市暂无可上报采集点', onsiteReady: false, onsiteLocation: null, feedLoading: false, feedLoaded: false, feed: [] })
+        this.setData({ cityIndex, cityId: city.id, cityName: city.name, spotOptions: options, spotIndex: 0, spotId: options.length ? options[0].id : '', spotName: options.length ? options[0].name : '当前城市暂无可上报采集点', zoneId: 'middle', onsiteReady: false, onsiteLocation: null, locationText: '可选；不定位或距离较远也可以发布', feedLoading: false, feedLoaded: false, feed: [] })
       }
     }
     if (this.data.mode === 'feed') this.loadFeed()
@@ -112,9 +117,13 @@ Page({
       if (!result || !result.ok) throw new Error(result && result.error || '读取失败')
       const feed = (result.items || []).map(item => Object.assign({}, item, {
         timeLabel: relativeTime(item.createdAt),
+        zoneDisplay: item.zoneId && item.zoneId !== 'unknown' ? item.zoneLabel : '',
         noteDisplay: item.note || (item.found ? '分享了一次现场收获' : '记录了一次未发现样本')
       }))
-      this.setData({ feed, feedLoading: false, feedLoaded: true })
+      return this.hydrateFeedPhotos(feed).then(items => {
+        if (requestId !== this._feedRequestId || cityId !== this.data.cityId) return
+        this.setData({ feed: items, feedLoading: false, feedLoaded: true })
+      })
     }).catch(error => {
       if (requestId !== this._feedRequestId) return
       this.setData({ feedLoading: false, feedLoaded: true })
@@ -122,6 +131,28 @@ Page({
     }).finally(() => {
       if (requestId === this._feedRequestId) wx.stopPullDownRefresh()
     })
+  },
+
+  hydrateFeedPhotos(items) {
+    const fileIds = []
+    items.forEach(item => (item.photoFileIds || []).forEach(fileId => {
+      if (fileIds.indexOf(fileId) < 0) fileIds.push(fileId)
+    }))
+    if (!fileIds.length || !wx.cloud || !wx.cloud.getTempFileURL) return Promise.resolve(items)
+    const requests = []
+    for (let index = 0; index < fileIds.length; index += 50) requests.push(wx.cloud.getTempFileURL({ fileList: fileIds.slice(index, index + 50) }))
+    return Promise.all(requests).then(responses => {
+      const urls = {}
+      responses.forEach(response => (response.fileList || []).forEach(item => { if (item.fileID && item.tempFileURL) urls[item.fileID] = item.tempFileURL }))
+      return items.map(item => Object.assign({}, item, { photos: (item.photoFileIds || []).map(fileId => urls[fileId] || fileId) }))
+    }).catch(() => items.map(item => Object.assign({}, item, { photos: item.photoFileIds || [] })))
+  },
+
+  previewFeedPhoto(e) {
+    const index = Number(e.currentTarget.dataset.feedIndex)
+    const current = e.currentTarget.dataset.url
+    const item = this.data.feed[index]
+    if (item && item.photos && current) wx.previewImage({ current, urls: item.photos })
   },
 
   openPublish() {
@@ -141,7 +172,7 @@ Page({
     const index = Number(e.detail.value)
     const spot = this.data.spotOptions[index]
     if (!spot) return
-    this.setData({ spotId: spot.id, spotName: spot.name, spotIndex: index, onsiteReady: false, onsiteLocation: null, locationText: '地点已改变，请重新核验位置' })
+    this.setData({ spotId: spot.id, spotName: spot.name, spotIndex: index, zoneId: 'middle', onsiteReady: false, onsiteLocation: null, locationText: '地点已改变；定位仍为可选' })
   },
 
   chooseCity(e) {
@@ -159,9 +190,10 @@ Page({
       spotIndex: 0,
       spotId: first ? first.id : '',
       spotName: first ? first.name : '当前城市暂无可上报采集点',
+      zoneId: 'middle',
       onsiteReady: false,
       onsiteLocation: null,
-      locationText: '点击获取位置，发布时只核验距离',
+      locationText: '可选；不定位或距离较远也可以发布',
       feedLoading: false,
       feedLoaded: false,
       feed: []
@@ -173,7 +205,35 @@ Page({
   chooseSpecies(e) { this.setData({ selectedSpecies: e.currentTarget.dataset.value }) },
   chooseFound(e) { this.setData({ found: e.currentTarget.dataset.value === 'true' }) },
   chooseAmount(e) { this.setData({ amount: e.currentTarget.dataset.value }) },
+  chooseZone(e) { this.setData({ zoneId: e.currentTarget.dataset.value }) },
   onNote(e) { this.setData({ note: e.detail.value }) },
+
+  choosePhotos() {
+    if (this.data.photos.length >= 3 || this.data.submitting) return
+    const remaining = 3 - this.data.photos.length
+    const onSuccess = result => {
+      const files = result.tempFiles || (result.tempFilePaths || []).map((tempFilePath, index) => ({ tempFilePath, size: result.tempFiles && result.tempFiles[index] && result.tempFiles[index].size }))
+      const accepted = files.filter(item => !item.size || item.size <= 10 * 1024 * 1024).slice(0, remaining)
+      if (accepted.length < files.length) wx.showToast({ title: '已忽略超过10MB的照片', icon: 'none' })
+      this.setData({ photos: this.data.photos.concat(accepted.map(item => ({ tempFilePath: item.tempFilePath, size: item.size || 0 }))) })
+    }
+    if (wx.chooseMedia) {
+      wx.chooseMedia({ count: remaining, mediaType: ['image'], sourceType: ['album', 'camera'], sizeType: ['compressed'], success: onSuccess })
+    } else {
+      wx.chooseImage({ count: remaining, sourceType: ['album', 'camera'], sizeType: ['compressed'], success: onSuccess })
+    }
+  },
+
+  previewPhoto(e) {
+    const current = e.currentTarget.dataset.url
+    wx.previewImage({ current, urls: this.data.photos.map(item => item.tempFilePath) })
+  },
+
+  removePhoto(e) {
+    if (this.data.submitting) return
+    const index = Number(e.currentTarget.dataset.index)
+    this.setData({ photos: this.data.photos.filter((item, itemIndex) => itemIndex !== index) })
+  },
 
   verifyLocation() {
     if (this.data.submitting) return
@@ -181,7 +241,7 @@ Page({
     getLocation((error, location) => {
       if (error || !location) {
         this.setData({ onsiteReady: false, onsiteLocation: null, locationText: '定位失败，点击重试' })
-        wx.showModal({ title: '无法核验位置', content: '请在系统和微信中开启精确位置权限后重试。', showCancel: false })
+        wx.showModal({ title: '定位未成功', content: '仍可继续发布，动态会标记为“未到场核验”，且不会计入海货预测样本。', showCancel: false })
         return
       }
       this.setData({
@@ -195,9 +255,45 @@ Page({
   generateDraft() {
     if (this.data.aiGenerating) return
     this.setData({ aiGenerating: true })
-    ai.summarizeReport({ spotName: this.data.spotName, species: this.data.selectedSpecies, amount: this.data.found ? this.data.amount : '未发现', note: this.data.note }).then(result => {
+    const zone = this.data.zoneOptions.find(item => item.id === this.data.zoneId)
+    ai.summarizeReport({ spotName: this.data.spotName, zoneLabel: zone && zone.label, species: this.data.selectedSpecies, amount: this.data.found ? this.data.amount : '未发现', note: this.data.note }).then(result => {
       this.setData({ note: result.answer, aiGenerating: false })
     }).catch(() => this.setData({ aiGenerating: false }))
+  },
+
+  uploadPhotos() {
+    const photos = this.data.photos || []
+    if (!photos.length) return Promise.resolve([])
+    let completed = 0
+    const uploaded = []
+    this.setData({ uploadingPhotos: true, uploadProgress: '上传照片 0/' + photos.length })
+    return Promise.all(photos.map((photo, index) => new Promise((resolve, reject) => {
+      const match = String(photo.tempFilePath || '').match(/\.([a-zA-Z0-9]+)(?:\?|$)/)
+      const rawExtension = match ? match[1].toLowerCase() : 'jpg'
+      const extension = ['jpg', 'jpeg', 'png', 'webp', 'heic'].indexOf(rawExtension) >= 0 ? rawExtension : 'jpg'
+      const safeCity = String(this.data.cityId || 'unknown').replace(/[^\w-]/g, '')
+      const safeSpot = String(this.data.spotId || 'unknown').replace(/[^\w-]/g, '')
+      const cloudPath = 'field-reports/' + safeCity + '/' + safeSpot + '/' + Date.now() + '-' + index + '-' + Math.random().toString(36).slice(2, 9) + '.' + extension
+      wx.cloud.uploadFile({
+        cloudPath,
+        filePath: photo.tempFilePath,
+        success: result => {
+          completed += 1
+          uploaded.push(result.fileID)
+          this.setData({ uploadProgress: '上传照片 ' + completed + '/' + photos.length })
+          resolve(result.fileID)
+        },
+        fail: reject
+      })
+    }))).catch(error => {
+      error.uploadedFileIds = uploaded
+      throw error
+    })
+  },
+
+  cleanupPhotos(fileIds) {
+    if (!fileIds || !fileIds.length || !wx.cloud || !wx.cloud.deleteFile) return
+    wx.cloud.deleteFile({ fileList: fileIds }).catch(() => {})
   },
 
   submit() {
@@ -211,36 +307,41 @@ Page({
       wx.showToast({ title: '云环境尚未启用', icon: 'none' })
       return
     }
-    if (!this.data.onsiteReady || !this.data.onsiteLocation) {
-      wx.showToast({ title: '请先完成现场定位核验', icon: 'none' })
-      this.verifyLocation()
-      return
-    }
     this.setData({ submitting: true })
-    wx.cloud.callFunction({ name: 'report', data: {
-      action: 'submit',
-      spotId: this.data.spotId,
-      cityId: this.data.cityId,
-      species: this.data.selectedSpecies,
-      found: this.data.found,
-      amount: this.data.amount,
-      note: this.data.note,
-      location: this.data.onsiteLocation
-    } }).then(response => {
+    let uploadedFileIds = []
+    this.uploadPhotos().then(fileIds => {
+      uploadedFileIds = fileIds
+      return wx.cloud.callFunction({ name: 'report', data: {
+        action: 'submit',
+        spotId: this.data.spotId,
+        cityId: this.data.cityId,
+        species: this.data.selectedSpecies,
+        zoneId: this.data.zoneId,
+        found: this.data.found,
+        amount: this.data.amount,
+        note: this.data.note,
+        photoFileIds: fileIds,
+        location: this.data.onsiteLocation
+      } })
+    }).then(response => {
       const result = response && response.result
       if (!result || !result.ok) throw new Error(result && result.error || '保存失败')
       this.setData({
         mode: 'feed',
         submitting: false,
+        uploadingPhotos: false,
+        uploadProgress: '',
+        photos: [],
         note: '',
         onsiteReady: false,
         onsiteLocation: null,
-        locationText: '点击获取位置，发布时只核验距离'
+        locationText: '可选；不定位或距离较远也可以发布'
       })
-      wx.showToast({ title: '已发布到赶海圈', icon: 'success' })
+      wx.showToast({ title: result.verified ? '已发布并现场核验' : '已作为普通分享发布', icon: 'success' })
       this.loadFeed(true)
     }).catch(error => {
-      this.setData({ submitting: false })
+      this.cleanupPhotos(error.uploadedFileIds || uploadedFileIds)
+      this.setData({ submitting: false, uploadingPhotos: false, uploadProgress: '' })
       wx.showModal({ title: '暂未保存', content: error.message || '请检查云函数和数据库集合', showCancel: false })
     })
   }

@@ -10,7 +10,7 @@
     </view>
 
     <view class="feed-city-row"><text>当前城市</text><picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="city-picker">{{cityName}}⌄</view></picker></view>
-    <view class="circle-rule">发布时只核验你是否在所选地点附近，精确坐标不会保存或展示；核验动态将计入真实收获样本。</view>
+    <view class="circle-rule">不在地点附近也可以分享；只有现场定位核验通过的记录才计入海货预测，精确坐标不会保存或展示。</view>
 
     <view wx:if="{{feedLoading && !feedLoaded}}" class="feed-state">正在读取赶海圈…</view>
     <view wx:elif="{{feedLoaded && !feed.length}}" class="empty-card card">
@@ -26,12 +26,15 @@
           <view class="feed-avatar">{{item.species.slice(0, 1)}}</view>
           <view class="feed-meta">
             <view class="feed-spot">{{item.spotName}}</view>
-            <view class="feed-time">{{item.timeLabel}} · {{item.verified ? '现场定位已核验' : '用户自选地点'}}</view>
+            <view class="feed-time">{{item.timeLabel}} · {{item.verificationLabel}}{{item.zoneDisplay ? ' · ' + item.zoneDisplay : ''}}</view>
           </view>
-          <view class="verified-badge">{{item.verified ? '可信现场' : '海友分享'}}</view>
+          <view class="verified-badge {{item.verified ? '' : 'unverified'}}">{{item.verified ? '可信现场' : '普通分享'}}</view>
         </view>
         <view class="feed-result"><text class="species-name">{{item.species}}</text><text class="amount-tag">{{item.found ? item.amount : '未发现'}}</text></view>
         <view class="feed-note">{{item.noteDisplay}}</view>
+        <view wx:if="{{item.photos && item.photos.length}}" class="feed-photo-grid">
+          <image wx:for="{{item.photos}}" wx:for-item="photo" wx:for-index="photoIndex" wx:key="*this" class="feed-photo" src="{{photo}}" mode="aspectFill" data-feed-index="{{index}}" data-url="{{photo}}" bindtap="previewFeedPhoto"></image>
+        </view>
       </view>
     </view>
   </block>
@@ -40,12 +43,12 @@
     <view class="publish-head">
       <view class="back-link" bindtap="backToFeed">‹ 返回赶海圈</view>
       <view class="report-title">分享今天的现场</view>
-      <view class="report-subtitle">完成现场定位核验后，动态会计入该地点的真实收获样本。</view>
+      <view class="report-subtitle">定位是可选项；远距离也能分享，现场核验记录才会计入预测样本。</view>
     </view>
 
     <view class="location-check {{onsiteReady ? 'ready' : ''}}" bindtap="verifyLocation">
       <view class="location-check-icon">○</view>
-      <view><text class="location-check-title">{{onsiteReady ? '现场位置已获取' : '核验当前位置'}}</text><text class="location-check-text">{{locationText}}</text></view>
+      <view><text class="location-check-title">{{onsiteReady ? '现场位置已获取' : '核验当前位置（可选）'}}</text><text class="location-check-text">{{locationText}}</text></view>
     </view>
 
     <view class="report-card card">
@@ -59,6 +62,10 @@
       <view wx:else class="spot-picker empty"><text>{{spotName}}</text></view>
       <view class="form-hint">{{spotOptions.length ? '已收录的附近参考点也可选择；请确保分享内容与所选地点一致。' : '生态观察或禁止采集地点不开放战果上报。'}}</view>
 
+      <view class="form-label amount-label">所在岸段（粗略选择）</view>
+      <view class="chip-grid zone-chip-grid"><view wx:for="{{zoneOptions}}" wx:key="id" class="choice-chip {{zoneId === item.id ? 'selected' : ''}}" data-value="{{item.id}}" bindtap="chooseZone">{{item.label}}</view></view>
+      <view class="form-hint">按地图参考点大致选择西侧、附近或东侧，样本积累后可判断这个地点哪一段更容易有收获。</view>
+
       <view class="form-label amount-label">今天遇到的品类</view>
       <view class="chip-grid"><view wx:for="{{species}}" wx:key="*this" class="choice-chip {{selectedSpecies === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseSpecies">{{item}}</view></view>
 
@@ -67,11 +74,21 @@
       <view wx:if="{{!found}}" class="form-hint">“没有发现”同样会记入预测样本，可以帮助减少假高分。</view>
       <block wx:if="{{found}}"><view class="form-label amount-label">大概收获</view><view class="amount-row"><view wx:for="{{amounts}}" wx:key="*this" class="amount-choice {{amount === item ? 'selected' : ''}}" data-value="{{item}}" bindtap="chooseAmount"><text class="amount-dot"></text><text>{{item}}</text></view></view></block>
 
+      <view class="form-label amount-label">现场照片（可选，最多3张）</view>
+      <view class="photo-picker-grid">
+        <view wx:for="{{photos}}" wx:key="tempFilePath" class="photo-picker-item">
+          <image class="picked-photo" src="{{item.tempFilePath}}" mode="aspectFill" data-url="{{item.tempFilePath}}" bindtap="previewPhoto"></image>
+          <view class="photo-remove" data-index="{{index}}" catchtap="removePhoto">×</view>
+        </view>
+        <view wx:if="{{photos.length < 3}}" class="photo-add" bindtap="choosePhotos"><text class="photo-add-icon">＋</text><text>拍照/相册</text></view>
+      </view>
+      <view class="form-hint">照片会在赶海圈公开展示，请勿包含人脸、车牌等隐私信息。</view>
+
       <view class="note-head"><view class="form-label note-label">补充一句（可选）</view><view class="ai-draft-btn {{aiGenerating ? 'disabled' : ''}}" bindtap="generateDraft">✦ {{aiGenerating ? '整理中' : 'AI帮我整理'}}</view></view>
       <textarea class="note-input" maxlength="120" placeholder="例如：公共入口附近沙滩，回涨前已撤离" value="{{note}}" bindinput="onNote"></textarea>
     </view>
 
-    <view class="privacy-note">定位坐标仅在发布时用于计算与地点的距离，云端不保存精确经纬度，也不会向其他用户展示。</view>
-    <view class="primary-btn submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submit">{{submitting ? '正在发布…' : '发布到赶海圈'}}</view>
+    <view class="privacy-note">不定位也能发布。定位坐标仅用于现场核验，云端不保存精确经纬度；未核验分享不计入海货预测。</view>
+    <view class="primary-btn submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submit">{{uploadingPhotos ? uploadProgress : submitting ? '正在发布…' : '发布到赶海圈'}}</view>
   </block>
 </view>

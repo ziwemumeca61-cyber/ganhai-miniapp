@@ -99,6 +99,16 @@
 .best-zone-source { margin-top: 8rpx; color: #4c8986; font-size: 18rpx; font-weight: 700; }
 .best-zone-note { margin-top: 10rpx; color: #7b979a; font-size: 18rpx; line-height: 1.55; }
 
+.zone-evidence {
+  margin-top: 12rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 14rpx;
+  background: #f5f9f9;
+  color: #748f93;
+  font-size: 18rpx;
+  line-height: 1.55;
+}
+
 
 .catch-summary {
   margin-bottom: 16rpx;

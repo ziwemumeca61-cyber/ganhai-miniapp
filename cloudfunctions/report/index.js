@@ -5,6 +5,9 @@ const command = db.command
 
 const spots = require('./national-spots')
 const weights = { '未发现': 0, '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
+const zoneLabels = { west: '参考点西侧', middle: '参考点附近', east: '参考点东侧', unknown: '未分段' }
+const normalizeZoneId = value => Object.prototype.hasOwnProperty.call(zoneLabels, String(value || '')) ? String(value) : 'unknown'
+const validPhotoFileId = value => /^cloud:\/\/[\w.-]+\/field-reports\/[\w/-]+\.(?:jpe?g|png|webp|heic)$/i.test(String(value || ''))
 const radians = value => value * Math.PI / 180
 const distanceMeters = (from, to) => {
   const radius = 6371000
@@ -36,26 +39,35 @@ async function summaries() {
     const rows = await readAll(() => db.collection('field_reports').where({ createdAt: command.gte(since), verified: true }))
     const grouped = {}
     const generic = {}
+    const byZone = {}
     rows.forEach(item => {
       const species = String(item.species || '其他').slice(0, 12)
       const found = item.found !== false && item.amount !== '未发现'
-      const key = item.spotId + '|' + species
-      if (!grouped[key]) grouped[key] = { spotId: item.spotId, species, count: 0, positiveCount: 0, negativeCount: 0, total: 0 }
+      const zoneId = normalizeZoneId(item.zoneId)
+      const key = item.spotId + '|' + species + '|' + zoneId
+      if (!grouped[key]) grouped[key] = { spotId: item.spotId, species, zoneId, zoneLabel: zoneLabels[zoneId], count: 0, positiveCount: 0, negativeCount: 0, total: 0 }
       const group = grouped[key]
       group.count += 1
       group[found ? 'positiveCount' : 'negativeCount'] += 1
+      const zoneKey = item.spotId + '|' + zoneId
+      if (!byZone[zoneKey]) byZone[zoneKey] = { spotId: item.spotId, species: '*', zoneId, zoneLabel: zoneLabels[zoneId], count: 0, positiveCount: 0, negativeCount: 0, total: 0 }
+      const zoneGroup = byZone[zoneKey]
+      zoneGroup.count += 1
+      zoneGroup[found ? 'positiveCount' : 'negativeCount'] += 1
+      if (Date.now() - new Date(item.createdAt).getTime() <= 14 * 86400000) {
+        if (!generic[item.spotId]) generic[item.spotId] = { spotId: item.spotId, species: '*', count: 0, total: 0 }
+        generic[item.spotId].count += 1
+        generic[item.spotId].total += found ? Number(item.amountWeight || 0) : 0
+      }
       if (found) {
         group.total += Number(item.amountWeight || 0)
-        if (Date.now() - new Date(item.createdAt).getTime() <= 14 * 86400000) {
-          if (!generic[item.spotId]) generic[item.spotId] = { spotId: item.spotId, species: '*', count: 0, total: 0 }
-          generic[item.spotId].count += 1
-          generic[item.spotId].total += Number(item.amountWeight || 0)
-        }
+        zoneGroup.total += Number(item.amountWeight || 0)
       }
     })
     const speciesSummaries = Object.values(grouped).map(item => Object.assign({}, item, { average: item.positiveCount ? Number((item.total / item.positiveCount).toFixed(2)) : 0, windowDays: 90 }))
     const genericSummaries = Object.values(generic).map(item => ({ spotId: item.spotId, species: '*', count: item.count, average: Number((item.total / item.count).toFixed(2)), windowDays: 14 }))
-    return { ok: true, summaries: genericSummaries.concat(speciesSummaries) }
+    const zoneSummaries = Object.values(byZone).map(item => Object.assign({}, item, { average: item.positiveCount ? Number((item.total / item.positiveCount).toFixed(2)) : 0, windowDays: 90 }))
+    return { ok: true, summaries: genericSummaries.concat(zoneSummaries, speciesSummaries) }
   } catch (error) {
     console.warn('field_reports unavailable', error)
     return { ok: true, summaries: [], needsCollection: true }
@@ -86,8 +98,12 @@ async function feed(event) {
       species: String(item.species || '其他').slice(0, 12),
       found: item.found !== false && item.amount !== '未发现',
       amount: Object.prototype.hasOwnProperty.call(weights, item.amount) ? item.amount : '已记录',
+      zoneId: normalizeZoneId(item.zoneId),
+      zoneLabel: zoneLabels[normalizeZoneId(item.zoneId)],
+      photoFileIds: Array.isArray(item.photoFileIds) ? item.photoFileIds.filter(validPhotoFileId).slice(0, 3) : [],
       note: String(item.note || '').slice(0, 120),
       verified: item.verified === true,
+      verificationLabel: item.verified === true ? '现场定位已核验' : String(item.verificationLabel || '未到场核验').slice(0, 20),
       createdAt: isoTime(item.createdAt)
     }))
     return { ok: true, items }
@@ -134,13 +150,23 @@ async function submit(event) {
   const found = event.found !== false
   const amount = found ? event.amount : '未发现'
   if (!Object.prototype.hasOwnProperty.call(weights, amount)) return { ok: false, error: '请选择收获量' }
-  const latitude = Number(event.location && event.location.latitude)
-  const longitude = Number(event.location && event.location.longitude)
-  const accuracy = Number(event.location && event.location.accuracy)
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return { ok: false, error: '未收到有效定位，请重新核验' }
-  if (!Number.isFinite(accuracy) || accuracy <= 0 || accuracy > 300) return { ok: false, error: '定位精度不足（需在300米内），请到室外重新定位' }
-  const onsiteDistance = distanceMeters({ latitude, longitude }, target)
-  if (onsiteDistance > 2500 + accuracy) return { ok: false, error: '当前位置距所选地点约' + Math.round(onsiteDistance / 100) / 10 + '公里，请到现场或改选正确地点' }
+  const zoneId = normalizeZoneId(event.zoneId)
+  const rawPhotoFileIds = Array.isArray(event.photoFileIds) ? event.photoFileIds.slice(0, 3) : []
+  const photoFileIds = rawPhotoFileIds.filter(validPhotoFileId)
+  if (photoFileIds.length !== rawPhotoFileIds.length) return { ok: false, error: '照片地址无效，请重新选择照片' }
+  const rawLocation = event.location
+  const latitude = Number(rawLocation && rawLocation.latitude)
+  const longitude = Number(rawLocation && rawLocation.longitude)
+  const accuracy = Number(rawLocation && rawLocation.accuracy)
+  const hasLocation = Boolean(rawLocation) && Number.isFinite(latitude) && Number.isFinite(longitude) && Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180
+  const accuracyReady = Number.isFinite(accuracy) && accuracy > 0 && accuracy <= 300
+  const onsiteDistance = hasLocation ? distanceMeters({ latitude, longitude }, target) : null
+  const verified = hasLocation && accuracyReady && onsiteDistance <= 2500 + accuracy
+  const verificationLabel = verified
+    ? '现场定位已核验'
+    : !hasLocation ? '未提供现场定位'
+    : !accuracyReady ? '定位精度不足，未核验'
+    : '距离较远，未到场核验'
   const now = new Date()
   try {
     const duplicate = await db.collection('field_reports').where({ _openid: context.OPENID, createdAt: command.gte(new Date(Date.now() - 10 * 60000)) }).limit(1).get()
@@ -151,18 +177,21 @@ async function submit(event) {
       cityId: target.cityId,
       spotName: target.name,
       species: String(event.species || '其他').slice(0, 12),
+      zoneId,
+      zoneLabel: zoneLabels[zoneId],
       found,
       amount,
       amountWeight: weights[amount],
+      photoFileIds,
       note: String(event.note || '').slice(0, 120),
-      verified: true,
-      verificationLabel: '现场定位已核验',
+      verified,
+      verificationLabel,
       distanceMeters: onsiteDistance,
-      locationAccuracy: Math.round(accuracy),
+      locationAccuracy: accuracyReady ? Math.round(accuracy) : null,
       observedAt: now,
       createdAt: now
     } })
-    return { ok: true, id: result._id, verified: true, distanceMeters: onsiteDistance }
+    return { ok: true, id: result._id, verified, verificationLabel, distanceMeters: onsiteDistance }
   } catch (error) {
     console.error('report submit failed', error)
     return { ok: false, error: '请先在云数据库创建 field_reports 集合并部署 report 云函数' }

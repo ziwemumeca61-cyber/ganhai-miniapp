@@ -110,6 +110,11 @@
   font-weight: 700;
 }
 
+.verified-badge.unverified {
+  background: #fff3e3;
+  color: #a66c32;
+}
+
 .feed-result {
   display: flex;
   align-items: center;
@@ -137,6 +142,20 @@
   color: #617d83;
   font-size: 22rpx;
   line-height: 1.65;
+}
+
+.feed-photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10rpx;
+  margin-top: 18rpx;
+}
+
+.feed-photo {
+  width: 100%;
+  height: 190rpx;
+  border-radius: 14rpx;
+  background: #edf4f3;
 }
 
 .feed-state {
@@ -224,6 +243,66 @@
   background: #eaf8f5;
   color: #087f88;
   font-weight: 600;
+}
+
+.zone-chip-grid .choice-chip {
+  flex: 1;
+  text-align: center;
+}
+
+.photo-picker-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.photo-picker-item,
+.photo-add {
+  position: relative;
+  width: 184rpx;
+  height: 184rpx;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.picked-photo {
+  width: 100%;
+  height: 100%;
+}
+
+.photo-add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1rpx dashed #a9c6c6;
+  background: #f7fbfa;
+  color: #789495;
+  font-size: 19rpx;
+}
+
+.photo-add-icon {
+  margin-bottom: 8rpx;
+  color: #4b9c94;
+  font-size: 44rpx;
+  line-height: 1;
+}
+
+.photo-remove {
+  position: absolute;
+  top: 8rpx;
+  right: 8rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38rpx;
+  height: 38rpx;
+  border-radius: 50%;
+  background: rgba(20, 45, 48, .72);
+  color: #fff;
+  font-size: 28rpx;
+  line-height: 1;
 }
 
 .amount-row {
