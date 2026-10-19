@@ -1,4 +1,6 @@
 .home-page { overflow: hidden; padding-top: 26rpx; }
+.refresh-status { display: flex; align-items: center; justify-content: space-between; gap: 16rpx; margin-top: 22rpx; color: #7a8068; font-size: 21rpx; line-height: 1.5; }
+.failure-actions { display: flex; flex-shrink: 0; gap: 20rpx; }.failure-actions text { padding: 8rpx 0; color: #a66c47; }
 .topline { display: flex; align-items: center; justify-content: space-between; gap: 18rpx; }
 .brand-lockup { display: flex; align-items: center; gap: 14rpx; min-width: 0; }
 .brand { color: #234f53; font-size: 32rpx; font-weight: 800; letter-spacing: 1rpx; }

@@ -13,10 +13,15 @@
     <view class="ticket-top"><text>{{leadBlocked ? '今天先留在岸上' : '你的海边时间票'}}</text><text class="coast-status {{loading ? 'pending' : mood.tone}}">{{loading ? '更新中' : leadStatus}}</text></view>
     <view class="ticket-time {{leadBlocked ? 'blocked' : ''}}">{{loading ? '…' : leadBlocked ? '今天先别下滩' : summary.bestTime}}</view>
     <view class="ticket-caption">{{leadBlocked ? '潮汐时段不代表可下滩，请以预警与现场管理为准' : '参考赶海时段 · 以当地潮汐与现场为准'}}</view>
-    <view wx:if="{{!loading && spots.length}}" class="ticket-destination" bindtap="viewSpot" data-id="{{spots[0].id}}"><view><text>这一站</text><text>{{summary.referenceSpot || spots[0].name}}</text></view><view class="round-arrow">↗</view></view>
+    <view wx:if="{{!loading && spotCount}}" class="ticket-destination" bindtap="viewSpot" data-id="{{leadSpot.id}}"><view><text>这一站</text><text>{{summary.referenceSpot || leadSpot.name}}</text></view><view class="round-arrow">↗</view></view>
   </view>
 
   <view wx:if="{{!loading && summary.showSafetyWarning}}" class="safety-banner"><text class="warning-mark">!</text><view><text>{{summary.warningTitle}}</text><text>{{summary.warningText}}</text></view></view>
+
+  <view class="refresh-status">
+    <text>{{refreshing ? (summary.cacheNotice || '海况更新中，地点可先浏览') : (summary.cacheNotice || summary.failureHint || '海况已更新')}}</text>
+    <view wx:if="{{!refreshing && summary.failureReason}}" class="failure-actions"><text bindtap="showDataInfo">查看原因</text><text bindtap="retryForecast">重试 ↻</text></view>
+  </view>
 
   <view class="explore-tools">
     <view class="explore-tool map-tool" bindtap="goMap"><view class="map-symbol" aria-hidden="true"><view></view></view><view><text>摊开地图</text><text>沿着海岸找一找</text></view><text class="tool-arrow">↗</text></view>
@@ -25,7 +30,7 @@
 
   <view class="section-title"><view><text class="section-kicker">下一站，去哪里</text><view class="title">{{cityName}}海岸探索</view></view><view class="relocate" bindtap="locate">⊙ 重新定位</view></view>
   <view wx:if="{{loading}}" class="list-state">正在摊开本市海岸手记…</view>
-  <view wx:elif="{{!spots.length}}" class="list-state">这一页海岸手记还在补充中</view>
+  <view wx:elif="{{!spotCount}}" class="list-state">这一页海岸手记还在补充中</view>
   <block wx:else>
     <view wx:for="{{visibleSpots}}" wx:key="id" class="explore-card" bindtap="viewSpot" data-id="{{item.id}}">
       <view class="explore-main">
@@ -36,7 +41,7 @@
       <view class="spot-note"><text>◷ {{item.bestWindow}}</text><text class="note-index">NO.{{index + 1}}</text></view>
       <view class="spot-direction">{{!item.canReport ? '只看海，也很好。这里仅供生态观察。' : item.bestZoneAvailable ? '参考岸段 · ' + item.bestZone : '具体岸段还待确认，先看附近位置'}}</view>
     </view>
-    <view wx:if="{{visibleSpots.length < spots.length}}" class="more-spots" bindtap="showMoreSpots">再翻一页海岸手记 <text>↓</text><text class="remaining-count">还有 {{spots.length - visibleSpots.length}} 个地点</text></view>
+    <view wx:if="{{visibleSpots.length < spotCount}}" class="more-spots" bindtap="showMoreSpots">再翻一页海岸手记 <text>↓</text><text class="remaining-count">还有 {{spotCount - visibleSpots.length}} 个地点</text></view>
   </block>
   <view class="page-signoff">带走回忆，留下海浪。</view>
   <view class="data-notice" bindtap="showDataInfo">Open-Meteo · 数据来源与更新时间 ⓘ</view>

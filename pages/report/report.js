@@ -172,6 +172,7 @@ Page({
       const result = response && response.result
       if (!result || !result.ok) throw new Error(result && result.error || '保存失败')
       this.setData({ mode: 'circle', submitting: false, onsiteReady: false, onsiteLocation: null, locationText: '现场样本需到场核验' })
+      api.invalidateReportCache()
       wx.showToast({ title: '匿名样本已贡献', icon: 'success' })
       this.refreshOfficialFeed()
     }).catch(error => {

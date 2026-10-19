@@ -5,10 +5,26 @@ const db = cloud.database()
 
 const HOME = 'https://hyj.yantai.gov.cn/'
 const INDEX = 'https://hyj.yantai.gov.cn/col/col1638/index.html'
-const MODEL_CACHE_TTL = 10 * 60 * 1000
+const MODEL_CACHE_TTL = 2 * 60 * 1000
+const FORECAST_VERSION = 'forecast-20261019.1'
+const REQUEST_BUDGET_MS = 11000
 const PERSISTENT_CACHE_FRESH_MS = 10 * 60 * 1000
 const PERSISTENT_CACHE_COLLECTION = 'forecast_cache'
 const modelCache = new Map()
+
+function within(promise, milliseconds, fallback) {
+  return new Promise(resolve => {
+    let settled = false
+    const finish = value => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      resolve(value)
+    }
+    const timer = setTimeout(() => finish(fallback), milliseconds)
+    promise.then(finish, () => finish(fallback))
+  })
+}
 
 const cacheDocumentId = cityId => 'city-' + String(cityId || 'yantai').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 50)
 
@@ -32,7 +48,7 @@ async function readPersistentCache(cityId) {
     const value = data && data.value
     const checkedAt = value && value.checkedAt || data && data.checkedAt
     const time = new Date(checkedAt).getTime()
-    if (!value || !Number.isFinite(time)) return null
+    if (!value || !value.conditions || value.conditions.dataReady !== true || !Number.isFinite(time) || time > Date.now() + 60000) return null
     return { value, checkedAt, ageMs: Math.max(0, Date.now() - time) }
   } catch (error) {
     console.warn('forecast persistent cache read skipped', error.message)
@@ -59,18 +75,34 @@ const OFFICIAL_TIDE_STATIONS = {
 }
 const LIST_API = 'https://hyj.yantai.gov.cn/api-gateway/jpaas-publish-server/front/page/build/unit?parseType=bulidstatic&webId=52&tplSetId=MsPkwMwlYqOxItyOUpt7Y&pageType=column&tagId=%E5%88%97%E8%A1%A8%E6%96%B0%E9%97%BB&editType=null&pageId=1638'
 
-const get = url => new Promise((resolve, reject) => {
-  const request = https.get(url, { headers: { 'User-Agent': 'GanhaiRadar/1.1' } }, res => {
+const get = (url, deadline, redirects = 0) => new Promise((resolve, reject) => {
+  const timeout = Math.min(8000, deadline ? deadline - Date.now() : 8000)
+  if (timeout <= 0) return reject(new Error('外部数据请求已达时间预算'))
+  if (redirects > 3) return reject(new Error('数据源重定向次数过多'))
+  let settled = false
+  const finish = (error, body) => {
+    if (settled) return
+    settled = true
+    clearTimeout(timer)
+    error ? reject(error) : resolve(body)
+  }
+  const timer = setTimeout(() => {
+    finish(new Error(new URL(url).hostname + '请求超时'))
+    request.destroy()
+  }, timeout)
+  const request = https.get(url, { headers: { 'User-Agent': 'GanhaiRadar/1.2' } }, res => {
     if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-      return get(new URL(res.headers.location, url).toString()).then(resolve, reject)
+      res.resume()
+      get(new URL(res.headers.location, url).toString(), deadline || Date.now() + timeout, redirects + 1).then(body => finish(null, body), finish)
+      return
     }
     let body = ''
     res.setEncoding('utf8')
     res.on('data', chunk => { body += chunk })
-    res.on('end', () => res.statusCode < 300 ? resolve(body) : reject(new Error('HTTP ' + res.statusCode)))
+    res.on('end', () => finish(res.statusCode < 300 ? null : new Error(new URL(url).hostname + ' HTTP ' + res.statusCode), body))
+    res.on('error', finish)
   })
-  request.setTimeout(12000, () => request.destroy(new Error('请求超时')))
-  request.on('error', reject)
+  request.on('error', finish)
 })
 
 const distanceKm = (from, to) => {
@@ -99,12 +131,13 @@ const chinaDateOffset = days => new Intl.DateTimeFormat('en-CA', {
 }).format(new Date(Date.now() + Number(days || 0) * 86400000))
 
 const chinaDate = () => chinaDateOffset(0)
+const chinaDayOf = value => new Date(Date.parse(value) + 8 * 3600000).toISOString().slice(0, 10)
 
 const chinaTimestamp = (date, time) => Date.parse(date + 'T' + time + ':00+08:00')
 
-async function shMsaOfficialTide(station, date) {
+async function shMsaOfficialTide(station, date, deadline) {
   const url = 'https://www.sh.msa.gov.cn/shhsfb/information-aim-navigation/tide-search?PlaceId=' + station.placeId + '&TideDate=' + date
-  const text = clean(await get(url))
+  const text = clean(await get(url, deadline))
   const match = text.match(/潮时\(Hrs\)\s*((?:\d{2}:\d{2}\s*){2,4})\s*潮高\(cm\)\s*((?:-?\d+\s*){2,4})/)
   if (!match) throw new Error('上海海事局潮汐表解析失败')
   const times = (match[1].match(/\d{2}:\d{2}/g) || [])
@@ -140,16 +173,19 @@ const tideRow = (text, name) => {
 }
 
 const waveRow = (text, name) => {
-  const match = text.match(new RegExp(name + '.*?将有\\s*([0-9.]+)(?:\\s*(?:到|至|-|—)\\s*([0-9.]+))?\\s*米.*?风浪向\\s*([^；;，,\\s]+)'))
-  if (!match) return null
-  const first = Number(match[1])
-  const second = Number(match[2] || match[1])
-  if (!Number.isFinite(first) || !Number.isFinite(second)) return null
-  return {
-    min: Math.min(first, second),
-    max: Math.max(first, second),
-    direction: match[3]
+  const start = text.indexOf(name)
+  if (start < 0) return null
+  const section = text.slice(start).split(/[；;]/)[0]
+  const direction = section.match(/风浪向\s*([^；;，,\s]+)/)
+  const heights = []
+  const pattern = /([0-9.]+)(?:\s*(?:到|至|-|—)\s*([0-9.]+))?\s*米/g
+  for (const match of section.matchAll(pattern)) {
+    heights.push(Number(match[1]))
+    if (match[2]) heights.push(Number(match[2]))
   }
+  if (!direction || !heights.length || !heights.every(Number.isFinite)) return null
+  // “增至、减小到”等变化取整段预报的最大浪高，避免只读初始小浪。
+  return { min: Math.min(...heights), max: Math.max(...heights), direction: direction[1] }
 }
 
 const parseArticle = (html, url) => {
@@ -158,15 +194,15 @@ const parseArticle = (html, url) => {
   if (!coverage) return null
   const year = Number((url.match(/\/art\/(\d{4})\//) || [])[1] || new Date().getUTCFullYear())
   const waves = {
-    east: waveRow(text, '东部海域（开发区至牟平区）'),
-    pengchang: waveRow(text, '蓬长海域（蓬莱区）'),
-    west: waveRow(text, '西部海域（莱州市至龙口市）'),
-    south: waveRow(text, '南部海域（海阳市至莱阳市）')
+    east: waveRow(text, '东部海域'),
+    pengchang: waveRow(text, '蓬长海域'),
+    west: waveRow(text, '西部海域'),
+    south: waveRow(text, '南部海域')
   }
   const tides = {
     zhifu: tideRow(text, '芝罘近岸海域'),
     muping: tideRow(text, '牟平近岸海域'),
-    development: tideRow(text, '开发区近岸海域'),
+    development: tideRow(text, '开发区近岸海域') || tideRow(text, '黄渤海新区近岸海域'),
     penglai: tideRow(text, '蓬莱近岸海域'),
     changdaoSouth: tideRow(text, '长岛南部海域'),
     changdaoNorth: tideRow(text, '长岛北部海域'),
@@ -185,46 +221,51 @@ const parseArticle = (html, url) => {
 }
 
 const articleLinks = (html, base) => {
-  const links = []
-  const pattern = /href=["']([^"']*\/col\/col1638\/art\/\d{4}\/art_[^"']+\.html)[^"']*["']/gi
+  const current = [], unknown = []
+  const pattern = /<a\b[^>]*href=["']([^"']*\/col\/col1638\/art\/\d{4}\/art_[^"']+\.html)[^"']*["'][^>]*>([\s\S]*?)<\/a>/gi
   for (const match of html.matchAll(pattern)) {
-    try { links.push(new URL(match[1], base).toString()) } catch (error) {}
+    const title = clean(match[2])
+    if (title && !/海洋预报/.test(title)) continue
+    const date = title.match(/(\d{1,2})月(\d{1,2})日0时/)
+    try {
+      const url = new URL(match[1], base).toString()
+      if (date) {
+        const year = (url.match(/\/art\/(\d{4})\//) || [])[1]
+        if (year + '-' + date[1].padStart(2, '0') + '-' + date[2].padStart(2, '0') === chinaDate()) current.push(url)
+      } else unknown.push(url)
+    } catch (error) {}
   }
-  return links
+  return current.concat(unknown)
 }
 
-async function official() {
+async function official(deadline) {
   const links = []
   try {
-    const payload = JSON.parse(await get(LIST_API))
+    const payload = JSON.parse(await get(LIST_API, deadline))
     const html = payload && payload.data && payload.data.html || ''
     links.push(...articleLinks(html, HOME))
-  } catch (error) {
-    console.warn('official list api unavailable', error.message)
-  }
-  if (!links.length) {
-    const pages = await Promise.allSettled([get(HOME), get(INDEX)])
+  } catch (error) { console.warn('official list api unavailable', error.message) }
+  if (!links.length && (!deadline || Date.now() < deadline)) {
+    const pages = await Promise.allSettled([get(HOME, deadline), get(INDEX, deadline)])
     pages.forEach((result, index) => {
       if (result.status === 'fulfilled') links.push(...articleLinks(result.value, index === 0 ? HOME : INDEX))
     })
   }
-  const unique = Array.from(new Set(links))
-  for (const url of unique.slice(0, 30)) {
+  for (const url of Array.from(new Set(links)).slice(0, 3)) {
+    if (deadline && Date.now() >= deadline) break
     try {
-      const parsed = parseArticle(await get(url), url)
+      const parsed = parseArticle(await get(url, deadline), url)
       if (parsed && parsed.date === chinaDate()) return parsed
-    } catch (error) {
-      console.warn('official article skipped', error.message)
-    }
+    } catch (error) { console.warn('official article skipped', error.message) }
   }
-  console.warn('official daily forecast not found', { date: chinaDate(), linkCount: unique.length })
   return null
 }
 
-async function weather() {
+async function weather(deadline) {
   const query = 'latitude=37.536&longitude=121.450&timezone=Asia%2FShanghai&forecast_days=1&current=temperature_2m%2Cprecipitation%2Cweather_code%2Cwind_speed_10m%2Cwind_direction_10m%2Cwind_gusts_10m&hourly=visibility'
-  const data = JSON.parse(await get('https://api.open-meteo.com/v1/forecast?' + query))
+  const data = JSON.parse(await get('https://api.open-meteo.com/v1/forecast?' + query, deadline))
   const current = data.current || {}
+  if (![current.temperature_2m, current.precipitation, current.weather_code, current.wind_speed_10m, current.wind_gusts_10m].every(finite)) throw new Error('天气接口缺少温度、降水或风速数据')
   const index = current.time && data.hourly ? data.hourly.time.indexOf(current.time.slice(0, 13) + ':00') : -1
   return {
     temp: Number(current.temperature_2m),
@@ -233,7 +274,7 @@ async function weather() {
     wind: Number(current.wind_speed_10m),
     windDirection: Number(current.wind_direction_10m),
     gust: Number(current.wind_gusts_10m),
-    visibility: index >= 0 ? Number(data.hourly.visibility[index]) : null
+    visibility: index >= 0 && data.hourly.visibility && finite(data.hourly.visibility[index]) ? Number(data.hourly.visibility[index]) : null
   }
 }
 
@@ -327,11 +368,11 @@ const evaluateRegion = (region, ocean, met) => {
   }
 }
 
-async function yantaiOfficial(event) {
+async function yantaiOfficial(event, deadline) {
   const checkedAt = new Date().toISOString()
   const location = event && event.location || { latitude: 37.536, longitude: 121.45 }
   try {
-    const values = await Promise.all([official(), weather()])
+    const values = await Promise.all([official(deadline), weather(deadline)])
     const ocean = values[0]
     const met = values[1]
     if (!ocean) {
@@ -390,7 +431,7 @@ async function yantaiOfficial(event) {
 }
 
 
-const finite = value => Number.isFinite(Number(value))
+const finite = value => value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value))
 const localClock = iso => String(iso || '').slice(11, 16)
 const localTimestamp = iso => Date.parse(String(iso || '') + '+08:00')
 const formatChinaTime = timestamp => new Intl.DateTimeFormat('zh-CN', {
@@ -407,12 +448,13 @@ const modelConditions = (metData, marineData, label) => {
   const times = Array.isArray(hourly.time) ? hourly.time : []
   const levels = Array.isArray(hourly.sea_level_height_msl) ? hourly.sea_level_height_msl : []
   const waves = Array.isArray(hourly.wave_height) ? hourly.wave_height : []
-  if (!times.length || !levels.length || !waves.length || !finite(met.wind_speed_10m)) return null
+  if (!times.length || !levels.length || !waves.length || !finite(met.wind_speed_10m) || !finite(met.temperature_2m)) return null
 
   const now = Date.now()
   const candidates = []
   for (let index = 1; index < Math.min(times.length - 1, levels.length - 1); index += 1) {
     const stamp = localTimestamp(times[index])
+    if (![levels[index - 1], levels[index], levels[index + 1]].every(finite)) continue
     const current = Number(levels[index])
     if (!finite(stamp) || !finite(current) || stamp < now - 30 * 60000 || stamp > now + 30 * 3600000) continue
     if (current <= Number(levels[index - 1]) && current <= Number(levels[index + 1])) candidates.push(index)
@@ -422,6 +464,7 @@ const modelConditions = (metData, marineData, label) => {
     let minimum = Infinity
     for (let index = 0; index < Math.min(times.length, levels.length); index += 1) {
       const stamp = localTimestamp(times[index])
+      if (!finite(levels[index])) continue
       const value = Number(levels[index])
       if (stamp >= now - 30 * 60000 && stamp <= now + 18 * 3600000 && finite(value) && value < minimum) {
         minimum = value
@@ -440,6 +483,7 @@ const modelConditions = (metData, marineData, label) => {
     const stamp = localTimestamp(times[index])
     return stamp >= lowStamp - 2 * 3600000 && stamp <= lowStamp + 2 * 3600000 && finite(value)
   }).map(Number)
+  if (!windowWaves.length && !finite(marineData.current && marineData.current.wave_height) && !finite(waves[lowIndex])) return null
   const currentWave = finite(marineData.current && marineData.current.wave_height)
     ? Number(marineData.current.wave_height)
     : Number(waves[Math.max(0, lowIndex)])
@@ -541,10 +585,10 @@ const withOfficialTide = (conditions, official, point) => {
   })
 }
 
-async function nationwideModel(event) {
+async function nationwideModel(event, deadline) {
   const cacheKey = String(event && event.cityId || '') + ':' + String(event && event.cityName || '')
   const cached = modelCache.get(cacheKey)
-  if (cached && Date.now() - cached.time < MODEL_CACHE_TTL) return Object.assign({}, cached.value, { cached: true })
+  if (!event.forceRefresh && cached && Date.now() - cached.time < MODEL_CACHE_TTL && chinaDayOf(cached.value.checkedAt) === chinaDate()) return Object.assign({}, cached.value, { cached: true })
   const cityName = String(event && event.cityName || '当前城市').slice(0, 20)
   const center = event && event.location || { latitude: 37.536, longitude: 121.45 }
   const requested = Array.isArray(event && event.locations) ? event.locations.slice(0, 30) : []
@@ -561,7 +605,7 @@ async function nationwideModel(event) {
   const cityId = String(event && event.cityId || '')
   const officialStation = OFFICIAL_TIDE_STATIONS[cityId]
   const officialPromise = officialStation
-    ? Promise.allSettled([shMsaOfficialTide(officialStation, chinaDate()), shMsaOfficialTide(officialStation, chinaDateOffset(1))]).then(results => {
+    ? Promise.allSettled([shMsaOfficialTide(officialStation, chinaDate(), deadline), shMsaOfficialTide(officialStation, chinaDateOffset(1), deadline)]).then(results => {
         const available = results.filter(item => item.status === 'fulfilled').map(item => item.value)
         if (!available.length) return null
         return {
@@ -572,8 +616,8 @@ async function nationwideModel(event) {
       })
     : Promise.resolve(null)
   const values = await Promise.all([
-    get('https://api.open-meteo.com/v1/forecast?' + weatherQuery),
-    get('https://marine-api.open-meteo.com/v1/marine?' + marineQuery),
+    get('https://api.open-meteo.com/v1/forecast?' + weatherQuery, deadline),
+    get('https://marine-api.open-meteo.com/v1/marine?' + marineQuery, deadline),
     officialPromise
   ])
   const weatherData = JSON.parse(values[0])
@@ -613,12 +657,24 @@ async function nationwideModel(event) {
 }
 
 exports.main = async event => {
+  event = event || {}
   const cityId = String(event && event.cityId || 'yantai')
+  const startedAt = Date.now()
+  const deadline = startedAt + REQUEST_BUDGET_MS
+  const recent = await within(readPersistentCache(cityId), 500, null)
+  if (!event.forceRefresh && recent && recent.ageMs < MODEL_CACHE_TTL && recent.value.conditions && recent.value.conditions.dataReady && chinaDayOf(recent.checkedAt) === chinaDate()) {
+    return Object.assign({}, recent.value, { version: FORECAST_VERSION, cached: true, cacheAgeMinutes: Math.max(1, Math.floor(recent.ageMs / 60000)) })
+  }
   let result
+  let diagnostic = null
   if (cityId === 'yantai') {
-    const values = await Promise.allSettled([yantaiOfficial(event), nationwideModel(event)])
+    const values = await Promise.allSettled([yantaiOfficial(event, deadline), nationwideModel(event, deadline)])
     const officialResult = values[0].status === 'fulfilled' ? values[0].value : null
     const modelResult = values[1].status === 'fulfilled' ? values[1].value : null
+    diagnostic = {
+      official: officialResult && officialResult.conditions && officialResult.conditions.dataReady ? 'ok' : officialResult && officialResult.reason || String(values[0].reason && values[0].reason.message || '无当天有效官方预报'),
+      model: modelResult && modelResult.conditions && modelResult.conditions.dataReady ? 'ok' : String(values[1].reason && values[1].reason.message || '模型数据不完整')
+    }
     if (officialResult && officialResult.conditions && officialResult.conditions.dataReady) {
       result = officialResult
       if (modelResult && modelResult.conditions) {
@@ -628,6 +684,10 @@ exports.main = async event => {
           transportFields.forEach(key => {
             if (modelConditions && modelConditions[key] !== null && modelConditions[key] !== undefined) merged[key] = modelConditions[key]
           })
+          if (modelConditions && modelConditions.blocked) {
+            merged.blocked = true
+            merged.reasons = Array.from(new Set((merged.reasons || []).concat(modelConditions.reasons || [])))
+          }
           return merged
         }
         const perSpot = {}
@@ -644,7 +704,7 @@ exports.main = async event => {
     } else {
       try {
         if (!modelResult) throw new Error(values[1].reason && values[1].reason.message || '数值模型不可用')
-        const fallback = modelResult
+        const fallback = Object.assign({}, modelResult)
         fallback.source = '烟台官方预报不可用，已切换 ' + fallback.source
         fallback.officialFallbackReason = officialResult && officialResult.reason
         result = fallback
@@ -654,7 +714,7 @@ exports.main = async event => {
     }
   } else {
     try {
-      result = await nationwideModel(event)
+      result = await nationwideModel(event, deadline)
     } catch (error) {
       console.error('nationwide forecast failed', error)
       result = {
@@ -675,16 +735,24 @@ exports.main = async event => {
     }
   }
 
+  result.version = FORECAST_VERSION
+  result.diagnostics = Object.assign({ durationMs: Date.now() - startedAt }, diagnostic || {})
+  if (!result.conditions.dataReady && diagnostic) result.reason = '官方：' + diagnostic.official + '；模型：' + diagnostic.model
+
   if (result.conditions && result.conditions.dataReady) {
-    await savePersistentCache(cityId, result)
+    await within(savePersistentCache(cityId, result), 800, null)
     return result
   }
 
-  const cached = await readPersistentCache(cityId)
+  const cached = recent || await within(readPersistentCache(cityId), 500, null)
   if (!cached) return result
-  const ageMinutes = Math.max(1, Math.round(cached.ageMs / 60000))
-  if (cached.ageMs <= PERSISTENT_CACHE_FRESH_MS) {
+  const cacheAgeMs = Math.max(0, Date.now() - Date.parse(cached.checkedAt))
+  const ageMinutes = Math.max(1, Math.round(cacheAgeMs / 60000))
+  if (cacheAgeMs < PERSISTENT_CACHE_FRESH_MS && chinaDayOf(cached.checkedAt) === chinaDate()) {
     const value = JSON.parse(JSON.stringify(cached.value))
+    value.version = FORECAST_VERSION
+    value.diagnostics = result.diagnostics
+    value.refreshFailure = result.reason
     value.cached = true
     value.cacheAgeMinutes = ageMinutes
     value.source = '最近有效缓存 · ' + value.source
@@ -693,7 +761,7 @@ exports.main = async event => {
     return value
   }
   return Object.assign({}, result || {}, {
-    reason: String(result && result.reason || '实时海况接口暂不可用') + '；上次有效数据为' + ageMinutes + '分钟前，因超过10分钟已停止评分',
+    reason: String(result && result.reason || '实时海况接口暂不可用') + '；上次有效数据为' + ageMinutes + '分钟前，因跨日或超过10分钟已停止评分',
     lastValid: { checkedAt: cached.checkedAt, ageMinutes },
     conditions: { dataReady: false, blocked: false }
   })

@@ -8,7 +8,7 @@ App({
   },
 
   onLaunch() {
-    const savedCity = wx.getStorageSync('manual_coastal_city')
+    const savedCity = wx.getStorageSync('manual_coastal_city') || wx.getStorageSync('last_coastal_city')
     if (savedCity) this.globalData.selectedCityId = savedCity
     // 云开发承载天气、潮汐和匿名现场样本。
     const cloudEnv = 'ganhai-miniapp-d7g9754k00dfaa66b'
