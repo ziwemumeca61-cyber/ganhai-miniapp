@@ -1,4 +1,4 @@
-const ai = require('../../services/ai')
+const guide = require('../../services/guide')
 
 Page({
   data: {
@@ -6,7 +6,7 @@ Page({
     inputValue: '',
     scrollId: '',
     messages: [
-      { id: 'welcome', role: 'assistant', content: '我是你的全国赶海向导。告诉我想去的时间、距离、海货或同行人群，我会结合当前城市的潮汐和天气给你建议。' }
+      { id: 'welcome', role: 'assistant', content: '输入目标海货、区县或同行人群，按当前城市的实时数据筛选地点。' }
     ],
     suggestions: ['当前城市有哪些赶海点？', '今天哪里适合带孩子？', '想找蛤蜊多的地方', '现在还能下海吗？'],
     sending: false
@@ -18,9 +18,9 @@ Page({
     const api = require('../../services/api')
     const city = api.cities.find(item => item.id === cityId) || api.cities[0]
     this.setData({ cityName: city.name })
-    const prefill = wx.getStorageSync('ai_prefill')
+    const prefill = wx.getStorageSync('guide_prefill')
     if (prefill) {
-      wx.removeStorageSync('ai_prefill')
+      wx.removeStorageSync('guide_prefill')
       this.setData({ inputValue: prefill })
     }
   },
@@ -44,7 +44,7 @@ Page({
     this.setData({ messages, inputValue: '', sending: true, scrollId: userMessage.id })
     const app = getApp()
     const cityId = app.globalData.selectedCityId || 'yantai'
-    ai.ask(question, { city: this.data.cityName, cityId }).then(result => {
+    guide.ask(question, { city: this.data.cityName, cityId }).then(result => {
       const assistantMessage = { id: `a-${Date.now()}`, role: 'assistant', content: result.answer, source: result.source }
       this.setData({ messages: this.data.messages.concat(assistantMessage), sending: false, scrollId: assistantMessage.id })
     }).catch(() => {

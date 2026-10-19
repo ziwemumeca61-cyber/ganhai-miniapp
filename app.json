@@ -3,7 +3,7 @@
     "pages/index/index",
     "pages/map/map",
     "pages/spot/spot",
-    "pages/ai/ai",
+    "pages/guide/guide",
     "pages/report/report"
   ],
   "window": {
@@ -29,8 +29,8 @@
         "text": "附近"
       },
       {
-        "pagePath": "pages/ai/ai",
-        "text": "问赶海"
+        "pagePath": "pages/guide/guide",
+        "text": "筛地点"
       },
       {
         "pagePath": "pages/report/report",

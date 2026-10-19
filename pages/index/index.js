@@ -5,7 +5,7 @@ Page({
   data: {
     summary: {},
     spots: [],
-    calendar: [],
+    visibleSpots: [],
     cityOptions: api.cities,
     cityIndex: 0,
     cityId: 'yantai',
@@ -100,22 +100,36 @@ Page({
   },
 
   loadData(location, stopRefresh) {
+    const requestId = this._dataRequestId = (this._dataRequestId || 0) + 1
     this.setData({ loading: true })
     const app = getApp()
     const point = location || app.globalData.location
     api.getHomeData(point, this.data.cityId).then(data => {
+      if (requestId !== this._dataRequestId) return
       this.setData({
         summary: data.summary,
         spots: data.spots,
-        calendar: api.getForecastCalendar(data.summary),
+        visibleSpots: data.spots.slice(0, 5),
         loading: false
       })
     }).catch(error => {
+      if (requestId !== this._dataRequestId) return
       console.error('home data failed', error)
-      this.setData({ loading: false })
+      this.setData({
+        loading: false,
+        spots: [],
+        visibleSpots: [],
+        summary: {
+          label: '实时数据待更新',
+          bestTime: '时段待更新',
+          showSafetyWarning: true,
+          warningTitle: '暂无法判断下滩条件',
+          warningText: '请下拉刷新，并以现场风浪和管理提示为准。'
+        }
+      })
       wx.showToast({ title: '实时数据加载失败', icon: 'none' })
     }).finally(() => {
-      if (stopRefresh) wx.stopPullDownRefresh()
+      if (stopRefresh && requestId === this._dataRequestId) wx.stopPullDownRefresh()
     })
   },
 
@@ -128,9 +142,22 @@ Page({
     wx.switchTab({ url: '/pages/map/map' })
   },
 
-  goAi() {
-    wx.setStorageSync('ai_prefill', '请根据今天的天气、潮汐、当前位置距离和地点信息，帮我安排一条' + this.data.cityName + '赶海路线。数据未接入时请明确说明。')
-    wx.switchTab({ url: '/pages/ai/ai' })
+  goGuide() {
+    wx.setStorageSync('guide_prefill', '按当前实时数据筛选' + this.data.cityName + '赶海点。')
+    wx.switchTab({ url: '/pages/guide/guide' })
+  },
+
+  showMoreSpots() {
+    this.setData({ visibleSpots: this.data.spots.slice(0, this.data.visibleSpots.length + 5) })
+  },
+
+  showDataInfo() {
+    const summary = this.data.summary
+    wx.showModal({
+      title: '数据来源与更新',
+      content: '更新时间：' + (summary.updatedAt || '待更新') + '\n气象与海况模型：Open-Meteo（CC BY 4.0）。潮汐来源见地点详情。\n' + (summary.subtitle || '') + '\n' + this.data.locationLabel + ' · ' + this.data.locationStatus + '\n导航坐标为附近参考点，岸段是否开放以现场管理为准。',
+      showCancel: false
+    })
   },
 
   viewSpot(e) {

@@ -1,99 +1,37 @@
 <view class="page-shell home-page">
   <view class="topline">
-    <view>
-      <view class="brand">赶海雷达</view>
-      <view class="eyebrow">CHINA COASTAL GUIDE · 01</view>
-    </view>
-    <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity">
-      <view class="location-chip">
-        <text class="location-dot">●</text>
-        <view>
-          <view class="location-name">{{locationLabel}}</view>
-          <view class="location-status">{{locationStatus}}</view>
-        </view>
-        <text class="chevron">⌄</text>
-      </view>
-    </picker>
+    <view class="brand">赶海雷达</view>
+    <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="location-chip">{{cityName}} ⌄</view></picker>
   </view>
-
   <view class="hero card">
-    <view class="hero-glow"></view>
-    <view class="hero-head">
-      <view>
-        <view class="hero-kicker">TODAY'S COASTAL WINDOW</view>
-        <view class="hero-title">{{summary.safetyLevel || summary.label}}</view>
-        <view class="hero-subtitle">{{summary.subtitle}}</view>
-      </view>
-      <view class="score-ring">
-        <view class="score-number">{{summary.safetyScore === null ? '--' : summary.safetyScore}}</view>
-        <view class="score-label">首选点安全</view>
-      </view>
-    </view>
-    <view class="hero-line"></view>
-    <view class="metrics">
-      <view class="metric">
-        <text class="metric-icon">↓</text>
-        <view><text class="metric-value">{{summary.lowTide}}</text><text class="metric-label">首选点低潮</text></view>
-      </view>
-      <view class="metric">
-        <text class="metric-icon sun">☼</text>
-        <view><text class="metric-value">{{summary.weather}}</text><text class="metric-label">体感天气</text></view>
-      </view>
-      <view class="metric">
-        <text class="metric-icon wind">↝</text>
-        <view><text class="metric-value">{{summary.wind}}</text><text class="metric-label">海风状态</text></view>
-      </view>
-    </view>
-    <view class="best-window">
-      <view><text class="window-label">{{summary.referenceSpot || '首选点'}}窗口</text><text class="window-value">{{summary.bestTime}}</text></view>
-      <view class="window-warning">{{summary.safety}}</view>
-    </view>
+    <block wx:if="{{loading}}"><view class="hero-label">今日海况</view><view class="hero-title">正在更新…</view></block>
+    <block wx:else>
+      <view class="hero-label">{{summary.referenceSpot ? '优先参考 · ' + summary.referenceSpot : cityName + ' · 今日海况'}}</view>
+      <view class="hero-title">{{summary.safetyLevel || summary.label}}</view>
+      <view class="hero-window">{{summary.bestTime}}</view>
+      <view class="hero-label">参考赶海时段 · 以地点详情为准</view>
+      <view wx:if="{{spots.length}}" class="hero-detail" bindtap="viewSpot" data-id="{{spots[0].id}}">查看地点与岸段 ›</view>
+    </block>
   </view>
-
-  <view wx:if="{{summary.showSafetyWarning}}" class="safety-banner">
-    <text class="safety-banner-icon">!</text>
-    <view><text class="safety-banner-title">{{summary.warningTitle}}</text><text class="safety-banner-text">{{summary.warningText}}</text></view>
+  <view wx:if="{{!loading && summary.showSafetyWarning}}" class="safety-banner"><text>!</text><view><text>{{summary.warningTitle}}</text><text>{{summary.warningText}}</text></view></view>
+  <view class="browse-tools">
+    <view bindtap="goMap">看地图</view>
+    <view bindtap="goGuide">按条件筛选</view>
+    <view bindtap="locate">重新定位</view>
   </view>
-
-  <view class="quick-actions">
-    <view class="quick-action" bindtap="goMap"><view class="action-icon map-icon">⌁</view><text>沿海地点地图</text></view>
-    <view class="quick-action" bindtap="goAi"><view class="action-icon ai-icon">✦</view><text>问AI怎么去</text></view>
-    <view class="quick-action" bindtap="locate"><view class="action-icon locate-icon">⊙</view><text>刷新定位</text></view>
-  </view>
-
-  <view class="section-title forecast-title"><text class="title">今日有效数据</text><text class="link">数据闸门</text></view>
-  <scroll-view class="forecast-scroll" scroll-x="true">
-    <view wx:for="{{calendar}}" wx:key="date" class="forecast-card {{item.color}}">
-      <view class="forecast-date">{{item.date}}</view>
-      <view class="forecast-week">{{item.weekday}}</view>
-      <view class="forecast-score"><text>{{item.score === null ? '--' : item.score}}</text><text>安全</text></view>
-      <view class="forecast-label">{{item.label}}</view>
-      <view class="forecast-tide">低潮 {{item.tide}}</view>
-    </view>
-  </scroll-view>
-
-  <view class="section-title">
-    <text class="title">附近沿海地点</text>
-    <text class="link" bindtap="goMap">查看地图 →</text>
-  </view>
-
-  <block wx:for="{{spots}}" wx:key="id">
-    <view class="spot-card card" bindtap="viewSpot" data-id="{{item.id}}">
+  <view class="section-title"><text class="title">{{cityName}}赶海点</text><text class="list-hint">距离与海况综合排序</text></view>
+  <view wx:if="{{loading}}" class="list-state">正在整理本市地点…</view>
+  <view wx:elif="{{!spots.length}}" class="list-state">当前城市暂无收录地点</view>
+  <block wx:else>
+    <view wx:for="{{visibleSpots}}" wx:key="id" class="spot-card card" bindtap="viewSpot" data-id="{{item.id}}">
       <view class="spot-top">
-        <view class="spot-number">0{{index + 1}}</view>
-        <view class="spot-main">
-          <view class="spot-name-row"><text class="spot-name">{{item.name}}</text><text class="spot-area">{{item.area}}</text></view>
-          <view class="spot-meta"><text>{{item.distanceLabel}}</text><text class="meta-dot">·</text><text>{{item.tideRange}}</text><text class="meta-dot">·</text><text>{{item.update}}</text></view>
-        </view>
-        <view class="spot-score"><text>{{item.safetyScore === null ? '--' : item.safetyScore}}</text><text>安全</text></view>
+        <view class="spot-main"><view class="spot-name">{{item.name}}</view><view class="spot-meta">{{item.area}} · {{item.distanceLabel}}</view></view>
+        <view class="spot-score"><text>{{item.conditionsBlocked ? '暂勿下滩' : item.safetyScore === null ? '海况待更新' : '安全 ' + item.safetyScore + '分'}}</text></view>
       </view>
-      <view class="spot-bottom">
-        <view class="spot-tags"><text wx:for="{{item.tags}}" wx:key="*this" class="mini-tag">{{item}}</text></view>
-        <view wx:if="{{item.seaIntestineForecast.available}}" class="sea-intestine-chip {{item.seaIntestineForecast.safetyBlocked ? 'blocked' : ''}}">海肠 · {{item.seaIntestineForecast.summary}}</view>
-        <view class="spot-direction"><text class="direction-arrow">↗</text>优先区：{{item.bestZone}}</view>
-      </view>
+      <view class="spot-window">{{item.bestWindow}}</view>
+      <view class="spot-direction">{{!item.canReport ? '仅观察，不采集' : item.bestZoneAvailable ? '参考岸段：' + item.bestZone : '具体岸段待确认'}} <text>›</text></view>
     </view>
+    <view wx:if="{{visibleSpots.length < spots.length}}" class="more-spots" bindtap="showMoreSpots">查看更多地点（还剩 {{spots.length - visibleSpots.length}} 个）⌄</view>
   </block>
-
-  <view class="data-notice">数据更新时间：{{summary.updatedAt}}　·　海况模型：Open-Meteo（CC BY 4.0）　·　POI核验不等于岸段开放许可</view>
+  <view class="data-notice" bindtap="showDataInfo">Open-Meteo · 数据来源与更新时间 ⓘ</view>
 </view>

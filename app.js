@@ -10,7 +10,7 @@ App({
   onLaunch() {
     const savedCity = wx.getStorageSync('manual_coastal_city')
     if (savedCity) this.globalData.selectedCityId = savedCity
-    // 配置自己的 CloudBase 环境 ID 后，再打开云开发和成长计划 AI。
+    // 云开发承载天气、潮汐和匿名现场样本。
     const cloudEnv = 'ganhai-miniapp-d7g9754k00dfaa66b'
     if (wx.cloud && cloudEnv) {
       wx.cloud.init({

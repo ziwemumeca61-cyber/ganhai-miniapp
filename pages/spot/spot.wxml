@@ -1,80 +1,63 @@
 <view wx:if="{{spot}}" class="page-shell spot-page">
   <view class="detail-head">
-    <view class="detail-head-main">
-      <view class="eyebrow">{{spot.area}} · {{spot.canReport ? '今日赶海点' : '生态观察点'}}</view>
-      <view class="detail-title">{{spot.name}}</view>
-      <view class="detail-meta"><text>{{spot.distanceLabel}}</text><text class="meta-dot">·</text><text>{{spot.update}}</text></view>
-    </view>
-    <view class="detail-score"><text>{{spot.safetyScore === null ? '--' : spot.safetyScore}}</text><text>安全分</text></view>
+    <view class="detail-meta">{{spot.area}} · {{spot.distanceLabel}}</view>
+    <view class="detail-title">{{spot.name}}</view>
+    <view class="detail-status">{{spot.canReport ? (spot.conditionsBlocked ? '当前不建议下滩' : spot.safetyScore === null ? '海况待更新' : '海况安全参考 ' + spot.safetyScore + '分') : '仅观察，不采集'}}</view>
   </view>
 
-  <view class="decision-card card">
-    <view class="decision-title"><text class="decision-index">1</text><text>去哪儿赶海</text><view class="zone-status {{spot.bestZoneAvailable ? 'ready' : 'pending'}}">{{spot.zoneStatus}}</view></view>
-    <view class="best-zone {{spot.bestZoneAvailable ? '' : 'pending'}}">
-      <text class="best-zone-label">优先看这一段</text>
-      <text class="best-zone-name">{{spot.bestZone}}</text>
-      <text class="best-zone-source">{{spot.bestZoneSource}}</text>
-      <text wx:if="{{spot.bestZoneDetail}}" class="best-zone-note">{{spot.bestZoneDetail}}</text>
-    </view>
-    <view class="zone-evidence">岸段样本：{{spot.zoneEvidenceText}}</view>
-    <view class="key-answer"><text>到达后</text><text>{{spot.shoreSide}}</text></view>
-    <view class="key-answer"><text>离岸范围</text><text>{{spot.offshoreRange}}</text></view>
-    <view class="key-answer"><text>现场找什么</text><text>{{spot.searchFeature}}</text></view>
-    <view class="detail-toggle" bindtap="toggleRoute">{{showRouteDetails ? '收起路线与坐标 ⌃' : '查看路线与导航坐标 ⌄'}}</view>
-    <block wx:if="{{showRouteDetails}}">
-      <view class="zone-route">
-        <view wx:for="{{spot.zoneSteps}}" wx:key="label" class="route-step">
-          <view class="route-index">{{index + 1}}</view>
-          <view class="route-copy"><text>{{item.label}}</text><text>{{item.text}}</text></view>
-        </view>
-      </view>
-      <view class="coordinate-row" bindtap="copyZoneGuide"><view><text>导航参考坐标</text><text>{{spot.coordinateLabel}}</text></view><text class="copy-link">复制路线</text></view>
-    </block>
+  <view wx:if="{{spot.conditionsBlocked || !spot.conditionsReady}}" class="urgent-note">
+    <view>{{spot.conditionsBlocked ? '当前不建议下滩' : '实时海况不足，暂不能判断是否适合下滩'}}</view>
+    <view wx:if="{{spot.conditionsBlocked}}"><text wx:for="{{spot.conditionsReasons}}" wx:key="*this">{{item}} </text></view>
   </view>
 
-  <view class="decision-card card">
-    <view class="decision-title"><text class="decision-index">2</text><text>几点去</text><text class="decision-side">{{spot.tide}}</text></view>
+  <view class="time-card card">
+    <view class="card-label">参考时段</view>
     <view class="time-answer">{{spot.bestWindow}}</view>
-    <view class="time-basis">{{spot.windowBasis}} · {{spot.tideRange}}</view>
-    <view class="weather-row"><text>☆ {{spot.weather}}</text><text>回涨前留足撤离时间</text></view>
-    <view class="detail-toggle" bindtap="toggleTide">{{showTideDetails ? '收起潮汐依据 ⌃' : '查看潮汐时间线与数据源 ⌄'}}</view>
-    <block wx:if="{{showTideDetails}}">
+    <view class="detail-toggle" bindtap="toggleTide">{{showTideDetails ? '收起潮汐依据 ⌃' : '查看潮汐依据 ⌄'}}</view>
+    <view wx:if="{{showTideDetails}}" class="expanded-content">
+      <view class="detail-copy">{{spot.windowBasis}} · {{spot.tide}}</view>
+      <view class="detail-copy">{{spot.weather}} · {{spot.tideRange}}</view>
       <view class="timeline">
-        <view wx:for="{{forecast}}" wx:key="time" class="timeline-item {{item.type}}">
-          <view class="time-dot"></view><view class="time-label">{{item.time}}</view><view class="time-name">{{item.label}}</view>
-        </view>
+        <view wx:for="{{forecast}}" wx:key="time" class="timeline-item"><text>{{item.time}}</text><text>{{item.label}}</text></view>
       </view>
       <view class="source-note">{{spot.tideSource}}{{spot.tideStation ? ' · ' + spot.tideStation : ''}} · {{spot.tideConfidence}}置信{{spot.stationDistanceKm !== null ? ' · 距潮汐站约' + spot.stationDistanceKm + 'km' : ''}}</view>
-    </block>
+    </view>
   </view>
 
-  <view class="decision-card card">
-    <view class="decision-title"><text class="decision-index">3</text><text>可能有什么</text><text class="confidence-link" bindtap="showDisclaimer">置信说明 ⓘ</text></view>
+  <view class="zone-card card">
+    <view class="card-label">到哪一段</view>
+    <view class="best-zone-name">{{spot.bestZone}}</view>
+    <view class="zone-status">{{spot.zoneStatus}} · {{spot.bestZoneSource}}</view>
+    <view class="arrival-guide">{{spot.shoreSide}}</view>
+    <view class="detail-toggle" bindtap="toggleRoute">{{showRouteDetails ? '收起到达路线 ⌃' : '查看路线与现场特征 ⌄'}}</view>
+    <view wx:if="{{showRouteDetails}}" class="expanded-content">
+      <view wx:for="{{spot.zoneSteps}}" wx:key="label" class="route-step"><text>{{item.label}}</text><text>{{item.text}}</text></view>
+      <view wx:if="{{spot.bestZoneDetail}}" class="source-note">{{spot.bestZoneDetail}}</view>
+      <view class="source-note">岸段样本：{{spot.zoneEvidenceText}}</view>
+      <view class="coordinate-row" bindtap="copyZoneGuide"><text>参考坐标 {{spot.coordinateLabel}}</text><text>复制路线</text></view>
+      <view class="source-note">导航到附近参考点；入口与开放范围以现场为准。</view>
+    </view>
+  </view>
+
+  <view class="catch-card card">
+    <view class="card-label">可能遇到</view>
     <view class="catch-summary">{{spot.catchForecast}}</view>
-    <view wx:if="{{spot.seaIntestineForecast.available}}" class="sea-intestine-inline {{spot.seaIntestineForecast.safetyBlocked ? 'blocked' : ''}}">
-      <view><text>海肠冲岸</text><text>{{spot.seaIntestineForecast.score}}</text></view>
-      <text>{{spot.seaIntestineForecast.summary}}</text>
-      <text>样本：发现 {{spot.seaIntestineForecast.positiveCount}} · 未发现 {{spot.seaIntestineForecast.negativeCount}}；{{spot.seaIntestineForecast.disclaimer}}</text>
-    </view>
-    <view class="species-row">
-      <view wx:for="{{spot.species}}" wx:key="name" class="species-pill"><text>{{item.name}}</text><text>{{item.value}}</text></view>
+    <view wx:if="{{spot.seaIntestineForecast.available}}" class="sea-intestine-summary">{{spot.seaIntestineForecast.safetyBlocked ? '当前不建议下滩 · ' : ''}}海肠：{{spot.seaIntestineForecast.summary}}</view>
+    <view class="detail-toggle" bindtap="toggleCatch">{{showCatchDetails ? '收起样本与预测依据 ⌃' : '查看样本与预测依据 ⌄'}}</view>
+    <view wx:if="{{showCatchDetails}}" class="expanded-content">
+      <view class="detail-copy">近14天 {{spot.sampleCount}} 条现场样本 · {{spot.confidence}}置信</view>
+      <view class="species-row"><view wx:for="{{spot.species}}" wx:key="name" class="species-pill">{{item.name}} · {{item.value}}</view></view>
+      <view wx:if="{{spot.seaIntestineForecast.available}}" class="source-note">海肠冲岸参考 {{spot.seaIntestineForecast.score}} · 发现 {{spot.seaIntestineForecast.positiveCount}} 次 / 未发现 {{spot.seaIntestineForecast.negativeCount}} 次。{{spot.seaIntestineForecast.disclaimer}}</view>
+      <view class="detail-toggle" bindtap="showDisclaimer">如何理解样本与置信度 ⓘ</view>
     </view>
   </view>
 
-  <view class="decision-card safety-card">
-    <view class="decision-title"><text class="decision-index warning">4</text><text>安不安全</text><text class="risk {{spot.risk === '低' ? 'risk-low' : 'risk-medium'}}">{{spot.risk}}风险</text></view>
-    <view class="safety-text"><text>撤离线</text><text>{{spot.retreat}}</text></view>
-    <view class="safety-foot">不进入被海水包围的礁石或沟漕；现场封闭、预警或风浪增大时立即结束。</view>
-  </view>
-
-  <view class="secondary-tools">
-    <view class="ai-plan-btn" bindtap="askAI"><text>✶</text><text>让 AI 用当前数据解释这个地点</text><text class="ai-plan-arrow">→</text></view>
-    <view class="spot-feedback" bindtap="showFeedback">{{feedbackSubmitting ? '正在提交…' : '位置、入口或采集规定有误？点这里反馈'}}</view>
-  </view>
+  <view class="safety-note"><view>撤离提醒</view><text>{{spot.retreat}}</text><text>避开被海水包围的礁石和沟槽；封闭、预警或风浪增大时立即撤离。</text></view>
+  <view class="more-tools" bindtap="showMoreActions">{{feedbackSubmitting ? '正在提交反馈…' : '数据说明与地点反馈 ›'}}</view>
 
   <view class="detail-actions">
-    <view wx:if="{{spot.canReport}}" class="ghost-btn" bindtap="goReport">上报现场</view>
-    <view wx:else class="ghost-btn disabled">仅观察，不采集</view>
-    <view class="primary-btn" bindtap="openLocation">导航到参考点</view>
+    <view wx:if="{{spot.canReport}}" class="ghost-btn" bindtap="goReport">贡献样本</view>
+    <view class="primary-btn" bindtap="openLocation">导航到附近</view>
   </view>
 </view>
+<view wx:else class="page-shell detail-loading"><text>{{loadFailed ? '地点数据暂未加载' : '正在读取地点…'}}</text><view wx:if="{{loadFailed}}" class="ghost-btn" bindtap="retryLoad">重新加载</view></view>

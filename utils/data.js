@@ -214,7 +214,7 @@ function zoneEvidenceFor(spot, reports) {
   })[0] || null
   const knownCount = zoneRows.reduce((sum, item) => sum + item.sampleCount, 0)
   const evidenceText = !knownCount && !(unknown && unknown.count)
-    ? '暂无分段样本；发布时选择西侧、附近或东侧，帮助确定最佳岸段'
+    ? '暂无分段样本；贡献现场样本可帮助确定最佳岸段'
     : zoneRows.map(item => item.sampleCount
       ? item.label + item.sampleCount + '条（发现' + item.positiveCount + '／未发现' + item.negativeCount + '）'
       : item.label + '暂无').join(' · ') + (unknown && unknown.count ? ' · 未分段' + unknown.count + '条' : '')

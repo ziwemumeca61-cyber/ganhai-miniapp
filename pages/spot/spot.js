@@ -1,10 +1,16 @@
 const api = require('../../services/api')
 
 Page({
-  data: { spot: null, forecast: [], feedbackSubmitting: false, showRouteDetails: false, showTideDetails: false },
+  data: { spot: null, forecast: [], feedbackSubmitting: false, showRouteDetails: false, showTideDetails: false, showCatchDetails: false, loadFailed: false },
 
   onLoad(options) {
-    api.getSpotDetail(options.id).then(data => {
+    this._spotId = options.id
+    this.retryLoad()
+  },
+
+  retryLoad() {
+    this.setData({ loadFailed: false })
+    api.getSpotDetail(this._spotId).then(data => {
       const spot = data.spot
       const summary = data.summary || {}
       const windowParts = String(spot && spot.bestWindow || summary.bestTime || '').split('—')
@@ -14,7 +20,7 @@ Page({
       if (nextLow) forecast.push({ time: nextLow[0], label: '低潮', type: 'low', height: '' })
       if (windowParts[1] && /^\d{2}:\d{2}$/.test(windowParts[1])) forecast.push({ time: windowParts[1], label: '最晚回撤', type: 'back', height: '' })
       this.setData({ spot, forecast })
-    }).catch(() => wx.showToast({ title: '地点数据加载失败', icon: 'none' }))
+    }).catch(() => this.setData({ loadFailed: true }))
   },
 
   onShareAppMessage() {
@@ -37,14 +43,29 @@ Page({
   toggleRoute() { this.setData({ showRouteDetails: !this.data.showRouteDetails }) },
   toggleTide() { this.setData({ showTideDetails: !this.data.showTideDetails }) },
 
-  goReport() { wx.navigateTo({ url: '/pages/report/report?spotId=' + this.data.spot.id }) },
+  toggleCatch() { this.setData({ showCatchDetails: !this.data.showCatchDetails }) },
 
-  askAI() {
-    const spot = this.data.spot
-    if (!spot) return
-    wx.setStorageSync('ai_prefill', '请分别说明' + spot.name + '的海况安全、收获置信度、优先赶海区、公共入口和撤离提示。数据不足时不要推荐。')
-    wx.switchTab({ url: '/pages/ai/ai' })
+  showMoreActions() {
+    if (this.data.feedbackSubmitting) return
+    wx.showActionSheet({
+      itemList: ['查看数据说明', '反馈地点问题'],
+      success: result => {
+        if (result.tapIndex === 0) this.showSpotDataInfo()
+        else this.showFeedback()
+      }
+    })
   },
+
+  showSpotDataInfo() {
+    const spot = this.data.spot
+    wx.showModal({
+      title: '地点数据说明',
+      content: spot.verification + '\n' + spot.update + ' · ' + spot.tideSource + '\n气象与海况模型：Open-Meteo（CC BY 4.0）。\n导航点仅代表附近位置，地点核验不代表允许采集或当前可安全下滩。',
+      showCancel: false
+    })
+  },
+
+  goReport() { wx.navigateTo({ url: '/pages/report/report?spotId=' + this.data.spot.id }) },
 
   showDisclaimer() {
     wx.showModal({

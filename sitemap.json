@@ -4,7 +4,7 @@
     { "action": "allow", "page": "pages/index/index" },
     { "action": "allow", "page": "pages/map/map" },
     { "action": "allow", "page": "pages/spot/spot" },
-    { "action": "allow", "page": "pages/ai/ai" },
+    { "action": "allow", "page": "pages/guide/guide" },
     { "action": "allow", "page": "pages/report/report" }
   ]
 }

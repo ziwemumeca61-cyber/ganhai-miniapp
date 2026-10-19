@@ -7,7 +7,6 @@ const spots = require('./national-spots')
 const weights = { '未发现': 0, '少量': 1, '一般': 2, '较多': 3, '满载': 4 }
 const zoneLabels = { west: '参考点西侧', middle: '参考点附近', east: '参考点东侧', unknown: '未分段' }
 const normalizeZoneId = value => Object.prototype.hasOwnProperty.call(zoneLabels, String(value || '')) ? String(value) : 'unknown'
-const validPhotoFileId = value => /^cloud:\/\/[\w.-]+\/field-reports\/[\w/-]+\.(?:jpe?g|png|webp|heic)$/i.test(String(value || ''))
 const radians = value => value * Math.PI / 180
 const distanceMeters = (from, to) => {
   const radius = 6371000
@@ -16,12 +15,6 @@ const distanceMeters = (from, to) => {
   const a = Math.sin(dLat / 2) ** 2 + Math.sin(dLng / 2) ** 2 * Math.cos(radians(from.latitude)) * Math.cos(radians(to.latitude))
   return Math.round(radius * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)))
 }
-const isoTime = value => {
-  if (!value) return ''
-  const date = value instanceof Date ? value : new Date(value)
-  return Number.isNaN(date.getTime()) ? '' : date.toISOString()
-}
-
 async function readAll(queryFactory, pageSize = 100, maxPages = 50) {
   const rows = []
   for (let page = 0; page < maxPages; page += 1) {
@@ -74,45 +67,6 @@ async function summaries() {
   }
 }
 
-async function feed(event) {
-  try {
-    const selectedCityId = String(event && event.cityId || '').slice(0, 40)
-    let records
-    try {
-      const query = selectedCityId
-        ? db.collection('field_reports').where({ cityId: selectedCityId })
-        : db.collection('field_reports')
-      const result = await query.orderBy('createdAt', 'desc').limit(30).get()
-      records = result.data || []
-    } catch (indexError) {
-      const rows = await readAll(() => selectedCityId
-        ? db.collection('field_reports').where({ cityId: selectedCityId })
-        : db.collection('field_reports'))
-      records = rows.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 30)
-    }
-    const items = records.map(item => ({
-      id: item._id,
-      cityId: item.cityId || 'yantai',
-      spotId: item.spotId,
-      spotName: item.spotName || spots[item.spotId] && spots[item.spotId].name || '已核验地点',
-      species: String(item.species || '其他').slice(0, 12),
-      found: item.found !== false && item.amount !== '未发现',
-      amount: Object.prototype.hasOwnProperty.call(weights, item.amount) ? item.amount : '已记录',
-      zoneId: normalizeZoneId(item.zoneId),
-      zoneLabel: zoneLabels[normalizeZoneId(item.zoneId)],
-      photoFileIds: Array.isArray(item.photoFileIds) ? item.photoFileIds.filter(validPhotoFileId).slice(0, 3) : [],
-      note: String(item.note || '').slice(0, 120),
-      verified: item.verified === true,
-      verificationLabel: item.verified === true ? '现场定位已核验' : String(item.verificationLabel || '未到场核验').slice(0, 20),
-      createdAt: isoTime(item.createdAt)
-    }))
-    return { ok: true, items }
-  } catch (error) {
-    console.warn('field_reports feed unavailable', error)
-    return { ok: true, items: [], needsCollection: true }
-  }
-}
-
 async function feedback(event) {
   const context = cloud.getWXContext()
   const target = spots[event.spotId]
@@ -147,13 +101,12 @@ async function submit(event) {
   const target = spots[event.spotId]
   if (!target) return { ok: false, error: '请选择已收录的赶海地点' }
   if (target.collectible === false) return { ok: false, error: '该地点仅供生态观察，不开放收获上报' }
+  const species = String(event.species || '')
+  if (['蛤蜊', '海螺', '海蛎子', '螃蟹', '海肠', '其他'].indexOf(species) < 0) return { ok: false, error: '请选择现场品类' }
   const found = event.found !== false
   const amount = found ? event.amount : '未发现'
   if (!Object.prototype.hasOwnProperty.call(weights, amount)) return { ok: false, error: '请选择收获量' }
   const zoneId = normalizeZoneId(event.zoneId)
-  const rawPhotoFileIds = Array.isArray(event.photoFileIds) ? event.photoFileIds.slice(0, 3) : []
-  const photoFileIds = rawPhotoFileIds.filter(validPhotoFileId)
-  if (photoFileIds.length !== rawPhotoFileIds.length) return { ok: false, error: '照片地址无效，请重新选择照片' }
   const rawLocation = event.location
   const latitude = Number(rawLocation && rawLocation.latitude)
   const longitude = Number(rawLocation && rawLocation.longitude)
@@ -162,28 +115,25 @@ async function submit(event) {
   const accuracyReady = Number.isFinite(accuracy) && accuracy > 0 && accuracy <= 300
   const onsiteDistance = hasLocation ? distanceMeters({ latitude, longitude }, target) : null
   const verified = hasLocation && accuracyReady && onsiteDistance <= 2500 + accuracy
-  const verificationLabel = verified
-    ? '现场定位已核验'
-    : !hasLocation ? '未提供现场定位'
-    : !accuracyReady ? '定位精度不足，未核验'
-    : '距离较远，未到场核验'
+  if (!hasLocation) return { ok: false, error: '匿名预测样本需要现场定位核验' }
+  if (!accuracyReady) return { ok: false, error: '定位精度不足，请到室外重新定位' }
+  if (!verified) return { ok: false, error: '当前位置距离所选地点较远，请到现场或改选正确地点' }
+  const verificationLabel = '现场定位已核验'
   const now = new Date()
   try {
     const duplicate = await db.collection('field_reports').where({ _openid: context.OPENID, createdAt: command.gte(new Date(Date.now() - 10 * 60000)) }).limit(1).get()
-    if (duplicate.data && duplicate.data.length) return { ok: false, error: '10分钟内请勿重复发布' }
+    if (duplicate.data && duplicate.data.length) return { ok: false, error: '10分钟内请勿重复提交样本' }
     const result = await db.collection('field_reports').add({ data: {
       _openid: context.OPENID,
       spotId: event.spotId,
       cityId: target.cityId,
       spotName: target.name,
-      species: String(event.species || '其他').slice(0, 12),
+      species,
       zoneId,
       zoneLabel: zoneLabels[zoneId],
       found,
       amount,
       amountWeight: weights[amount],
-      photoFileIds,
-      note: String(event.note || '').slice(0, 120),
       verified,
       verificationLabel,
       distanceMeters: onsiteDistance,
@@ -200,7 +150,6 @@ async function submit(event) {
 
 exports.main = event => {
   if (event && event.action === 'submit') return submit(event)
-  if (event && event.action === 'feed') return feed(event)
   if (event && event.action === 'feedback') return feedback(event)
   return summaries()
 }
