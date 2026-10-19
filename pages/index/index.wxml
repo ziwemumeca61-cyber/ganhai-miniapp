@@ -1,37 +1,43 @@
 <view class="page-shell home-page">
   <view class="topline">
-    <view class="brand">赶海雷达</view>
-    <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="location-chip">{{cityName}} ⌄</view></picker>
+    <view class="brand-lockup"><view class="brand-mark" aria-hidden="true"><view></view><view></view><view></view></view><view><view class="brand">赶海雷达</view><view class="day-label">{{dayLabel}}</view></view></view>
+    <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="location-chip"><text class="location-pin">◉</text>{{cityName}}<text>⌄</text></view></picker>
   </view>
-  <view class="hero card">
-    <block wx:if="{{loading}}"><view class="hero-label">今日海况</view><view class="hero-title">正在更新…</view></block>
-    <block wx:else>
-      <view class="hero-label">{{summary.referenceSpot ? '优先参考 · ' + summary.referenceSpot : cityName + ' · 今日海况'}}</view>
-      <view class="hero-title">{{summary.safetyLevel || summary.label}}</view>
-      <view class="hero-window">{{summary.bestTime}}</view>
-      <view class="hero-label">参考赶海时段 · 以地点详情为准</view>
-      <view wx:if="{{spots.length}}" class="hero-detail" bindtap="viewSpot" data-id="{{spots[0].id}}">查看地点与岸段 ›</view>
-    </block>
+
+  <view class="hero-stage">
+    <view class="hero-copy"><view class="hero-title">{{loading ? '听听海的\n消息。' : mood.title}}</view><view class="hero-subtitle">{{loading ? '正在查看潮汐和风浪…' : mood.subtitle}}</view></view>
+    <view class="hero-art"><coast-scene mood="{{loading ? 'pending' : mood.tone}}"></coast-scene></view>
   </view>
-  <view wx:if="{{!loading && summary.showSafetyWarning}}" class="safety-banner"><text>!</text><view><text>{{summary.warningTitle}}</text><text>{{summary.warningText}}</text></view></view>
-  <view class="browse-tools">
-    <view bindtap="goMap">看地图</view>
-    <view bindtap="goGuide">按条件筛选</view>
-    <view bindtap="locate">重新定位</view>
+
+  <view class="departure-ticket">
+    <view class="ticket-top"><text>{{leadBlocked ? '今天先留在岸上' : '你的海边时间票'}}</text><text class="coast-status {{loading ? 'pending' : mood.tone}}">{{loading ? '更新中' : leadStatus}}</text></view>
+    <view class="ticket-time {{leadBlocked ? 'blocked' : ''}}">{{loading ? '…' : leadBlocked ? '今天先别下滩' : summary.bestTime}}</view>
+    <view class="ticket-caption">{{leadBlocked ? '潮汐时段不代表可下滩，请以预警与现场管理为准' : '参考赶海时段 · 以当地潮汐与现场为准'}}</view>
+    <view wx:if="{{!loading && spots.length}}" class="ticket-destination" bindtap="viewSpot" data-id="{{spots[0].id}}"><view><text>这一站</text><text>{{summary.referenceSpot || spots[0].name}}</text></view><view class="round-arrow">↗</view></view>
   </view>
-  <view class="section-title"><text class="title">{{cityName}}赶海点</text><text class="list-hint">距离与海况综合排序</text></view>
-  <view wx:if="{{loading}}" class="list-state">正在整理本市地点…</view>
-  <view wx:elif="{{!spots.length}}" class="list-state">当前城市暂无收录地点</view>
+
+  <view wx:if="{{!loading && summary.showSafetyWarning}}" class="safety-banner"><text class="warning-mark">!</text><view><text>{{summary.warningTitle}}</text><text>{{summary.warningText}}</text></view></view>
+
+  <view class="explore-tools">
+    <view class="explore-tool map-tool" bindtap="goMap"><view class="map-symbol" aria-hidden="true"><view></view></view><view><text>摊开地图</text><text>沿着海岸找一找</text></view><text class="tool-arrow">↗</text></view>
+    <view class="explore-tool filter-tool" bindtap="goGuide"><view class="shell-symbol" aria-hidden="true"></view><view><text>找我的海边</text><text>按海货与同行人筛选</text></view><text class="tool-arrow">↗</text></view>
+  </view>
+
+  <view class="section-title"><view><text class="section-kicker">下一站，去哪里</text><view class="title">{{cityName}}海岸探索</view></view><view class="relocate" bindtap="locate">⊙ 重新定位</view></view>
+  <view wx:if="{{loading}}" class="list-state">正在摊开本市海岸手记…</view>
+  <view wx:elif="{{!spots.length}}" class="list-state">这一页海岸手记还在补充中</view>
   <block wx:else>
-    <view wx:for="{{visibleSpots}}" wx:key="id" class="spot-card card" bindtap="viewSpot" data-id="{{item.id}}">
-      <view class="spot-top">
-        <view class="spot-main"><view class="spot-name">{{item.name}}</view><view class="spot-meta">{{item.area}} · {{item.distanceLabel}}</view></view>
-        <view class="spot-score"><text>{{item.conditionsBlocked ? '暂勿下滩' : item.safetyScore === null ? '海况待更新' : '安全 ' + item.safetyScore + '分'}}</text></view>
+    <view wx:for="{{visibleSpots}}" wx:key="id" class="explore-card" bindtap="viewSpot" data-id="{{item.id}}">
+      <view class="explore-main">
+        <view class="shore-stamp {{item.exploreTone}}" aria-hidden="true"><view class="stamp-water"></view><view class="stamp-shore"></view><view class="stamp-rock"></view><view class="stamp-shell"></view><text>{{item.exploreLabel}}</text></view>
+        <view class="spot-main"><view class="spot-name">{{item.name}}</view><view class="spot-meta">{{item.area}} · {{item.distanceLabel}}</view><text class="spot-state {{item.coastTone}}">{{item.coastLabel}}</text></view>
+        <text class="spot-arrow">↗</text>
       </view>
-      <view class="spot-window">{{item.bestWindow}}</view>
-      <view class="spot-direction">{{!item.canReport ? '仅观察，不采集' : item.bestZoneAvailable ? '参考岸段：' + item.bestZone : '具体岸段待确认'}} <text>›</text></view>
+      <view class="spot-note"><text>◷ {{item.bestWindow}}</text><text class="note-index">NO.{{index + 1}}</text></view>
+      <view class="spot-direction">{{!item.canReport ? '只看海，也很好。这里仅供生态观察。' : item.bestZoneAvailable ? '参考岸段 · ' + item.bestZone : '具体岸段还待确认，先看附近位置'}}</view>
     </view>
-    <view wx:if="{{visibleSpots.length < spots.length}}" class="more-spots" bindtap="showMoreSpots">查看更多地点（还剩 {{spots.length - visibleSpots.length}} 个）⌄</view>
+    <view wx:if="{{visibleSpots.length < spots.length}}" class="more-spots" bindtap="showMoreSpots">再翻一页海岸手记 <text>↓</text><text class="remaining-count">还有 {{spots.length - visibleSpots.length}} 个地点</text></view>
   </block>
+  <view class="page-signoff">带走回忆，留下海浪。</view>
   <view class="data-notice" bindtap="showDataInfo">Open-Meteo · 数据来源与更新时间 ⓘ</view>
 </view>

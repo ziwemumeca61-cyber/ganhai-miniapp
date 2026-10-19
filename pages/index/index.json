@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "赶海雷达",
-  "enablePullDownRefresh": true
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "coast-scene": "/components/coast-scene/coast-scene"
+  }
 }

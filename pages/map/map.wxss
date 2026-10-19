@@ -237,3 +237,8 @@
 
 .preview-btn.light { background: #eff8f7; color: #087f88; }
 .preview-btn.dark { background: #087f88; color: white; }
+
+.map-sheet { border-top: 2rpx solid #dfd4b9; border-radius: 28rpx 28rpx 0 0; background: #f6f1e6; box-shadow: 0 -8rpx 25rpx rgba(60,70,47,.1); }.sheet-handle { background: #d8ccb0; }.sheet-title { color: #3f604d; }.sheet-hint { color: #95927a; }
+.map-legend { border-radius: 5rpx; background: #fffcf1; color: #747d66; }.map-locate { border-radius: 8rpx; background: rgba(72,99,80,.8); }
+.map-spot-card { border-color: #ddd4bd; border-radius: 7rpx; background: #fffcf4; }.map-spot-card.active { border-color: #9cb287; background: #eef1df; box-shadow: none; }.map-spot-name { color: #526a54; }.map-spot-meta { color: #858974; }.map-spot-level { background: #e8ecda; color: #78855f; }.map-score { color: #bd8554; }
+.selected-preview { border-radius: 8rpx; background: #fffcf4; }.preview-title { color: #43604d; }.preview-desc { color: #80876f; }.preview-btn.light { background: #edf0de; color: #6d8059; }.preview-btn.dark { background: #c47753; }

@@ -1,4 +1,7 @@
 {
   "navigationBarTitleText": "赶海点详情",
-  "enableShareAppMessage": true
+  "enableShareAppMessage": true,
+  "usingComponents": {
+    "coast-scene": "/components/coast-scene/coast-scene"
+  }
 }

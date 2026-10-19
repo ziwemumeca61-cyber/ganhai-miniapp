@@ -1,7 +1,9 @@
 {
   "description": "全国赶海雷达微信小程序",
   "packOptions": {
-    "ignore": []
+    "ignore": [
+      { "type": "folder", "value": "docs" }
+    ]
   },
   "setting": {
     "es6": true,

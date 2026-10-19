@@ -1,0 +1,35 @@
+:host { display: block; }
+.coast-art, .art-bucket, .bucket-rim, .bucket-handle, .crab-claw, .crab-eye, .art-pool, .art-shell { box-sizing: border-box; }
+.coast-art { position: relative; height: 320rpx; width: 100%; overflow: hidden; background: #e4eeeb; border-radius: 140rpx 140rpx 22rpx 22rpx; }
+.art-sun { position: absolute; top: 24rpx; right: 100rpx; width: 64rpx; height: 64rpx; border-radius: 50%; background: #f2b45d; }
+.art-cloud { position: absolute; top: 42rpx; left: 110rpx; width: 100rpx; height: 22rpx; border-radius: 80%; background: #fbf9ed; transform: rotate(-6deg); }
+.cloud-two { top: 78rpx; left: 55rpx; width: 60rpx; height: 14rpx; }
+.art-gull { position: absolute; top: 63rpx; left: 280rpx; width: 28rpx; height: 14rpx; border-top: 3rpx solid #466b70; border-radius: 50%; transform: rotate(12deg); }
+.art-gull::after { content: ''; position: absolute; top: -3rpx; left: 23rpx; width: 28rpx; height: 14rpx; border-top: 3rpx solid #466b70; border-radius: 50%; transform: rotate(-22deg); }
+.gull-two { top: 88rpx; left: 325rpx; transform: scale(.65) rotate(-7deg); }
+.art-island { position: absolute; top: 112rpx; right: -26rpx; width: 180rpx; height: 54rpx; border-radius: 80% 70% 0 0; background: #a2bfad; transform: rotate(-8deg); }
+.art-sea { position: absolute; top: 138rpx; left: -10%; width: 120%; height: 200rpx; border-radius: 48% 50% 0 0; background: #7fb8b3; transform: rotate(-6deg); }
+.sea-line { position: absolute; width: 95rpx; height: 7rpx; border-radius: 50%; background: #d6e8dc; transform: rotate(-6deg); }
+.line-one { top: 163rpx; left: 45rpx; }.line-two { top: 192rpx; left: 300rpx; width: 64rpx; }.line-three { top: 140rpx; right: 30rpx; width: 48rpx; }
+.art-sand { position: absolute; top: 224rpx; left: -10%; width: 120%; height: 170rpx; border-radius: 50% 45% 0 0; background: #e9d9b7; transform: rotate(-10deg); }
+.art-foam { position: absolute; top: 217rpx; left: -5%; width: 108%; height: 8rpx; border-radius: 50%; background: #fff9e8; transform: rotate(-10deg); }
+.art-pool { position: absolute; top: 263rpx; left: 30%; width: 125rpx; height: 32rpx; border: 5rpx solid #f7ebcb; border-radius: 50%; background: #96c7be; transform: rotate(-10deg); }
+.art-rock { position: absolute; right: 25rpx; bottom: 50rpx; width: 68rpx; height: 42rpx; border-radius: 65% 48% 30% 25%; background: #718c81; transform: rotate(-10deg); box-shadow: inset 0 8rpx 0 #8fa395; }
+.rock-two { right: 73rpx; bottom: 43rpx; width: 43rpx; height: 30rpx; background: #8fa395; box-shadow: none; }
+.art-bucket { position: absolute; bottom: 22rpx; left: 63rpx; width: 50rpx; height: 55rpx; border: 3rpx solid #b6624b; border-radius: 3rpx 3rpx 17rpx 17rpx; background: #dd8063; transform: rotate(9deg); }
+.bucket-handle { position: absolute; top: -24rpx; left: 5rpx; width: 34rpx; height: 38rpx; border: 4rpx solid #bd684d; border-bottom: 0; border-radius: 50% 50% 0 0; }
+.bucket-rim { position: absolute; top: -5rpx; left: -7rpx; width: 58rpx; height: 10rpx; border: 3rpx solid #b6624b; border-radius: 50%; background: #e79b77; }
+.bucket-mark { position: absolute; top: 18rpx; left: 16rpx; width: 12rpx; height: 19rpx; border-radius: 50%; background: #f9d8ad; }
+.art-crab { position: absolute; bottom: 24rpx; right: 148rpx; width: 78rpx; height: 60rpx; transform: rotate(-8deg); }
+.crab-body { position: absolute; bottom: 7rpx; left: 17rpx; width: 44rpx; height: 29rpx; border-radius: 50%; background: #c46e50; }
+.crab-eye { position: absolute; top: -6rpx; width: 8rpx; height: 11rpx; border: 3rpx solid #c46e50; border-top: 6rpx solid #3f5752; border-radius: 8rpx; }.eye-one { left: 10rpx; }.eye-two { right: 10rpx; }
+.crab-leg { position: absolute; bottom: 2rpx; width: 26rpx; height: 22rpx; border-top: 4rpx solid #c46e50; border-bottom: 4rpx solid #c46e50; transform: rotate(30deg); }.leg-one { left: 2rpx; }.leg-two { right: 2rpx; transform: rotate(-30deg); }
+.crab-claw { position: absolute; top: 7rpx; width: 21rpx; height: 23rpx; border: 6rpx solid #c46e50; border-top-color: transparent; border-radius: 50%; }.claw-one { left: 2rpx; transform: rotate(-25deg); }.claw-two { right: 2rpx; transform: rotate(25deg); }
+.art-shell { position: absolute; bottom: 35rpx; left: 145rpx; width: 22rpx; height: 20rpx; border-radius: 50% 50% 20% 20%; background: #f9efd6; border: 2rpx solid #c6ad7c; transform: rotate(-20deg); }.shell-two { bottom: 64rpx; left: 190rpx; transform: scale(.65) rotate(25deg); }
+.crab-hit-area { position: absolute; bottom: 10rpx; right: 133rpx; width: 110rpx; height: 100rpx; }.crab-hit-area .art-crab { bottom: 14rpx; right: 15rpx; }.crab-tapped .art-crab { transform: rotate(9deg); }.crab-tip { position: absolute; bottom: 107rpx; right: 24rpx; padding: 13rpx 16rpx; border: 1rpx solid #cbb990; border-radius: 13rpx 13rpx 13rpx 0; background: #fff9e8; color: #7b704c; font-size: 21rpx; }
+.sand-dot { position: absolute; bottom: 20rpx; width: 4rpx; height: 4rpx; border-radius: 50%; background: #baaa87; }.dot-one { left: 215rpx; }.dot-two { left: 235rpx; bottom: 35rpx; }.dot-three { right: 75rpx; bottom: 24rpx; }
+.quiet .art-sun, .pending .art-sun { opacity: .35; background: #bec9bd; }
+.quiet .art-sea, .pending .art-sea { background: #8daeb0; }
+.quiet .art-bucket, .pending .art-bucket { display: none; }
+.compact { height: 200rpx; border-radius: 90rpx 90rpx 20rpx 20rpx; }
+.compact .art-sun { top: 18rpx; right: 100rpx; width: 46rpx; height: 46rpx; }.compact .art-island { top: 68rpx; }.compact .art-sea { top: 90rpx; }.compact .art-sand { top: 148rpx; }.compact .art-foam { top: 140rpx; }.compact .art-pool { top: 166rpx; }.compact .line-one { top: 111rpx; }.compact .line-two { top: 127rpx; }.compact .line-three { top: 96rpx; }.compact .art-bucket { bottom: 9rpx; transform: scale(.65) rotate(9deg); }.compact .art-crab { bottom: 1rpx; transform: scale(.7) rotate(-8deg); }.compact .art-rock { bottom: 25rpx; }.compact .rock-two { bottom: 20rpx; }

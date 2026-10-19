@@ -1,4 +1,5 @@
 const api = require('../../services/api')
+const { exploreSpot } = require('../../utils/presentation')
 
 Page({
   data: { spot: null, forecast: [], feedbackSubmitting: false, showRouteDetails: false, showTideDetails: false, showCatchDetails: false, loadFailed: false },
@@ -11,7 +12,7 @@ Page({
   retryLoad() {
     this.setData({ loadFailed: false })
     api.getSpotDetail(this._spotId).then(data => {
-      const spot = data.spot
+      const spot = exploreSpot(data.spot)
       const summary = data.summary || {}
       const windowParts = String(spot && spot.bestWindow || summary.bestTime || '').split('—')
       const nextLow = spot && spot.tide && spot.tide.match(/\d{2}:\d{2}/)

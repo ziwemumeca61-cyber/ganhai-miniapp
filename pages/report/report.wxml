@@ -4,18 +4,18 @@
       <view class="report-title">赶海圈</view>
       <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="city-picker">{{cityName}} ⌄</view></picker>
     </view>
-    <view class="circle-toolbar"><text>海友现场 · 微信官方贴图</text><view class="publish-btn" bindtap="openOfficialPublisher">发一条</view></view>
+    <view class="circle-toolbar"><text>海友的海边日常</text><view class="publish-btn" bindtap="openOfficialPublisher">发一条</view></view>
     <view class="official-card card">
       <view wx:if="{{!officialPublishEnabled}}" class="official-unavailable">请在 Android 或 iPhone 微信中查看和发布</view>
-      <official-account-publish wx:elif="{{officialFeedMounted}}" topic="{{circleTopic}}" limit="10" placeholder="分享今天的海边见闻和赶海收获…" background-color="#f6fbfa" color-unity="{{true}}" show-related="{{true}}" recommend-path="/pages/report/report" recommend-title="查看赶海现场" binderror="onOfficialComponentError" bindpublishsuccess="onOfficialPublishSuccess" bindpublishfail="onOfficialPublishFail"></official-account-publish>
+      <official-account-publish wx:elif="{{officialFeedMounted}}" topic="{{circleTopic}}" limit="10" placeholder="分享今天的海边见闻和赶海收获…" background-color="#f6f1e6" color-unity="{{true}}" show-related="{{true}}" recommend-path="/pages/report/report" recommend-title="查看赶海现场" binderror="onOfficialComponentError" bindpublishsuccess="onOfficialPublishSuccess" bindpublishfail="onOfficialPublishFail"></official-account-publish>
       <view wx:else class="official-unavailable">正在刷新…</view>
     </view>
     <view class="sample-entry" bindtap="openSample">贡献匿名现场样本，帮助校准预测 ›</view>
   </block>
   <block wx:else>
     <view class="back-link" bindtap="backToCircle">‹ 返回赶海圈</view>
-    <view class="report-title">贡献现场样本</view>
-    <view class="report-subtitle">匿名汇总用于预测，不公开个人记录。</view>
+    <view class="report-title">给海边记一笔</view>
+    <view class="report-subtitle">发现了什么，或什么也没找到，都能帮助校准预测。</view>
     <view class="report-card card">
       <view class="form-label">地点</view>
       <picker mode="selector" range="{{cityOptions}}" range-key="label" value="{{cityIndex}}" bindchange="chooseCity"><view class="city-form-picker"><text>城市</text><text>{{cityName}} ⌄</text></view></picker>

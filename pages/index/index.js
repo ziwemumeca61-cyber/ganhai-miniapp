@@ -1,4 +1,5 @@
 const api = require('../../services/api')
+const { exploreSpot, homeMood, dayLabel } = require('../../utils/presentation')
 const { getLocation } = require('../../utils/location')
 
 Page({
@@ -12,6 +13,10 @@ Page({
     cityName: '烟台',
     locationLabel: '全国沿海 · 正在定位',
     locationStatus: '将按实际距离排序',
+    dayLabel: dayLabel(),
+    mood: { tone: 'pending', title: '', subtitle: '' },
+    leadStatus: '海况待更新',
+    leadBlocked: false,
     loading: true
   },
 
@@ -37,6 +42,7 @@ Page({
   },
 
   onShow() {
+    this.setData({ dayLabel: dayLabel() })
     const selected = getApp().globalData.selectedCityId
     if (selected && selected !== this.data.cityId) {
       const index = api.cities.findIndex(item => item.id === selected)
@@ -101,15 +107,20 @@ Page({
 
   loadData(location, stopRefresh) {
     const requestId = this._dataRequestId = (this._dataRequestId || 0) + 1
-    this.setData({ loading: true })
+    this.setData({ loading: true, leadBlocked: false })
     const app = getApp()
     const point = location || app.globalData.location
     api.getHomeData(point, this.data.cityId).then(data => {
       if (requestId !== this._dataRequestId) return
+      const spots = data.spots.map(exploreSpot)
+      const mood = homeMood(data.summary, spots[0])
       this.setData({
         summary: data.summary,
-        spots: data.spots,
-        visibleSpots: data.spots.slice(0, 5),
+        mood,
+        leadStatus: spots[0] ? spots[0].coastLabel : '海况待更新',
+        leadBlocked: Boolean(spots[0] && spots[0].conditionsBlocked),
+        spots,
+        visibleSpots: spots.slice(0, 5),
         loading: false
       })
     }).catch(error => {
@@ -119,6 +130,9 @@ Page({
         loading: false,
         spots: [],
         visibleSpots: [],
+        mood: homeMood({}, null),
+        leadStatus: '海况待更新',
+        leadBlocked: false,
         summary: {
           label: '实时数据待更新',
           bestTime: '时段待更新',

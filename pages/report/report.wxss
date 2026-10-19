@@ -21,3 +21,15 @@
 .location-check text:last-child { font-size: 22rpx; }
 .privacy-note { margin: 22rpx 0; color: #789196; font-size: 22rpx; text-align: center; }
 .disabled { opacity: .58; }
+
+.report-title { color: #2d5550; font-size: 43rpx; letter-spacing: 2rpx; }
+.circle-toolbar { color: #8c8b73; border-bottom: 2rpx dashed #d9d0b7; padding-bottom: 22rpx; }
+.city-picker { border: 1rpx solid #d5cbb2; background: #fffcf2; color: #687c62; border-radius: 5rpx; transform: rotate(2deg); }
+.publish-btn { background: #c47753; border-radius: 8rpx; box-shadow: 0 4rpx 0 #a75c40; }
+.official-card { border-radius: 9rpx; border-color: #ded5bf; background: #fffcf4; }
+.official-unavailable, .report-subtitle, .privacy-note { color: #85856e; }
+.sample-entry { color: #8c7c57; }.back-link { color: #92724f; }
+.report-card { border-radius: 9rpx; border-color: #dcd3bd; }.form-label { color: #4d6755; }
+.choice-chip { border-radius: 7rpx; background: #f7f4e8; border-color: #dcd7bf; color: #7d826c; }.choice-chip.selected { border-color: #b1bc94; background: #e9eedc; color: #587349; }
+.city-form-picker, .spot-picker { border-radius: 7rpx; background: #eff0e3; color: #63715b; }
+.location-check { border-radius: 8rpx; border: 1rpx dashed #c6ac80; background: #f5ead3; color: #8f7346; }.location-check.ready { background: #e8eddb; color: #627c4d; }

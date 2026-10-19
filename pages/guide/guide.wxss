@@ -137,7 +137,7 @@
   vertical-align: middle;
 }
 
-.typing i {
+.typing .typing-dot {
   display: block;
   width: 8rpx;
   height: 8rpx;
@@ -207,3 +207,11 @@
 .send-btn.ready {
   background: #087f88;
 }
+
+.ai-page { background: #f6f1e6; }.ai-title { color: #2d5550; font-size: 43rpx; }.ai-subtitle { color: #858773; }
+.ai-header .eyebrow { color: #a08059; font-size: 22rpx; letter-spacing: 2rpx; }
+.ai-tip { background: #ecefdf; border: 1rpx dashed #bcc6a4; color: #748263; border-radius: 8rpx; }.tip-icon { background: #98ac79; }
+.wish-shell { display: flex; align-items: center; justify-content: center; gap: 9rpx; width: 86rpx; height: 86rpx; border: 3rpx solid #c6a36d; border-radius: 50% 50% 18% 18%; background: #eed9af; transform: rotate(12deg); }.wish-shell view { width: 6rpx; height: 46rpx; border-radius: 99rpx; background: #c5a575; transform: rotate(-16deg); }.wish-shell view:nth-child(2) { height: 58rpx; transform: none; }.wish-shell view:last-child { transform: rotate(16deg); }
+.message-bubble { border: 1rpx solid #dfd6c0; border-radius: 5rpx 18rpx 18rpx 18rpx; background: #fffcf3; color: #627259; box-shadow: none; }.user .message-bubble { background: #e8ebd9; color: #5c7351; border-color: #c9d0b0; }
+.assistant-avatar { border-radius: 50%; background: #e9d5ac; color: #977249; font-size: 24rpx; transform: rotate(-8deg); }.user-avatar { background: #dfe8dc; color: #6e8664; }.message-source { color: #99997f; }
+.suggestion-title { color: #9c9476; }.suggestion { border-color: #d3c6a8; border-radius: 5rpx; background: #f9edcf; color: #8a7d58; }.input-bar { border-color: #d9ceb7; border-radius: 12rpx; background: #fffcf3; box-shadow: none; }.chat-input { color: #627259; }.send-btn { border-radius: 10rpx; background: #d0d5bd; }.send-btn.ready { background: #c47753; }

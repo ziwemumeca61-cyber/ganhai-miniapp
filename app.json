@@ -8,16 +8,16 @@
   ],
   "window": {
     "navigationBarTitleText": "全国赶海雷达",
-    "navigationBarBackgroundColor": "#f6fbfc",
+    "navigationBarBackgroundColor": "#f6f1e6",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f4f8fa",
-    "backgroundTextStyle": "light",
+    "backgroundColor": "#f6f1e6",
+    "backgroundTextStyle": "dark",
     "enablePullDownRefresh": true
   },
   "tabBar": {
-    "color": "#82959d",
-    "selectedColor": "#087f88",
-    "backgroundColor": "#ffffff",
+    "color": "#8a8b78",
+    "selectedColor": "#bd704e",
+    "backgroundColor": "#fffcf4",
     "borderStyle": "white",
     "list": [
       {

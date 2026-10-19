@@ -1,26 +1,26 @@
 .spot-page { padding-top: 28rpx; padding-bottom: calc(158rpx + env(safe-area-inset-bottom)); }
 .detail-head { margin-bottom: 24rpx; }
-.detail-meta { color: #728d93; font-size: 24rpx; line-height: 1.5; }
-.detail-title { margin-top: 12rpx; color: #173f48; font-size: 40rpx; font-weight: 800; line-height: 1.4; }
+.detail-meta { color: #80816e; font-size: 24rpx; line-height: 1.5; }
+.detail-title { margin-top: 12rpx; color: #254f51; font-size: 40rpx; font-weight: 800; line-height: 1.4; }
 .detail-status { display: inline-block; margin-top: 14rpx; color: #806137; font-size: 24rpx; }
 .time-card, .zone-card, .catch-card { margin-top: 18rpx; padding: 28rpx; box-shadow: none; }
-.card-label { color: #728d93; font-size: 24rpx; }
+.card-label { color: #80816e; font-size: 24rpx; }
 .time-answer { margin-top: 12rpx; color: #126e73; font-size: 38rpx; font-weight: 700; line-height: 1.4; }
 .best-zone-name { margin-top: 14rpx; color: #174b53; font-size: 31rpx; font-weight: 700; line-height: 1.5; }
 .zone-status { margin-top: 10rpx; color: #98733e; font-size: 22rpx; line-height: 1.5; }
 .arrival-guide { margin-top: 20rpx; color: #41696f; font-size: 25rpx; line-height: 1.65; }
 .detail-toggle { margin-top: 20rpx; padding: 16rpx 0 4rpx; color: #27817f; font-size: 24rpx; line-height: 1.5; }
-.expanded-content { margin-top: 18rpx; padding-top: 18rpx; border-top: 1rpx solid #e5eeee; }
+.expanded-content { margin-top: 18rpx; padding-top: 18rpx; border-top: 1rpx solid #e2dbc7; }
 .detail-copy { margin-bottom: 14rpx; color: #41696f; font-size: 24rpx; line-height: 1.65; }
 .timeline { display: flex; justify-content: space-between; gap: 16rpx; margin: 22rpx 0; }
 .timeline-item text { display: block; color: #285e62; font-size: 25rpx; }
-.timeline-item text:last-child { margin-top: 8rpx; color: #789196; font-size: 22rpx; }
-.source-note { margin-top: 14rpx; color: #728d93; font-size: 22rpx; line-height: 1.65; }
+.timeline-item text:last-child { margin-top: 8rpx; color: #858772; font-size: 22rpx; }
+.source-note { margin-top: 14rpx; color: #80816e; font-size: 22rpx; line-height: 1.65; }
 .route-step { display: flex; gap: 20rpx; margin: 18rpx 0; }
-.route-step > text:first-child { flex: 0 0 100rpx; color: #728d93; font-size: 23rpx; }
-.route-step > text:last-child { color: #315e64; font-size: 24rpx; line-height: 1.65; }
-.coordinate-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18rpx; margin-top: 24rpx; padding: 20rpx 0; border-top: 1rpx solid #e5eeee; color: #27817f; font-size: 22rpx; }
-.catch-summary { margin-top: 14rpx; color: #315e64; font-size: 26rpx; line-height: 1.65; }
+.route-step > text:first-child { flex: 0 0 100rpx; color: #80816e; font-size: 23rpx; }
+.route-step > text:last-child { color: #4a685c; font-size: 24rpx; line-height: 1.65; }
+.coordinate-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18rpx; margin-top: 24rpx; padding: 20rpx 0; border-top: 1rpx solid #e2dbc7; color: #27817f; font-size: 22rpx; }
+.catch-summary { margin-top: 14rpx; color: #4a685c; font-size: 26rpx; line-height: 1.65; }
 .sea-intestine-summary { margin-top: 14rpx; color: #846336; font-size: 24rpx; line-height: 1.6; }
 .species-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; }
 .species-pill { padding: 12rpx 16rpx; border-radius: 14rpx; background: #eff7f5; color: #41696f; font-size: 23rpx; }
@@ -29,8 +29,29 @@
 .safety-note > text, .urgent-note > view:last-child:not(:first-child) { display: block; margin-top: 10rpx; font-size: 24rpx; line-height: 1.65; }
 .safety-note > text:last-child { font-size: 22rpx; }
 .more-tools { padding: 28rpx 0 8rpx; color: #528084; font-size: 24rpx; text-align: center; }
-.detail-actions { position: fixed; z-index: 10; right: 0; bottom: 0; left: 0; display: flex; align-items: center; gap: 18rpx; padding: 18rpx 30rpx calc(18rpx + env(safe-area-inset-bottom)); background: #f4f8fa; border-top: 1rpx solid #dceaea; }
+.detail-actions { position: fixed; z-index: 10; right: 0; bottom: 0; left: 0; display: flex; align-items: center; gap: 18rpx; padding: 18rpx 30rpx calc(18rpx + env(safe-area-inset-bottom)); background: #f6f1e6; border-top: 1rpx solid #dceaea; }
 .detail-actions .ghost-btn { flex: 0 0 196rpx; height: 86rpx; }
 .detail-actions .primary-btn { flex: 1; }
-.detail-loading { color: #789196; font-size: 26rpx; text-align: center; }
+.detail-loading { color: #858772; font-size: 26rpx; text-align: center; }
 .detail-loading .ghost-btn { margin-top: 28rpx; }
+
+/* 海边手记：纸票、岸段便签与真实潮汐路线。 */
+.detail-head { position: relative; margin-bottom: 26rpx; }
+.detail-title { font-size: 44rpx; letter-spacing: 1rpx; }
+.location-dot { color: #c17852; font-size: 21rpx; }
+.detail-illustration { position: relative; overflow: hidden; margin-top: 22rpx; border-radius: 12rpx; }
+.coast-caption { position: absolute; top: 20rpx; left: 20rpx; padding: 8rpx 13rpx; background: #fff8e7; color: #657b65; border: 1rpx solid #d6dac4; border-radius: 4rpx; font-size: 21rpx; transform: rotate(-4deg); }
+.detail-status { margin-top: 18rpx; padding: 8rpx 14rpx; border: 1rpx solid #cbcbb6; border-radius: 5rpx; color: #607963; background: #eff1e2; font-size: 23rpx; }
+.detail-status.quiet { color: #955e36; background: #faedd8; border-color: #e0bf98; }.detail-status.pending { background: #f0eee2; color: #7c7e70; }
+.time-card, .zone-card, .catch-card { border: 1rpx solid #dcd5c2; border-radius: 9rpx; background: #fffcf4; padding: 28rpx; }
+.time-card { border-bottom: 3rpx dashed #d9ccb0; box-shadow: 0 8rpx 0 -4rpx #e8dec7; }
+.card-label { display: flex; align-items: center; gap: 13rpx; color: #61785f; font-size: 26rpx; font-weight: 600; }.field-icon { font-size: 32rpx; color: #b67851; }.reference-label { margin-left: auto; color: #9a967e; font-size: 20rpx; font-weight: 400; }
+.time-answer { margin-top: 17rpx; color: #2a5552; font-size: 41rpx; }
+.zone-card { position: relative; margin-top: 26rpx; border-radius: 9rpx 28rpx 9rpx 9rpx; background: #f1f2e6; }
+.best-zone-name { color: #365b4c; font-size: 31rpx; }.zone-status { color: #94764c; }.arrival-guide { color: #65745f; }
+.catch-card { background: #edf2eb; border-color: #ced8c7; }.catch-summary { color: #526c59; }.catch-shell { width: 28rpx; height: 28rpx; border: 2rpx solid #a98253; border-radius: 50% 50% 20% 20%; background: repeating-linear-gradient(85deg,#d3b380 0,#d3b380 4rpx,#f7e8be 4rpx,#f7e8be 8rpx); transform: rotate(-12deg); }
+.detail-toggle { color: #7b805e; font-size: 23rpx; }.expanded-content { border-top-style: dashed; }.source-note { color: #82856f; }.detail-copy { color: #61705a; }
+.timeline { position: relative; padding-top: 18rpx; }.timeline::before { content: ''; position: absolute; top: 0; right: 0; left: 0; border-top: 2rpx dashed #c3b18a; }.timeline-item { position: relative; }.timeline-item::before { content: ''; position: absolute; top: -23rpx; left: 10rpx; width: 10rpx; height: 10rpx; border-radius: 50%; background: #b98055; }
+.species-pill { background: #faf6e6; border: 1rpx solid #d9d8bf; border-radius: 5rpx; color: #65745c; }.sea-intestine-summary { color: #8b703f; }
+.safety-note, .urgent-note { border: 1rpx solid #d4ad7f; border-radius: 9rpx; background: #f8ebd5; color: #7d5a34; }.urgent-note { border: 2rpx solid #c58355; }.safety-note > view { font-size: 25rpx; }
+.more-tools { color: #85846a; }.detail-actions { border-top: 1rpx solid #dcd2bd; background: #f6f1e6; }.detail-actions .ghost-btn { border-color: #d5c6a8; background: #fffcf4; color: #7c7654; border-radius: 14rpx; font-size: 25rpx; }.detail-actions .primary-btn { border-radius: 14rpx; background: #c57552; box-shadow: 0 6rpx 0 #a65f42; }

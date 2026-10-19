@@ -1,0 +1,16 @@
+<view class="coast-art {{mood}} {{compact ? 'compact' : ''}}">
+  <view class="art-sun"></view>
+  <view class="art-cloud cloud-one"></view><view class="art-cloud cloud-two"></view>
+  <view class="art-gull gull-one"></view><view class="art-gull gull-two"></view>
+  <view class="art-island"></view>
+  <view class="art-sea"></view>
+  <view class="sea-line line-one"></view><view class="sea-line line-two"></view><view class="sea-line line-three"></view>
+  <view class="art-sand"></view><view class="art-foam"></view>
+  <view class="art-pool"></view>
+  <view class="art-rock rock-one"></view><view class="art-rock rock-two"></view>
+  <view class="art-bucket"><view class="bucket-handle"></view><view class="bucket-rim"></view><view class="bucket-mark"></view></view>
+  <view class="crab-hit-area" aria-role="{{compact ? 'img' : 'button'}}" aria-label="{{compact ? '小螃蟹插画' : '听听小螃蟹的提醒'}}" hover-class="crab-tapped" bindtap="greet"><view class="art-crab"><view class="crab-leg leg-one"></view><view class="crab-leg leg-two"></view><view class="crab-claw claw-one"></view><view class="crab-claw claw-two"></view><view class="crab-body"><view class="crab-eye eye-one"></view><view class="crab-eye eye-two"></view></view></view></view>
+  <view wx:if="{{tipVisible && !compact}}" class="crab-tip">{{mood === 'calm' ? '小桶带上，垃圾带走。' : '先在岸上看看海哦。'}}</view>
+  <view class="art-shell shell-one"></view><view class="art-shell shell-two"></view>
+  <view class="sand-dot dot-one"></view><view class="sand-dot dot-two"></view><view class="sand-dot dot-three"></view>
+</view>
